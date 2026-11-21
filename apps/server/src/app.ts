@@ -8,6 +8,11 @@ import type { Config } from './config.js';
 import { createLlmProbe, type LlmProbe } from './llm/ollama.js';
 import { healthRoutes } from './routes/health.js';
 import { defaultContentDir, loadContent } from './content.js';
+import { Store } from './store.js';
+import { profileRoutes } from './routes/profiles.js';
+import { campaignRoutes } from './routes/campaign.js';
+import { HttpError } from './routes/util.js';
+import { ZodError } from 'zod';
 import type { ContentBundle } from '@starwake/shared';
 
 export interface AppDeps {
@@ -30,6 +35,23 @@ export async function buildApp(cfg: Config, deps: AppDeps = {}): Promise<Fastify
 
   app.setErrorHandler(
     (err: Error & { statusCode?: number; code?: string; validation?: unknown }, _req, reply) => {
+      if (err instanceof HttpError) {
+        const body: ApiError = {
+          error: err.message,
+          code: err.code,
+          ...(err.detail !== undefined ? { detail: err.detail } : {}),
+        };
+        return reply.code(err.statusCode).send(body);
+      }
+      // Duck-typed too: zod errors thrown in the shared package may come from another module instance.
+      if (err instanceof ZodError || Array.isArray((err as { issues?: unknown }).issues)) {
+        const body: ApiError = {
+          error: 'Invalid request',
+          code: 'BAD_REQUEST',
+          detail: (err as ZodError).issues,
+        };
+        return reply.code(400).send(body);
+      }
       const status = err.statusCode && err.statusCode >= 400 ? err.statusCode : 500;
       if (status >= 500) app.log.error({ err }, 'request failed');
       const body: ApiError = {
@@ -47,6 +69,10 @@ export async function buildApp(cfg: Config, deps: AppDeps = {}): Promise<Fastify
   app.log.info({ dir: cfg.CONTENT_DIR ?? defaultContentDir() }, 'content loaded and validated');
 
   healthRoutes(app, cfg, llm);
+
+  const store = new Store(cfg.DATA_DIR);
+  profileRoutes(app, store);
+  campaignRoutes(app, store, content);
 
   app.get('/api/content', async (_req, reply) => {
     reply.header('cache-control', 'no-cache');
