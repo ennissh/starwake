@@ -18,5 +18,35 @@
       "reserve": ["vosk-fighter", "vosk-fighter", "vosk-fighter", "vosk-fighter"]
     },
     "distance": 4200
+  },
+  {
+    "id": "vosk-lane-ambush",
+    "name": "Vosk lane ambush",
+    "description": "Biters drop out of the fold around you.",
+    "roster": {
+      "hulls": ["vosk-fighter", "vosk-fighter", "vosk-fighter"],
+      "reserve": []
+    },
+    "distance": 2200
+  },
+  {
+    "id": "vosk-patrol",
+    "name": "Vosk patrol",
+    "description": "A Gnasher and its Biters.",
+    "roster": {
+      "hulls": ["vosk-frigate", "vosk-fighter", "vosk-fighter"],
+      "reserve": ["vosk-fighter", "vosk-fighter"]
+    },
+    "distance": 3500
+  },
+  {
+    "id": "cinder-hold",
+    "name": "Cinder Hold",
+    "description": "The Vosk raider base itself.",
+    "roster": {
+      "hulls": ["vosk-base", "vosk-fighter", "vosk-fighter"],
+      "reserve": ["vosk-fighter", "vosk-fighter", "vosk-fighter", "vosk-fighter"]
+    },
+    "distance": 4200
   }
 ]

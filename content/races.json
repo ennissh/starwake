@@ -8,7 +8,24 @@
       "glow": "#7fe0ff",
       "accent": "#e0b84a"
     },
-    "summary": "Tall avian merchant-poets. Every deal is a performance."
+    "summary": "Tall avian merchant-poets. Every deal is a performance.",
+    "diplomacy": {
+      "startRelation": 0,
+      "hostileActs": [
+        {
+          "act": "claimWithoutPermission",
+          "delta": -12
+        },
+        {
+          "act": "destroyShip",
+          "delta": -10
+        },
+        {
+          "act": "firstStrike",
+          "delta": -15
+        }
+      ]
+    }
   },
   {
     "id": "vosk",
@@ -19,7 +36,24 @@
       "glow": "#ff7a2a",
       "accent": "#c8902a"
     },
-    "summary": "Armoured, hive-ranked salvagers who respect strength and tribute."
+    "summary": "Armoured, hive-ranked salvagers who respect strength and tribute.",
+    "diplomacy": {
+      "startRelation": -40,
+      "hostileActs": [
+        {
+          "act": "claimWithoutPermission",
+          "delta": -6
+        },
+        {
+          "act": "destroyShip",
+          "delta": -3
+        },
+        {
+          "act": "firstStrike",
+          "delta": -5
+        }
+      ]
+    }
   },
   {
     "id": "murmur",
@@ -30,6 +64,23 @@
       "glow": "#c8a0ff",
       "accent": "#9fe0d0"
     },
-    "summary": "A choir-intelligence living in a gas cloud. Trades in knowledge and songs."
+    "summary": "A choir-intelligence living in a gas cloud. Trades in knowledge and songs.",
+    "diplomacy": {
+      "startRelation": 10,
+      "hostileActs": [
+        {
+          "act": "claimWithoutPermission",
+          "delta": -8
+        },
+        {
+          "act": "destroyShip",
+          "delta": -12
+        },
+        {
+          "act": "firstStrike",
+          "delta": -12
+        }
+      ]
+    }
   }
 ]

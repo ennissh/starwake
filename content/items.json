@@ -1,0 +1,16 @@
+[
+  {
+    "id": "provender",
+    "name": "Provender",
+    "description": "Bricks of fabricated food and fibre from the Waystation. Cheap, endless, everyone eats.",
+    "stack": 5,
+    "baseValue": 2
+  },
+  {
+    "id": "data-core",
+    "name": "Data Core",
+    "description": "Sealed crystalline memory. Prized by collectors of knowledge; the Waystation takes them as currency.",
+    "stack": 5,
+    "baseValue": 25
+  }
+]
