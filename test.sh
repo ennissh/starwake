@@ -31,6 +31,6 @@ step "typecheck";         npm run -s typecheck
 step "unit tests";        npx vitest run
 if [[ $QUICK == 0 ]]; then
     step "build";         npm run -s build
-    step "playwright smoke (mock LLM)"; npx playwright test --trace off
+    step "playwright smoke (mock LLM)"; npx playwright test e2e/smoke.spec.ts --trace off
 fi
 printf '\n\033[1;32mtest.sh: all green (%s)\033[0m\n' "$(scripts/version.sh)"

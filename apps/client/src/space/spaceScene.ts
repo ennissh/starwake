@@ -608,6 +608,15 @@ export class SpaceScene {
     return { screen: null, r, edgeAngle: ang };
   }
 
+  /** Test hook: cripple the Starwake now. Practice arena only (campaign fights are verified). */
+  debugCripple(): boolean {
+    if (this.o.mode !== 'fight' || this.o.fight || this.sim.crippled) return false;
+    this.sim.player.hp = 0;
+    this.sim.crippled = true;
+    this.onEvents([{ t: 'crippled' }]);
+    return true;
+  }
+
   snapshot() {
     const p = this.sim.player;
     return {

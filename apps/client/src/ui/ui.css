@@ -195,3 +195,21 @@
 .sw-title-screen .sw-field {
   grid-template-columns: 60px 1fr;
 }
+
+/* UX audit fixes (e2e/ux.spec.ts) */
+.sw-btn--primary small,
+.sw-menu .sw-btn--primary small {
+  color: inherit;
+  opacity: 0.9;
+}
+.sw-title-screen {
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+input[type='range'] {
+  min-height: 24px;
+}
+input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+}

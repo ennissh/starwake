@@ -250,9 +250,22 @@
   color: var(--hud-ink);
 }
 .hud--combat .hud__systems {
-  top: 34%;
+  top: 40px;
+  transform: none;
+}
+/* The target panel takes the rest of the right column; the hologram shrinks on short screens. */
+.chud__target {
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
+}
+.chud__holo {
+  width: min(100%, 28vh);
+  justify-self: center;
 }
 .hud--combat .hud__hint {
   bottom: auto;
   top: 16px;
+}
+.chud__holo {
+  background: rgba(0, 0, 0, 0.45);
 }

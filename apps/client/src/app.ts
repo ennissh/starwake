@@ -400,6 +400,7 @@ export class Game {
       campaign: () => this.campaign?.snapshot() ?? null,
       bindings: () => this.settings.bindings,
       profile: () => this.profile,
+      debugCripple: () => this.scene?.debugCripple() ?? false,
     };
   }
 }

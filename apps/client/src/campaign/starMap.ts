@@ -76,7 +76,7 @@ export function mapBody(s: CampaignState, c: ContentBundle, v: MapView, ship: { 
     })
     .join('');
   return `<div class="cmap">
-      <svg class="cmap__svg" id="cmap-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Star map of the Shoal">${lanes}${nodes}</svg>
+      <svg class="cmap__svg" id="cmap-svg" viewBox="0 0 ${W} ${H}" role="group" aria-label="Star map of the Shoal">${lanes}${nodes}</svg>
       <div class="cmap__side">${details(s, c, v.selected)}</div>
     </div>
     <p class="sw-meta">Drag to rotate. Click a system. J jumps along a lane. Dashed lanes are beyond your Fold Drive's range (${ship.range.toFixed(2)} pc).</p>`;

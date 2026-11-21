@@ -219,7 +219,9 @@ export class Campaign {
   private panelKey(e: KeyboardEvent): boolean {
     if (this.modal.isOpen && ['map', 'system', 'readiness'].includes(this.modal.kind ?? '')) {
       const bind = this.host.input.keyMap;
-      const is = (a: Action) => bind[a].includes(e.code);
+      // Tab is the default map key, but inside other panels it must move keyboard focus.
+      const tabNav = e.code === 'Tab' && this.modal.kind !== 'map';
+      const is = (a: Action) => !tabNav && bind[a].includes(e.code);
       if (is('starMap') || is('systemReport') || is('colony') || e.code === 'Escape') {
         e.preventDefault();
         const kind = this.modal.kind;

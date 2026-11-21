@@ -2,6 +2,13 @@
 
 ## 0.1.0 (in progress)
 
+### UI/UX validation and mockups
+- `e2e/ux.spec.ts`: headless UX audit of every built view (axe WCAG 2.2 AA, layout, overflow,
+  target size, keyboard focus, console) at three viewports and three themes; see `docs/ux-validation.md`.
+- Fixed what it found: combat HUD panel overlap, Tab in campaign panels, button contrast, VGA title
+  height, star-map roles, small targets.
+- `docs/mockups/`: HTML mockups of the M4–M6 views; `scripts/render-mockups.mjs` renders them.
+
 ### Review fixes (M3 stop)
 - Closing a campaign panel with its own key (Tab/I/H) no longer reopens it.
 - Esc while rebinding cancels only the capture; mouse buttons can be bound from the Controls screen.
