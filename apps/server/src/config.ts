@@ -9,6 +9,7 @@ const Env = z.object({
   LISTEN_PORT: z.coerce.number().int().min(1).max(65535).default(8080),
   DATA_DIR: z.string().default('/data'),
   CLIENT_DIR: z.string().optional(),
+  CONTENT_DIR: z.string().optional(),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   LLM_MODE: z.enum(['ollama', 'mock', 'off']).default('ollama'),
   OLLAMA_URL: z

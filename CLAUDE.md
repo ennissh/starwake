@@ -224,7 +224,7 @@ the dwarf/Ollama acceptance steps for Shawn, with exact commands.
 
 ```
 M0 — Skeleton, deploy pipeline, /healthz, install.sh                    [x] built; dwarf acceptance pending (Shawn)
-M1 — Flight and cameras, HUD, key help, rebinding, pause               [ ]
+M1 — Flight and cameras, HUD, key help, rebinding, pause               [x] built; 60 fps check pending (Shawn)
 M2 — Combat, drones, subsystems, crippled state, salvage, arena        [ ]
 M3 — Campaign: Shoal content, star map, jumps, probe, claims, saves    [ ]
 M4 — Engine room: slots, condition, stat preview, wired effects        [ ]

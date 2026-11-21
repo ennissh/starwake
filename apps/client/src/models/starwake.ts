@@ -106,7 +106,7 @@ export function buildStarwake(): StarwakeModel {
       lanceMuzzle: point('lance-muzzle', [0, -11, -146]),
       turret: point('turret', [0, 19, 0]),
       droneBay: point('drone-bay', [0, -20, 66]),
-      bridge: point('bridge', [0, 17, -48]),
+      bridge: point('bridge', [0, 17.5, -53]),
       engines: engines.map(([x, y], i) => point(`engine-${i}`, [x, y, 139])),
     },
     dispose() {

@@ -1,3 +1,6 @@
 export * from './rng.js';
 export * from './schemas/api.js';
+export * from './schemas/content.js';
 export * from './themes.js';
+export * from './sim/math.js';
+export * from './sim/flight.js';

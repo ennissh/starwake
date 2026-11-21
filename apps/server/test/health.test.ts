@@ -170,3 +170,21 @@ describe('config', () => {
     expect(loadConfig({}).CONTENT_RATING).toBe('mature');
   });
 });
+
+describe('/api/content', () => {
+  it('serves the validated content bundle', async () => {
+    const app = await buildApp(loadConfig({ LLM_MODE: 'off', DATA_DIR: tmp(), LOG_LEVEL: 'silent' }));
+    const res = await app.inject('/api/content');
+    expect(res.statusCode).toBe(200);
+    expect(res.json().player.name).toBe('Starwake');
+    await app.close();
+  });
+
+  it('refuses to start on broken content, naming the file', async () => {
+    const dir = tmp();
+    writeFileSync(join(dir, 'player.json'), '{"name": ""}');
+    await expect(
+      buildApp(loadConfig({ LLM_MODE: 'off', DATA_DIR: tmp(), LOG_LEVEL: 'silent', CONTENT_DIR: dir })),
+    ).rejects.toThrow(/player\.json/);
+  });
+});

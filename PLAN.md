@@ -617,6 +617,7 @@ Build in order. Stop for review after each one.
 - The page loads at `http://starwake.citus.cloud:8090`.
 
 ### M1 · Flight and cameras
+**Status (2026-11-21): built.** Unit + Playwright green. To verify on Shawn's laptop: 60 fps (press ` for the perf overlay). Keys persist per profile in the browser until server profiles land in M3. Added: Z toggles flight assist/drift; ` perf overlay.
 - Starfield and skybox, the *Starwake* model, flight model (assisted and drift), throttle.
 - All five MVP cameras with smooth transitions.
 - HUD: speed, throttle, radar globe, status icons.

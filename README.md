@@ -16,7 +16,7 @@ Starwake is an **original work inspired by the design of MicroProse's Lightspeed
 
 ## Status
 
-In development: **M0 (skeleton, Docker image, installer) is built**; M1–M3 are next (PLAN.md §8). PLAN.md is the build plan for Claude Code. The first deliverable is an **MVP**: one star cluster (the Shoal), six systems, three alien races, and the full loop playable from start to finish.
+In development: **M0 (skeleton, Docker image, installer) and M1 (flight, cameras, HUD) are built**; M2–M3 are next (PLAN.md §8). PLAN.md is the build plan for Claude Code. The first deliverable is an **MVP**: one star cluster (the Shoal), six systems, three alien races, and the full loop playable from start to finish.
 
 ## How it runs
 
@@ -128,6 +128,7 @@ title screen; the choice is remembered per browser (per profile from M3).
 | Pitch / yaw | Mouse as a virtual joystick (pointer lock; offset from centre = turn rate) or arrow keys |
 | Roll | Q / E |
 | Throttle up / down · full · stop | W / S · Shift+W · X |
+| Flight assist on/off (drift mode) | Z |
 | Fire selected weapon | Left mouse / Space |
 | Cycle camera (bridge → chase → orbit → turret → drones) | C |
 | Next / previous target · target subsystem | T / Shift+T · Y |
@@ -137,9 +138,10 @@ title screen; the choice is remembered per browser (per profile from M3).
 | Probe system · Hail ship or base | P · V |
 | Fold jump (from star map) · Emergency fold | J · Shift+J (hold 1 s) |
 | Key help overlay | F1 or ? |
+| Performance overlay (fps, draw calls) | ` |
 | Pause / release mouse | Esc |
 
-Browser-reserved keys (Ctrl+W, Alt combinations, F11) are never bound.
+Browser-reserved keys (Ctrl/Alt/Meta combinations, F5, F11, F12) can never be bound; Esc always pauses. Rebind keys in the pause menu (Esc → Controls). In bridge and chase views the mouse is a virtual joystick; in orbit and turret views it moves the camera and you fly with the arrow keys.
 
 ## Repository layout
 

@@ -1,0 +1,13 @@
+{
+  "name": "Starwake",
+  "flight": {
+    "maxSpeed": 60,
+    "accel": 9,
+    "pitchRate": 0.3,
+    "yawRate": 0.26,
+    "rollRate": 0.5,
+    "angAccel": 0.32,
+    "driftDamping": 0
+  },
+  "flightFloor": 0.3
+}

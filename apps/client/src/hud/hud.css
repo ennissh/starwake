@@ -1,0 +1,170 @@
+/* Flight HUD: vector-style DOM over the 3D view. Uses the --hud-* tokens so it reads against space. */
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--hud-ink);
+  font-family: var(--hud-font);
+  font-size: 12px;
+}
+[data-theme='vga'] .hud {
+  font-size: 18px;
+}
+.hud__tl {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: grid;
+  gap: 4px;
+}
+.hud__tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--hud-dim);
+  border-radius: var(--radius-sm);
+  background: var(--hud-panel);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.hud__tag--warn {
+  color: var(--hud-warn);
+  border-color: var(--hud-warn);
+}
+.hud__centre {
+  position: absolute;
+  inset: 0;
+}
+.hud__centre svg {
+  width: 100%;
+  height: 100%;
+}
+.hud__bottom {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  min-width: 320px;
+}
+.hud__speed {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+[data-theme='vga'] .hud__speed {
+  font-size: 30px;
+}
+.hud__bar {
+  position: relative;
+  width: 300px;
+  height: 10px;
+  border: 1px solid var(--hud-dim);
+  background: var(--hud-panel);
+}
+.hud__bar > i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--hud-accent);
+}
+.hud__bar > b {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--hud-ink);
+}
+.hud__label {
+  color: var(--hud-dim);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+[data-theme='vga'] .hud__label {
+  font-size: 16px;
+}
+.hud__systems {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  gap: 6px;
+  background: var(--hud-panel);
+  padding: 8px 10px;
+  border: 1px solid var(--hud-dim);
+  border-radius: var(--radius-md);
+}
+.hud__sys {
+  display: grid;
+  grid-template-columns: 18px 70px 64px 36px;
+  align-items: center;
+  gap: 6px;
+}
+.hud__sys svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+}
+.hud__sys .hud__bar {
+  width: 64px;
+  height: 6px;
+}
+.hud__sys--low {
+  color: var(--hud-warn);
+}
+.hud__sys--low .hud__bar > i {
+  background: var(--hud-warn);
+}
+.hud__radar {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  width: 200px;
+  height: 200px;
+  border: 1px solid var(--hud-dim);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0) 55%, var(--hud-panel) 100%);
+}
+[data-theme='vga'] .hud__radar {
+  border-radius: 0;
+}
+.hud__radar span {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -18px;
+  color: var(--hud-dim);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+.hud__toast {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  background: var(--hud-panel);
+  border: 1px solid var(--hud-accent);
+  border-radius: var(--radius-md);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.hud__toast--on {
+  opacity: 1;
+}
+.hud__hint {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  color: var(--hud-dim);
+  font-size: 11px;
+  text-align: right;
+}
+[data-theme='vga'] .hud__hint {
+  font-size: 16px;
+}

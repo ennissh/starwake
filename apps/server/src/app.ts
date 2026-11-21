@@ -7,9 +7,12 @@ import type { ApiError } from '@starwake/shared';
 import type { Config } from './config.js';
 import { createLlmProbe, type LlmProbe } from './llm/ollama.js';
 import { healthRoutes } from './routes/health.js';
+import { defaultContentDir, loadContent } from './content.js';
+import type { ContentBundle } from '@starwake/shared';
 
 export interface AppDeps {
   llm?: LlmProbe;
+  content?: ContentBundle;
 }
 
 function defaultClientDir(): string {
@@ -38,7 +41,17 @@ export async function buildApp(cfg: Config, deps: AppDeps = {}): Promise<Fastify
     },
   );
 
+  // Content is validated at start: a broken content file stops the server with a clear message
+  // rather than serving a half-working game.
+  const content = deps.content ?? (await loadContent(cfg.CONTENT_DIR ?? defaultContentDir()));
+  app.log.info({ dir: cfg.CONTENT_DIR ?? defaultContentDir() }, 'content loaded and validated');
+
   healthRoutes(app, cfg, llm);
+
+  app.get('/api/content', async (_req, reply) => {
+    reply.header('cache-control', 'no-cache');
+    return content;
+  });
 
   app.get('/api/version', async () => ({
     version: cfg.STARWAKE_VERSION,

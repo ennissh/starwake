@@ -1,4 +1,7 @@
 /* Starwake components. Read tokens only (../themes/tokens.css). Prefix sw-. */
+[hidden] {
+  display: none !important;
+}
 * {
   box-sizing: border-box;
 }
@@ -142,12 +145,15 @@ body {
   border-radius: 0;
 }
 
-/* M0 landing card */
-.sw-landing {
-  position: absolute;
-  left: var(--space-8);
-  bottom: var(--space-8);
-  max-width: 440px;
-  display: grid;
-  gap: var(--space-3);
+/* Layers inside #ui: HUD (never takes the mouse) < title < overlays < perf. */
+#ui > .hud {
+  pointer-events: none;
+  z-index: 1;
+}
+#ui > .sw-overlay {
+  z-index: 20;
+}
+#ui > .sw-perf {
+  pointer-events: none;
+  z-index: 30;
 }
