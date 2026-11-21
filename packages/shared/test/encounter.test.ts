@@ -10,7 +10,11 @@ import { loadTestContent } from './helpers.js';
 const c = loadTestContent();
 const roster = (id: string) => c.encounters.find((e) => e.id === id)!;
 
-function make(id: string, seed: string | number, extra: Partial<ConstructorParameters<typeof Encounter>[0]> = {}) {
+function make(
+  id: string,
+  seed: string | number,
+  extra: Partial<ConstructorParameters<typeof Encounter>[0]> = {},
+) {
   const def = roster(id);
   return new Encounter({ seed, content: c, roster: def.roster, distance: def.distance, ...extra });
 }
@@ -66,17 +70,24 @@ describe('encounter: shield emitters block the Lance', () => {
     const e = make('arena-base', 5);
     const base = e.hostiles().find((h) => h.hullClass === 'base')!;
     // Point the keel at the base (the real path: steering input) and fire whenever charged.
-    const fire = (): PlayerCommand => ({ ...IDLE_COMMAND, flight: steerToward(e.player.f, base.f.pos, 0, 2).input, fireLance: true, targetId: base.id });
+    const fire = (): PlayerCommand => ({
+      ...IDLE_COMMAND,
+      flight: steerToward(e.player.f, base.f.pos, 0, 2).input,
+      fireLance: true,
+      targetId: base.id,
+    });
     let blocked = 0;
     for (let i = 0; i < 60 * 20; i++) {
-      for (const ev of e.step(fire())) if (ev.t === 'lance' && ev.hitId === base.id && ev.blocked === 'emitters') blocked++;
+      for (const ev of e.step(fire()))
+        if (ev.t === 'lance' && ev.hitId === base.id && ev.blocked === 'emitters') blocked++;
     }
     expect(blocked).toBeGreaterThan(0);
     expect(base.hp).toBe(base.maxHp);
     for (const s of base.subs) if (s.kind === 'emitter') s.alive = false;
     let damage = 0;
     for (let i = 0; i < 60 * 6 && !damage; i++) {
-      for (const ev of e.step(fire())) if (ev.t === 'hit' && ev.weaponId === 'spinal-lance' && ev.blocked === null) damage += ev.damage;
+      for (const ev of e.step(fire()))
+        if (ev.t === 'hit' && ev.weaponId === 'spinal-lance' && ev.blocked === null) damage += ev.damage;
     }
     expect(damage).toBe(c.weapons.find((w) => w.id === 'spinal-lance')!.damage);
   });
@@ -89,16 +100,31 @@ describe('encounter: shield emitters block the Lance', () => {
     for (let i = 0; i < 60 * 40 && emitter.alive; i++) {
       const mount = toWorld(e.player.f.pos, e.player.f.rot, c.player.turret.mount);
       const at = toWorld(base.f.pos, base.f.rot, emitter.offset);
-      events.push(...e.step({ ...IDLE_COMMAND, turret: { mode: 'manual', aim: normalize(sub(at, mount)), fire: true }, flight: { ...IDLE_COMMAND.flight, throttleSet: 0 } }));
+      events.push(
+        ...e.step({
+          ...IDLE_COMMAND,
+          turret: { mode: 'manual', aim: normalize(sub(at, mount)), fire: true },
+          flight: { ...IDLE_COMMAND.flight, throttleSet: 0 },
+        }),
+      );
     }
     expect(emitter.alive).toBe(false);
     // Now aim at bare hull (low on the front face, clear of subsystems): every hit is deflected.
     for (let i = 0; i < 60 * 5; i++) {
       const mount = toWorld(e.player.f.pos, e.player.f.rot, c.player.turret.mount);
       const at = toWorld(base.f.pos, base.f.rot, { x: 0, y: -160, z: -120 });
-      events.push(...e.step({ ...IDLE_COMMAND, turret: { mode: 'manual', aim: normalize(sub(at, mount)), fire: true }, flight: { ...IDLE_COMMAND.flight, throttleSet: 0 } }));
+      events.push(
+        ...e.step({
+          ...IDLE_COMMAND,
+          turret: { mode: 'manual', aim: normalize(sub(at, mount)), fire: true },
+          flight: { ...IDLE_COMMAND.flight, throttleSet: 0 },
+        }),
+      );
     }
-    const hullHits = events.filter((ev): ev is Extract<CombatEvent, { t: 'hit' }> => ev.t === 'hit' && ev.targetId === base.id && ev.subId === null && ev.weaponId === 'wake-turret');
+    const hullHits = events.filter(
+      (ev): ev is Extract<CombatEvent, { t: 'hit' }> =>
+        ev.t === 'hit' && ev.targetId === base.id && ev.subId === null && ev.weaponId === 'wake-turret',
+    );
     expect(hullHits.length).toBeGreaterThan(0);
     for (const h of hullHits) expect(h.blocked).toBe('armor');
     expect(base.hp).toBe(base.maxHp);
@@ -123,7 +149,8 @@ describe('encounter: drones', () => {
     expect(e.frames).toBe(1);
     for (let i = 0; i < 120; i++) e.step(IDLE_COMMAND);
     let docked = false;
-    for (let i = 0; i < 60 * 30 && !docked; i++) docked = e.step({ ...IDLE_COMMAND, recall: true }).some((x) => x.t === 'docked');
+    for (let i = 0; i < 60 * 30 && !docked; i++)
+      docked = e.step({ ...IDLE_COMMAND, recall: true }).some((x) => x.t === 'docked');
     expect(docked).toBe(true);
     expect(e.frames).toBe(2);
   });
@@ -171,7 +198,11 @@ describe('encounter: salvage and reserves', () => {
     const e = make('arena-patrol', 22);
     run(e, sensiblePilot, 240);
     const r = e.result();
-    const allowed = new Set(r.destroyed.flatMap((d) => c.hulls.find((h) => h.id === d.hullId)!.salvage.table.map((t) => t.componentId)));
+    const allowed = new Set(
+      r.destroyed.flatMap((d) =>
+        c.hulls.find((h) => h.id === d.hullId)!.salvage.table.map((t) => t.componentId),
+      ),
+    );
     for (const s of r.salvage) expect(allowed.has(s)).toBe(true);
   });
 
@@ -179,7 +210,11 @@ describe('encounter: salvage and reserves', () => {
     const def = roster('arena-base');
     const e = make('arena-base', 6);
     run(e, passivePilot, 400);
-    const spawned = new Set([...e.result().destroyed.map((d) => d.id), ...e.result().fled.map((d) => d.id), ...e.hostiles().map((h) => h.id)]);
+    const spawned = new Set([
+      ...e.result().destroyed.map((d) => d.id),
+      ...e.result().fled.map((d) => d.id),
+      ...e.hostiles().map((h) => h.id),
+    ]);
     expect(spawned.size).toBeLessThanOrEqual(def.roster.hulls.length + def.roster.reserve.length);
     expect(e.reserve.length).toBe(0);
   });

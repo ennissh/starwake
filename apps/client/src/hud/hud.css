@@ -168,3 +168,91 @@
 [data-theme='vga'] .hud__hint {
   font-size: 16px;
 }
+
+/* Combat HUD */
+.chud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.chud__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.chud__flash {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 160px 40px var(--hud-danger);
+  opacity: 0;
+}
+.hud__panel {
+  background: var(--hud-panel);
+  border: 1px solid var(--hud-dim);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+}
+.chud__status {
+  position: absolute;
+  left: 16px;
+  top: 64px;
+  display: grid;
+  gap: 5px;
+  min-width: 210px;
+}
+.chud__row {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.chud__row .hud__bar {
+  width: auto;
+  height: 6px;
+}
+.chud__row b {
+  font-weight: 500;
+  color: var(--hud-accent);
+}
+.chud--ready {
+  background: var(--hud-ink) !important;
+}
+.chud__target {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 260px;
+  display: grid;
+  gap: 5px;
+}
+.chud__holo {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-bottom: 1px solid var(--hud-dim);
+}
+.chud__tname {
+  color: var(--hud-danger);
+}
+.chud__warn {
+  color: var(--hud-warn);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+[data-theme='vga'] .chud__warn {
+  font-size: 16px;
+}
+.chud--dead {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+.chud--sel span {
+  color: var(--hud-ink);
+}
+.hud--combat .hud__systems {
+  top: 34%;
+}
+.hud--combat .hud__hint {
+  bottom: auto;
+  top: 16px;
+}

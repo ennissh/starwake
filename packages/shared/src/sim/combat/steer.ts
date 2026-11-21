@@ -6,7 +6,12 @@ import { toLocalDir } from './geometry.js';
  * Turn a desired world point into flight input (used by enemy AI, homing drones and the drone
  * autopilot). Returns the input and the angle (radians) between the nose and the point.
  */
-export function steerToward(f: FlightState, target: Vec3, throttle: number, gain = 2.5): { input: FlightInput; angle: number } {
+export function steerToward(
+  f: FlightState,
+  target: Vec3,
+  throttle: number,
+  gain = 2.5,
+): { input: FlightInput; angle: number } {
   const d = toLocalDir(f.pos, f.rot, target);
   const yawErr = Math.atan2(-d.x, -d.z); // + when the point is to the left (-x)
   const pitchErr = Math.atan2(d.y, Math.hypot(d.x, d.z)); // + when above

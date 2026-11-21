@@ -57,7 +57,7 @@
     "raceId": "vosk",
     "class": "frigate",
     "armor": 1,
-    "hp": 320,
+    "hp": 520,
     "radius": 70,
     "flight": {
       "maxSpeed": 45,

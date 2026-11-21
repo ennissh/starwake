@@ -16,7 +16,7 @@ Starwake is an **original work inspired by the design of MicroProse's Lightspeed
 
 ## Status
 
-In development: **M0 (skeleton, Docker image, installer) and M1 (flight, cameras, HUD) are built**; M2–M3 are next (PLAN.md §8). PLAN.md is the build plan for Claude Code. The first deliverable is an **MVP**: one star cluster (the Shoal), six systems, three alien races, and the full loop playable from start to finish.
+In development: **M0 (skeleton, Docker image, installer), M1 (flight, cameras, HUD) and M2 (combat, practice arena) are built**; M3 is next (PLAN.md §8). PLAN.md is the build plan for Claude Code. The first deliverable is an **MVP**: one star cluster (the Shoal), six systems, three alien races, and the full loop playable from start to finish.
 
 ## How it runs
 

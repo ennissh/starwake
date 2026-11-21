@@ -163,3 +163,19 @@
   white-space: pre;
   pointer-events: none;
 }
+.sw-menu--tall .sw-btn {
+  min-height: 56px;
+  text-align: left;
+}
+.sw-menu .sw-btn small {
+  margin-left: 0;
+}
+.sw-grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+.sw-list {
+  margin: 4px 0;
+  padding-left: 18px;
+}

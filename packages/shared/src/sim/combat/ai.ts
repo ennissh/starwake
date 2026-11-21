@@ -44,7 +44,8 @@ function pickTarget(c: AiCtx): Ent {
   if (cur && cur.alive && !cur.fled && w.t % 4 > w.dt) return cur; // re-think every ~4 s
   // Fighters peel off to chase a nearby drone 40% of the time; otherwise the Starwake.
   const drones = w.playerSide().filter((e) => e.kind === 'drone' && dist(e.f.pos, self.f.pos) < 900);
-  const pick = drones.length && self.hullClass === 'fighter' && w.rng.chance(0.4) ? w.rng.pick(drones) : w.player;
+  const pick =
+    drones.length && self.hullClass === 'fighter' && w.rng.chance(0.4) ? w.rng.pick(drones) : w.player;
   self.ai.targetId = pick.id;
   return pick;
 }
@@ -140,14 +141,26 @@ const baseHold = action<AiCtx>((c) => {
 const recentlyHit = (c: AiCtx) => c.w.t - c.self.ai.lastHitT < 0.5;
 
 const fighterTree: BtNode<AiCtx> = selector(
-  sequence(condition((c) => hpFrac(c.self) < RETREAT_HP), retreat),
-  sequence(condition((c) => c.self.ai.mode === 'evade' || (recentlyHit(c) && c.w.rng.chance(0.08))), evade),
+  sequence(
+    condition((c) => hpFrac(c.self) < RETREAT_HP),
+    retreat,
+  ),
+  sequence(
+    condition((c) => c.self.ai.mode === 'evade' || (recentlyHit(c) && c.w.rng.chance(0.08))),
+    evade,
+  ),
   attackRun,
 );
 
 const shipTree: BtNode<AiCtx> = selector(
-  sequence(condition((c) => hpFrac(c.self) < 0.2), retreat),
-  sequence(condition((c) => hpFrac(c.self) < 0.5 && !c.self.ai.calledHelp), callForHelp),
+  sequence(
+    condition((c) => hpFrac(c.self) < 0.2),
+    retreat,
+  ),
+  sequence(
+    condition((c) => hpFrac(c.self) < 0.5 && !c.self.ai.calledHelp),
+    callForHelp,
+  ),
   standoff,
 );
 

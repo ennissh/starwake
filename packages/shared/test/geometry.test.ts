@@ -26,7 +26,7 @@ describe('geometry', () => {
 
   it('jitter stays within its cone', () => {
     for (let i = 0; i < 50; i++) {
-      const d = jitter(v(0, 0, -1), 2, i / 50, (i * 7) % 50 / 50);
+      const d = jitter(v(0, 0, -1), 2, i / 50, ((i * 7) % 50) / 50);
       expect(angleBetween(d, v(0, 0, -1))).toBeLessThanOrEqual((2 * Math.PI) / 180 + 1e-9);
     }
   });

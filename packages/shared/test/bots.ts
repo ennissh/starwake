@@ -15,7 +15,8 @@ export function sensiblePilot(enc: Encounter): PlayerCommand {
   const p = enc.player;
   const hostiles = enc.hostiles();
   const main: Ent | undefined =
-    hostiles.find((h) => h.hullClass === 'base' || h.hullClass === 'capital' || h.hullClass === 'frigate') ?? hostiles[0];
+    hostiles.find((h) => h.hullClass === 'base' || h.hullClass === 'capital' || h.hullClass === 'frigate') ??
+    hostiles[0];
   if (!main) return IDLE_COMMAND;
   const emitter = main.subs.find((s) => s.kind === 'emitter' && s.alive) ?? null;
   const d = dist(p.f.pos, main.f.pos);
@@ -27,7 +28,10 @@ export function sensiblePilot(enc: Encounter): PlayerCommand {
   const mount = toWorld(p.f.pos, p.f.rot, enc.c.player.turret.mount);
   const subPos = (id: string) => toWorld(main.f.pos, main.f.rot, main.subs.find((s) => s.id === id)!.offset);
   const threats = main.subs
-    .filter((s) => s.alive && s.kind === 'turret' && dist(toWorld(main.f.pos, main.f.rot, s.offset), p.f.pos) < 2100)
+    .filter(
+      (s) =>
+        s.alive && s.kind === 'turret' && dist(toWorld(main.f.pos, main.f.rot, s.offset), p.f.pos) < 2100,
+    )
     .sort((a, b) => dist(subPos(a.id), mount) - dist(subPos(b.id), mount));
   const prioritySub = threats[0] ?? emitter;
   const cmd: PlayerCommand = {

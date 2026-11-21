@@ -99,7 +99,15 @@ export interface PlayerCommand {
 export type CombatEvent =
   | { t: 'lance'; from: Vec3; to: Vec3; hitId: string | null; blocked: HitBlock }
   | { t: 'shot'; weaponId: string; side: Side; from: Vec3 }
-  | { t: 'hit'; targetId: string; subId: string | null; weaponId: string; damage: number; blocked: HitBlock; pos: Vec3 }
+  | {
+      t: 'hit';
+      targetId: string;
+      subId: string | null;
+      weaponId: string;
+      damage: number;
+      blocked: HitBlock;
+      pos: Vec3;
+    }
   | { t: 'playerHit'; region: 'fore' | 'aft'; absorbed: number; hull: number; pos: Vec3 }
   | { t: 'componentWorn'; system: SystemId; slot: number; componentId: string; condition: number }
   | { t: 'componentDestroyed'; system: SystemId; slot: number; componentId: string }

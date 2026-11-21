@@ -629,6 +629,7 @@ Build in order. Stop for review after each one.
 - Keys rebind and persist per profile.
 
 ### M2 · Combat
+**Status (2026-11-21): built.** Unit (armour table, mechanics, determinism, simulated balance) and Playwright green. Human playtest pending: see `docs/playtest-m2.md`. Decisions taken: bolts don't inherit the shooter's velocity (aim is WYSIWYG); WAKE's turret is point defence (fighters only); base turrets use a shorter-range heavy cannon (2000 vs the turret's 2400) so emitters can be sniped; the player's hull has no armour (shields instead).
 - Fighter and frigate hulls for the Vosk; a Vosk base.
 - Lance, turret, Hornet/Lance/Ram drones, drone cockpit.
 - Subsystem targeting, the armour/penetration rule, shield emitters blocking the Lance.

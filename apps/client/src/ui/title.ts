@@ -3,6 +3,7 @@ import { currentTheme, onThemeChange, setTheme } from '../themes/theme.js';
 
 export interface TitleHandlers {
   flightTest(): void;
+  arena(): void;
   settings(): void;
 }
 
@@ -60,7 +61,7 @@ export class TitleScreen {
           <button class="sw-btn" disabled>New game <small>M3</small></button>
           <button class="sw-btn" disabled>Continue <small>M3</small></button>
           <button class="sw-btn sw-btn--primary" data-act="flight">Flight test</button>
-          <button class="sw-btn" disabled>Practice arena <small>M2</small></button>
+          <button class="sw-btn" data-act="arena">Practice arena</button>
           <button class="sw-btn" data-act="settings">Settings and controls</button>
         </nav>
         <div class="sw-row" role="group" aria-label="Theme">
@@ -78,6 +79,7 @@ export class TitleScreen {
       this.gated = false;
       this.render();
     } else if (t.dataset.act === 'flight') this.h.flightTest();
+    else if (t.dataset.act === 'arena') this.h.arena();
     else if (t.dataset.act === 'settings') this.h.settings();
     else if (t.dataset.themeId) setTheme(t.dataset.themeId as ThemeId);
   };

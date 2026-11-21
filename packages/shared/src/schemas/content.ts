@@ -21,7 +21,15 @@ export const FlightStatsSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------------- components
-export const COMPONENT_FAMILIES = ['coil', 'capacitor', 'manifold', 'navcore', 'gyro', 'lens', 'emitter'] as const;
+export const COMPONENT_FAMILIES = [
+  'coil',
+  'capacitor',
+  'manifold',
+  'navcore',
+  'gyro',
+  'lens',
+  'emitter',
+] as const;
 export const ComponentFamily = z.enum(COMPONENT_FAMILIES);
 export type ComponentFamily = z.infer<typeof ComponentFamily>;
 
@@ -213,7 +221,8 @@ export function parseContent(raw: Record<keyof ContentBundle, unknown>): Content
     const schema = ContentBundleSchema.shape[key];
     const r = schema.safeParse(raw[key]);
     if (r.success) (out as Record<string, unknown>)[key] = r.data;
-    else for (const i of r.error.issues) errors.push(`${file}: ${i.path.join('.') || '(root)'}: ${i.message}`);
+    else
+      for (const i of r.error.issues) errors.push(`${file}: ${i.path.join('.') || '(root)'}: ${i.message}`);
   }
   if (errors.length) throw new Error(`Invalid content:\n  ${errors.join('\n  ')}`);
   const bundle = ContentBundleSchema.parse(out);
@@ -249,19 +258,22 @@ function crossCheck(c: ContentBundle): string[] {
     if (h.class !== 'base' && !h.flight) errs.push(`hulls.json ${h.id}: only bases may have no flight stats`);
   }
   for (const d of c.drones) need(weapons, d.weapon, `drones.json ${d.id}.weapon`);
-  for (const e of c.encounters) for (const h of [...e.roster.hulls, ...e.roster.reserve]) need(hulls, h, `encounters.json ${e.id}`);
+  for (const e of c.encounters)
+    for (const h of [...e.roster.hulls, ...e.roster.reserve]) need(hulls, h, `encounters.json ${e.id}`);
   need(weapons, c.player.lance.weapon, 'player.json lance.weapon');
   need(weapons, c.player.turret.weapon, 'player.json turret.weapon');
   const byId = new Map(c.components.map((x) => [x.id, x]));
   for (const sys of Object.keys(c.player.systems) as SystemId[]) {
     const def = c.player.systems[sys];
     const slots = c.player.loadout[sys] ?? [];
-    if (slots.length !== def.slots) errs.push(`player.json loadout.${sys}: needs ${def.slots} slots, has ${slots.length}`);
+    if (slots.length !== def.slots)
+      errs.push(`player.json loadout.${sys}: needs ${def.slots} slots, has ${slots.length}`);
     for (const cid of slots) {
       if (cid === null) continue;
       const comp = byId.get(cid);
       if (!comp) errs.push(`player.json loadout.${sys}: unknown component ${cid}`);
-      else if (!def.accepts.includes(comp.family)) errs.push(`player.json loadout.${sys}: ${cid} (${comp.family}) not accepted`);
+      else if (!def.accepts.includes(comp.family))
+        errs.push(`player.json loadout.${sys}: ${cid} (${comp.family}) not accepted`);
     }
   }
   for (const s of SYSTEM_IDS) if (!c.player.systems[s]) errs.push(`player.json systems: missing ${s}`);

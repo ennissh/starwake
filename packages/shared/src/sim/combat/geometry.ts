@@ -22,7 +22,13 @@ export function segmentSphere(p0: Vec3, p1: Vec3, c: Vec3, r: number): number | 
  * Where to aim so a projectile of `speed` meets a target moving at constant velocity.
  * Falls back to the target's current position when no solution exists.
  */
-export function leadPoint(shooter: Vec3, shooterVel: Vec3, target: Vec3, targetVel: Vec3, speed: number): Vec3 {
+export function leadPoint(
+  shooter: Vec3,
+  shooterVel: Vec3,
+  target: Vec3,
+  targetVel: Vec3,
+  speed: number,
+): Vec3 {
   const rp = sub(target, shooter);
   const rv = sub(targetVel, shooterVel);
   const a = dot(rv, rv) - speed * speed;
@@ -66,7 +72,11 @@ export function jitter(dir: Vec3, deg: number, u1: number, u2: number): Vec3 {
   const n = normalize(dir);
   // Any perpendicular basis.
   const ref = Math.abs(n.y) < 0.9 ? { x: 0, y: 1, z: 0 } : { x: 1, y: 0, z: 0 };
-  const p1 = normalize({ x: n.y * ref.z - n.z * ref.y, y: n.z * ref.x - n.x * ref.z, z: n.x * ref.y - n.y * ref.x });
+  const p1 = normalize({
+    x: n.y * ref.z - n.z * ref.y,
+    y: n.z * ref.x - n.x * ref.z,
+    z: n.x * ref.y - n.y * ref.x,
+  });
   const p2 = { x: n.y * p1.z - n.z * p1.y, y: n.z * p1.x - n.x * p1.z, z: n.x * p1.y - n.y * p1.x };
   const ang = ((deg * Math.PI) / 180) * Math.sqrt(u1);
   const phi = u2 * Math.PI * 2;

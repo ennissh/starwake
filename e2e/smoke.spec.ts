@@ -81,3 +81,50 @@ test('title → flight: throttle, cameras, assist, pause, help, rebinding persis
   expect(await hook(page, (h) => h.bindings().cycleCamera)).toEqual(['KeyG']);
   expect(errors).toEqual([]);
 });
+
+test('practice arena: target, subsystem, drone, ride it, emergency fold → result', async ({ page }) => {
+  const errors = watchErrors(page);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Click to begin' }).click();
+  await page.getByRole('button', { name: 'Practice arena' }).click();
+  await page.locator('[data-id="arena-base"]').click();
+  await expect.poll(() => hook(page, (h) => h.screen())).toBe('flight');
+  type Snap = {
+    targetId: string | null;
+    subId: string | null;
+    drones: number;
+    frames: number;
+    camera: string;
+    outcome: string;
+  };
+  const snap = () => hook(page, (h) => h.flight() as unknown as Snap);
+
+  await page.keyboard.press('KeyT');
+  await expect.poll(async () => (await snap()).targetId).not.toBeNull();
+  // Cycle T until the base (the one with subsystems) is targeted, then Y picks a subsystem.
+  for (let i = 0; i < 6 && !(await snap()).subId; i++) {
+    await page.keyboard.press('KeyY');
+    if (!(await snap()).subId) await page.keyboard.press('KeyT');
+  }
+  expect((await snap()).subId).not.toBeNull();
+
+  await page.keyboard.press('Digit1');
+  await expect.poll(async () => (await snap()).drones).toBe(1);
+  expect((await snap()).frames).toBe(7);
+
+  // C cycles chase → orbit → turret → drone cockpit.
+  for (let i = 0; i < 3; i++) await page.keyboard.press('KeyC');
+  await expect.poll(async () => (await snap()).camera).toBe('drone');
+
+  // Hold Shift+J for a second: emergency fold ends the fight.
+  await page.keyboard.down('Shift');
+  await page.keyboard.down('KeyJ');
+  await page.waitForTimeout(1400);
+  await page.keyboard.up('KeyJ');
+  await page.keyboard.up('Shift');
+  await expect(page.getByRole('dialog')).toContainText('Emergency fold');
+  await expect(page.getByRole('dialog')).toContainText('Components lost');
+  await page.getByRole('button', { name: 'Back to title' }).click();
+  await expect.poll(() => hook(page, (h) => h.screen())).toBe('title');
+  expect(errors).toEqual([]);
+});

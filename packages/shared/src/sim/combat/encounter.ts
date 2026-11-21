@@ -1,7 +1,28 @@
 import { Rng, type RngState } from '../../rng.js';
-import { type ContentBundle, type Drone, type Hull, type Roster, type Weapon, SYSTEM_IDS, byId } from '../../schemas/content.js';
+import {
+  type ContentBundle,
+  type Drone,
+  type Hull,
+  type Roster,
+  type Weapon,
+  SYSTEM_IDS,
+  byId,
+} from '../../schemas/content.js';
 import { type FlightInput, type FlightState, NO_INPUT, initialFlight, stepFlight } from '../flight.js';
-import { type Vec3, add, dist, forwardOf, len, normalize, qConj, qFromAxisAngle, qRotate, scale, sub, v3 } from '../math.js';
+import {
+  type Vec3,
+  add,
+  dist,
+  forwardOf,
+  len,
+  normalize,
+  qConj,
+  qFromAxisAngle,
+  qRotate,
+  scale,
+  sub,
+  v3,
+} from '../math.js';
 import { type AiWorld, think } from './ai.js';
 import { angleBetween, jitter, leadPoint, segmentSphere, toWorld } from './geometry.js';
 import { type HitBlock, hitBlockedBy } from './rules.js';
@@ -50,6 +71,8 @@ export interface EncounterOptions {
   hullFraction?: number;
   /** Where the player starts (defaults to the origin, flying -Z). */
   playerFlight?: FlightState;
+  /** End in victory when no hostiles remain (default true; false for open-space flight). */
+  endWhenClear?: boolean;
 }
 
 /** Default installed components from the content loadout, all at 100% condition. */
@@ -93,6 +116,7 @@ export class Encounter {
   private boltId = 1;
   private events: CombatEvent[] = [];
   private weapons: Map<string, Weapon>;
+  private readonly endWhenClear: boolean;
 
   constructor(o: EncounterOptions) {
     this.c = o.content;
@@ -104,6 +128,7 @@ export class Encounter {
     this.frames = o.frames ?? p.droneBay.frames;
     this.installed = (o.installed ?? defaultInstalled(o.content)).map((x) => ({ ...x }));
     this.reserve = [...o.roster.reserve];
+    this.endWhenClear = o.endWhenClear ?? true;
 
     const player: Ent = this.blankEnt(PLAYER_ID, 'starwake', 'player', p.name);
     player.f = o.playerFlight ?? initialFlight();
@@ -118,7 +143,10 @@ export class Encounter {
     o.roster.hulls.forEach((hullId, i) => {
       const spread = (i - (o.roster.hulls.length - 1) / 2) * 400;
       const side = normalize({ x: -fwd.z, y: 0, z: fwd.x });
-      const at = add(add(player.f.pos, scale(fwd, o.distance + this.rng.range(-200, 200))), add(scale(side, spread), v3(0, this.rng.range(-150, 150), 0)));
+      const at = add(
+        add(player.f.pos, scale(fwd, o.distance + this.rng.range(-200, 200))),
+        add(scale(side, spread), v3(0, this.rng.range(-150, 150), 0)),
+      );
       this.spawnHull(hullId, at);
     });
   }
@@ -178,7 +206,7 @@ export class Encounter {
 
     this.t += dt;
     this.tick++;
-    if (!this.crippled && this.hostiles().length === 0) this.finish('victory');
+    if (this.endWhenClear && !this.crippled && this.hostiles().length === 0) this.finish('victory');
     return this.events;
   }
 
@@ -224,7 +252,15 @@ export class Encounter {
       mounts: [],
       alive: true,
       fled: false,
-      ai: { mode: 'approach', timer: 0, targetId: null, jink: v3(0, 1, 0), calledHelp: false, lastHitT: -999, launchTimer: 0 },
+      ai: {
+        mode: 'approach',
+        timer: 0,
+        targetId: null,
+        jink: v3(0, 1, 0),
+        calledHelp: false,
+        lastHitT: -999,
+        launchTimer: 0,
+      },
       life: Infinity,
       targetId: null,
       targetSubId: null,
@@ -242,21 +278,23 @@ export class Encounter {
     e.armor = h.armor;
     e.radius = h.radius;
     e.f = { ...initialFlight(at), rot: this.facing(at, this.player.f.pos) };
-    e.mounts = h.weapons.map((w) => ({ weaponId: w.weapon, offset: w.offset, cooldown: this.rng.range(0, 1) }));
-    e.subs = h.subsystems.map(
-      (s): SubState => ({
-        id: s.id,
-        kind: s.kind,
-        offset: s.offset,
-        radius: s.radius,
-        hp: s.hp,
-        maxHp: s.hp,
-        armor: s.armor,
-        weaponId: s.weapon ?? null,
-        cooldown: this.rng.range(0, 1.5),
-        alive: true,
-      }),
-    );
+    e.mounts = h.weapons.map((w) => ({
+      weaponId: w.weapon,
+      offset: w.offset,
+      cooldown: this.rng.range(0, 1),
+    }));
+    e.subs = h.subsystems.map((s): SubState => ({
+      id: s.id,
+      kind: s.kind,
+      offset: s.offset,
+      radius: s.radius,
+      hp: s.hp,
+      maxHp: s.hp,
+      armor: s.armor,
+      weaponId: s.weapon ?? null,
+      cooldown: this.rng.range(0, 1.5),
+      alive: true,
+    }));
     if (h.launchInterval) {
       e.ai.timer = h.launchInterval;
       e.ai.launchTimer = h.launchInterval * 0.4;
@@ -284,7 +322,14 @@ export class Encounter {
     let count = 0;
     while (count < n && this.reserve.length) {
       const hullId = this.reserve.shift()!;
-      const at = add(by.f.pos, v3(this.rng.range(-1, 1) * (by.radius + 80), by.radius + 60, this.rng.range(-1, 1) * (by.radius + 80)));
+      const at = add(
+        by.f.pos,
+        v3(
+          this.rng.range(-1, 1) * (by.radius + 80),
+          by.radius + 60,
+          this.rng.range(-1, 1) * (by.radius + 80),
+        ),
+      );
       this.spawnHull(hullId, at);
       count++;
     }
@@ -338,7 +383,11 @@ export class Encounter {
           }
         }
       } else {
-        const tgt = this.nearest(from, this.hostiles().filter((h) => h.hullClass === 'fighter'), turret.range);
+        const tgt = this.nearest(
+          from,
+          this.hostiles().filter((h) => h.hullClass === 'fighter'),
+          turret.range,
+        );
         if (tgt) {
           dir = normalize(sub(leadPoint(from, v3(), tgt.f.pos, tgt.f.vel, turret.speed), from));
           spread = sp.wakeTurretSpread;
@@ -360,7 +409,10 @@ export class Encounter {
     const def: Drone = byId(this.c.drones, type);
     if (this.frames <= 0) return void this.events.push({ t: 'launchFailed', reason: 'No drone frames left' });
     if (this.drones().length >= sp.droneBay.maxActive)
-      return void this.events.push({ t: 'launchFailed', reason: `${sp.droneBay.maxActive} drones already out` });
+      return void this.events.push({
+        t: 'launchFailed',
+        reason: `${sp.droneBay.maxActive} drones already out`,
+      });
     const tgt = this.get(targetId);
     if (def.oneUse && !(tgt?.alive && tgt.side === 'hostile'))
       return void this.events.push({ t: 'launchFailed', reason: `${def.name} needs a target (T)` });
@@ -408,7 +460,12 @@ export class Encounter {
           continue;
         }
         const aim = this.aimPoint(tgt, d.targetSubId);
-        input = steerToward(d.f, leadPoint(d.f.pos, d.f.vel, aim, tgt.f.vel, Math.max(1, len(d.f.vel))), 1, 4).input;
+        input = steerToward(
+          d.f,
+          leadPoint(d.f.pos, d.f.vel, aim, tgt.f.vel, Math.max(1, len(d.f.vel))),
+          1,
+          4,
+        ).input;
         if (ridden) input = { ...cmd.drone!.flight, throttleSet: 1 };
         const sub = tgt.subs.find((s) => s.id === d.targetSubId && s.alive) ?? null;
         const reach = def.proximity + (sub ? sub.radius : tgt.radius);
@@ -441,7 +498,8 @@ export class Encounter {
           const lead = leadPoint(d.f.pos, v3(), this.aimPoint(tgt, null), tgt.f.vel, w.speed);
           const s = steerToward(d.f, lead, dist(d.f.pos, tgt.f.pos) < 200 ? 0.5 : 1, 3);
           input = s.input;
-          if (s.angle < (w.arc * Math.PI) / 180 && dist(d.f.pos, tgt.f.pos) < w.range) this.fireForward(d, def.weapon);
+          if (s.angle < (w.arc * Math.PI) / 180 && dist(d.f.pos, tgt.f.pos) < w.range)
+            this.fireForward(d, def.weapon);
         } else {
           input = steerToward(d.f, add(p.f.pos, qRotate(p.f.rot, v3(0, 60, -400))), 0.8).input;
         }
@@ -501,7 +559,9 @@ export class Encounter {
         if (s.cooldown > 0) continue;
         const w = this.weapon(s.weaponId);
         const from = toWorld(e.f.pos, e.f.rot, s.offset);
-        const near = this.nearest(from, this.drones(), Math.min(800, w.range)) ?? (dist(from, this.player.f.pos) <= w.range ? this.player : undefined);
+        const near =
+          this.nearest(from, this.drones(), Math.min(800, w.range)) ??
+          (dist(from, this.player.f.pos) <= w.range ? this.player : undefined);
         if (!near) continue;
         const lead = leadPoint(from, v3(), near.f.pos, near.f.vel, w.speed);
         this.fireBolt(w, 'hostile', e.id, from, normalize(sub(lead, from)), w.spread);
@@ -512,7 +572,14 @@ export class Encounter {
 
   // ---- projectiles and hits ---------------------------------------------------------------------
   /** Bolts fly along the aim line at the weapon's speed (no inherited velocity), so aim is WYSIWYG. */
-  private fireBolt(w: Weapon, side: Ent['side'], ownerId: string, from: Vec3, dir: Vec3, spreadDeg: number): void {
+  private fireBolt(
+    w: Weapon,
+    side: Ent['side'],
+    ownerId: string,
+    from: Vec3,
+    dir: Vec3,
+    spreadDeg: number,
+  ): void {
     const d = spreadDeg > 0 ? jitter(dir, spreadDeg, this.rng.next(), this.rng.next()) : dir;
     this.bolts.push({
       id: this.boltId++,
@@ -531,7 +598,14 @@ export class Encounter {
     // Drones have no AI tree; ai.timer holds the time their gun is next ready.
     if (e.ai.timer > this.t) return;
     e.ai.timer = this.t + w.cooldown;
-    this.fireBolt(w, e.side, e.id, add(e.f.pos, scale(forwardOf(e.f.rot), e.radius + 2)), forwardOf(e.f.rot), 0);
+    this.fireBolt(
+      w,
+      e.side,
+      e.id,
+      add(e.f.pos, scale(forwardOf(e.f.rot), e.radius + 2)),
+      forwardOf(e.f.rot),
+      0,
+    );
   }
 
   private stepBolts(dt: number): void {
@@ -552,7 +626,12 @@ export class Encounter {
   }
 
   /** Nearest hit along a segment against one side's entities: subsystems first, then hulls. */
-  private raycast(from: Vec3, to: Vec3, side: Ent['side'], ignoreId?: string): { ent: Ent; sub: SubState | null; pos: Vec3 } | null {
+  private raycast(
+    from: Vec3,
+    to: Vec3,
+    side: Ent['side'],
+    ignoreId?: string,
+  ): { ent: Ent; sub: SubState | null; pos: Vec3 } | null {
     let best: { ent: Ent; sub: SubState | null; t: number } | null = null;
     for (const e of this.ents) {
       if (!e.alive || e.fled || e.side !== side || e.id === ignoreId) continue;
@@ -584,8 +663,20 @@ export class Encounter {
       this.hitPlayer(w.damage, pos);
       return null;
     }
-    const blocked = hitBlockedBy({ weapon: w, armor: s ? s.armor : e.armor, emittersAlive: e.kind === 'hull' && this.emittersAlive(e) });
-    this.events.push({ t: 'hit', targetId: e.id, subId: s?.id ?? null, weaponId: w.id, damage: blocked ? 0 : w.damage, blocked, pos });
+    const blocked = hitBlockedBy({
+      weapon: w,
+      armor: s ? s.armor : e.armor,
+      emittersAlive: e.kind === 'hull' && this.emittersAlive(e),
+    });
+    this.events.push({
+      t: 'hit',
+      targetId: e.id,
+      subId: s?.id ?? null,
+      weaponId: w.id,
+      damage: blocked ? 0 : w.damage,
+      blocked,
+      pos,
+    });
     e.ai.lastHitT = this.t;
     if (blocked) return blocked;
     if (s) {
@@ -593,7 +684,12 @@ export class Encounter {
       if (s.hp <= 0) {
         s.alive = false;
         s.hp = 0;
-        this.events.push({ t: 'subDestroyed', targetId: e.id, subId: s.id, pos: toWorld(e.f.pos, e.f.rot, s.offset) });
+        this.events.push({
+          t: 'subDestroyed',
+          targetId: e.id,
+          subId: s.id,
+          pos: toWorld(e.f.pos, e.f.rot, s.offset),
+        });
       }
     } else {
       e.hp -= w.damage;
@@ -631,9 +727,20 @@ export class Encounter {
     if (c.condition <= 0) {
       this.installed = this.installed.filter((x) => x !== c);
       this.lost.push({ ...c });
-      this.events.push({ t: 'componentDestroyed', system: c.system, slot: c.slot, componentId: c.componentId });
+      this.events.push({
+        t: 'componentDestroyed',
+        system: c.system,
+        slot: c.slot,
+        componentId: c.componentId,
+      });
     } else {
-      this.events.push({ t: 'componentWorn', system: c.system, slot: c.slot, componentId: c.componentId, condition: c.condition });
+      this.events.push({
+        t: 'componentWorn',
+        system: c.system,
+        slot: c.slot,
+        componentId: c.componentId,
+        condition: c.condition,
+      });
     }
   }
 
@@ -660,7 +767,9 @@ export class Encounter {
     const h = byId(this.c.hulls, e.hullId!);
     for (let i = 0; i < h.salvage.rolls; i++) {
       if (!this.rng.chance(h.salvage.chance)) continue;
-      this.salvage.push(this.rng.weighted(h.salvage.table.map((x) => ({ item: x.componentId, weight: x.weight }))));
+      this.salvage.push(
+        this.rng.weighted(h.salvage.table.map((x) => ({ item: x.componentId, weight: x.weight }))),
+      );
     }
   }
 

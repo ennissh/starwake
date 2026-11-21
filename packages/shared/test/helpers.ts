@@ -8,6 +8,7 @@ const dir = join(dirname(fileURLToPath(import.meta.url)), '../../../content');
 /** The real content/ files, validated: tests run against the shipped balance numbers. */
 export function loadTestContent(): ContentBundle {
   const raw: Record<string, unknown> = {};
-  for (const [key, file] of Object.entries(CONTENT_FILES)) raw[key] = JSON.parse(readFileSync(join(dir, file), 'utf8'));
+  for (const [key, file] of Object.entries(CONTENT_FILES))
+    raw[key] = JSON.parse(readFileSync(join(dir, file), 'utf8'));
   return parseContent(raw as never);
 }

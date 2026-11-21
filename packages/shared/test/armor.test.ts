@@ -28,14 +28,22 @@ describe('armour rule: damage applies iff penetration >= armour', () => {
       const expected = w.penetration >= t.armor;
       it(`${w.name} (pen ${w.penetration}) vs ${t.name} (armour ${t.armor}) → ${expected ? 'damages' : 'deflected'}`, () => {
         expect(penetrates(w.penetration, t.armor)).toBe(expected);
-        expect(hitBlockedBy({ weapon: w, armor: t.armor, emittersAlive: false })).toBe(expected ? null : 'armor');
+        expect(hitBlockedBy({ weapon: w, armor: t.armor, emittersAlive: false })).toBe(
+          expected ? null : 'armor',
+        );
       });
     }
   }
 
   it('PLAN weapon penetrations: Lance 3, Turret 1, Hornet 1, Lance drone 2, Ram 3', () => {
     const pen = (id: string) => c.weapons.find((w) => w.id === id)!.penetration;
-    expect([pen('spinal-lance'), pen('wake-turret'), pen('hornet-gun'), pen('lance-warhead'), pen('ram-warhead')]).toEqual([3, 1, 1, 2, 3]);
+    expect([
+      pen('spinal-lance'),
+      pen('wake-turret'),
+      pen('hornet-gun'),
+      pen('lance-warhead'),
+      pen('ram-warhead'),
+    ]).toEqual([3, 1, 1, 2, 3]);
   });
 
   it('live shield emitters block beams on every part, but never bolts', () => {
