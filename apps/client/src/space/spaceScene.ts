@@ -9,7 +9,12 @@ import {
   type FlightInput,
   type PlayerCommand,
   type SystemId,
+  type CommandLog,
+  type InstalledComponent,
+  type Roster,
+  CommandRecorder,
   IDLE_COMMAND,
+  quantize,
   NO_INPUT,
   TICK,
   byId,
@@ -47,6 +52,8 @@ export interface Backdrop {
   sunDir: THREE.Vector3;
   planets: { kind: PlanetKind; radius: number; pos: THREE.Vector3; seed: string }[];
   buoys: boolean;
+  /** Static set pieces (stations, spires, clouds). */
+  scenery?: THREE.Object3D[];
 }
 
 export interface SceneOptions {
@@ -55,8 +62,17 @@ export interface SceneOptions {
   encounterId?: string;
   seed: string;
   backdrop: Backdrop;
+  /** A campaign fight: the exact options the server handed out (so its replay matches). */
+  fight?: {
+    seed: string;
+    roster: Roster;
+    distance: number;
+    installed: InstalledComponent[];
+    frames: number;
+    hullFraction: number;
+  };
   onCrippled?: () => void;
-  onEnd?: (r: EncounterResult) => void;
+  onEnd?: (r: EncounterResult, log: CommandLog) => void;
 }
 
 const SUB_LABEL: Record<string, string> = { emitter: 'Emitter', turret: 'Turret', engine: 'Engine' };
@@ -93,12 +109,14 @@ export class SpaceScene {
   private pendingLaunch: DroneType | null = null;
   private pendingRecall = false;
   private pendingFold = false;
+  private pendingAssist = false;
   private foldHoldStart: number | null = null;
   private targetId: string | null = null;
   private subId: string | null = null;
   private ridingId: string | null = null;
   private lastLaunched: string | null = null;
   private ended = false;
+  private recorder = new CommandRecorder();
   private holoT = 0;
 
   constructor(
@@ -109,13 +127,15 @@ export class SpaceScene {
     private readonly o: SceneOptions,
   ) {
     const def = o.encounterId ? byId(content.encounters, o.encounterId) : null;
-    this.sim = new Encounter({
-      seed: o.seed,
-      content,
-      roster: def?.roster ?? { hulls: [], reserve: [] },
-      distance: def?.distance ?? 3000,
-      endWhenClear: o.mode === 'fight',
-    });
+    this.sim = o.fight
+      ? new Encounter({ ...o.fight, content })
+      : new Encounter({
+          seed: o.seed,
+          content,
+          roster: def?.roster ?? { hulls: [], reserve: [] },
+          distance: def?.distance ?? 3000,
+          endWhenClear: o.mode === 'fight',
+        });
 
     const b = o.backdrop;
     this.space = buildSpace({ seed: b.seed, tint: b.tint, starColor: b.starColor, sunDir: b.sunDir });
@@ -126,6 +146,7 @@ export class SpaceScene {
       this.scene.add(m);
       this.staticContacts.push({ pos: m.position, kind: 'planet' });
     }
+    for (const o of b.scenery ?? []) this.scene.add(o);
     if (b.buoys) {
       for (let i = 0; i < 12; i++) {
         const m = buildBuoy(i % 4 === 0 ? 0xf0c060 : 0x2fd3c4);
@@ -161,8 +182,8 @@ export class SpaceScene {
         this.pendingThrottle = 0;
         return true;
       case 'flightAssist':
-        sim.player.f = { ...sim.player.f, assist: !sim.player.f.assist };
-        this.hud.toast(sim.player.f.assist ? 'Flight assist ON' : 'Drift mode: momentum is kept');
+        this.pendingAssist = true;
+        this.hud.toast(sim.player.f.assist ? 'Drift mode: momentum is kept' : 'Flight assist ON');
         return true;
       case 'cycleCamera': {
         if (!this.ridingId) this.ridingId = this.pickRide();
@@ -235,6 +256,7 @@ export class SpaceScene {
   }
 
   chooseCrippled(choice: 'emergencyFold' | 'lifeboat'): void {
+    this.recorder.crippledChoice = choice;
     this.sim.chooseCrippled(choice);
     this.finishIfOver();
   }
@@ -276,6 +298,7 @@ export class SpaceScene {
       launch: this.pendingLaunch,
       recall: this.pendingRecall,
       emergencyFold: this.pendingFold,
+      toggleAssist: this.pendingAssist,
       fireLance: (mode === 'bridge' || mode === 'chase' || mode === 'orbit') && firing,
       turret:
         mode === 'turret'
@@ -287,6 +310,7 @@ export class SpaceScene {
     this.pendingLaunch = null;
     this.pendingRecall = false;
     this.pendingFold = false;
+    this.pendingAssist = false;
     return cmd;
   }
 
@@ -303,7 +327,10 @@ export class SpaceScene {
       this.acc += Math.min(dt, 0.25);
       while (this.acc >= TICK) {
         this.capturePrev();
-        const events = this.sim.step(this.command());
+        // Quantised so the server's replay of the recorded log sees the very same numbers.
+        const cmd = quantize(this.command());
+        if (this.o.mode === 'fight') this.recorder.push(cmd);
+        const events = this.sim.step(cmd);
         this.onEvents(events);
         this.acc -= TICK;
         if (this.sim.crippled || this.sim.over) break;
@@ -486,7 +513,7 @@ export class SpaceScene {
   private finishIfOver(): void {
     if (this.sim.over && !this.ended) {
       this.ended = true;
-      this.o.onEnd?.(this.sim.result());
+      this.o.onEnd?.(this.sim.result(), this.recorder.log());
     }
   }
 

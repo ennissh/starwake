@@ -2,6 +2,22 @@
 
 ## 0.1.0 (in progress)
 
+### M3 · Campaign layer
+- The Shoal: six systems with planets (resources, temperatures, the habitable Cradle), fold lanes
+  with Vosk ambushes, patrols, the Waystation; races' diplomacy defaults; campaign rules in
+  `content/rules.json` (clock, fuel, range, quotas, relations, salvage, raids).
+- Pure campaign reducers in `packages/shared`: jump (lanes, range from Nav Cores, fuel from Fold Drive
+  output, time, ambush and patrol rolls, beacon raids), probe (one per visit), claim (with the
+  hostile-act penalty), dock (refuel, repair, restock, Provender), repair, buy, salvage (diminishing),
+  attack a base, signal the Caravan; encounter results (victory, emergency fold, lifeboat; breaking
+  the Vosk by force); Colony Readiness; save schema with migrations and a v1 fixture.
+- Server: profiles (name only, settings stored per profile), atomic save slots (auto + 3), campaign
+  actions, encounter start/result. Fight results are verified by **replaying the browser's command
+  log** through the same sim, with a plausibility fallback.
+- Client: pilot picker, New game / Continue / Load, system scenes (Waystation, Quillari spire, Murmur
+  cloud, Cinder Hold), campaign status bar, star map, system report, readiness, salvage, endings,
+  save/load in the pause menu.
+
 ### M2 · Combat
 - Deterministic encounter sim in `packages/shared` (60 Hz, seeded): Spinal Lance beam, turret (WAKE
   point defence or manual aim with assist), Hornet/Lance/Ram drones (8 frames, 3 out, recall/dock),

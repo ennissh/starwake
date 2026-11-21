@@ -94,6 +94,8 @@ export interface PlayerCommand {
   /** The Hornet the player is riding, flying it and firing its gun. */
   drone: { id: string; flight: FlightInput; fire: boolean } | null;
   emergencyFold: boolean;
+  /** Toggle flight assist (drift mode) this tick. */
+  toggleAssist?: boolean | undefined;
 }
 
 export type CombatEvent =

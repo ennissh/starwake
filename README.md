@@ -16,7 +16,7 @@ Starwake is an **original work inspired by the design of MicroProse's Lightspeed
 
 ## Status
 
-In development: **M0 (skeleton, Docker image, installer), M1 (flight, cameras, HUD) and M2 (combat, practice arena) are built**; M3 is next (PLAN.md §8). PLAN.md is the build plan for Claude Code. The first deliverable is an **MVP**: one star cluster (the Shoal), six systems, three alien races, and the full loop playable from start to finish.
+In development: **M0–M3 are built**: the installer and image, flight and cameras, combat and the practice arena, and the campaign (the Shoal, jumps, probes, claims, the Waystation, Colony Readiness, saves). Next: M4 engine room, M5 translator, M6 onboarding and audio (PLAN.md §8). PLAN.md is the build plan for Claude Code. The first deliverable is an **MVP**: one star cluster (the Shoal), six systems, three alien races, and the full loop playable from start to finish.
 
 ## How it runs
 
@@ -134,7 +134,8 @@ title screen; the choice is remembered per browser (per profile from M3).
 | Next / previous target · target subsystem | T / Shift+T · Y |
 | Match target speed | M |
 | Launch Hornet / Lance / Ram drone · recall drones | 1 / 2 / 3 · R |
-| Star map · Engine room · Colony status · Codex | Tab · F · H · K |
+| Star map · System report and services · Colony Readiness | Tab · I · H |
+| Engine room · Codex | F · K (M4, M6) |
 | Probe system · Hail ship or base | P · V |
 | Fold jump (from star map) · Emergency fold | J · Shift+J (hold 1 s) |
 | Key help overlay | F1 or ? |
@@ -142,6 +143,23 @@ title screen; the choice is remembered per browser (per profile from M3).
 | Pause / release mouse | Esc |
 
 Browser-reserved keys (Ctrl/Alt/Meta combinations, F5, F11, F12) can never be bound; Esc always pauses. Rebind keys in the pause menu (Esc → Controls). In bridge and chase views the mouse is a virtual joystick; in orbit and turret views it moves the camera and you fly with the arrow keys.
+
+## Playing the campaign (M3)
+
+1. Title → add a pilot (name only) → **New game**. You start in Harbor beside the Waystation.
+2. **P** launches the surveyor probe (one per visit) and opens the **system report** (**I** reopens it):
+   planets, resources, the habitable tag, occupants, and the Waystation's services (dock and refit,
+   Mk I parts for Data Cores).
+3. Place **claim beacons** on resource worlds (3 carried; restock by docking). Claiming in someone's
+   system without permission angers them; hostile patrols can destroy beacons while you're away.
+4. **Tab** opens the star map: drag to rotate, click a system, **J** to fold along a lane. Jumps cost
+   fold mass and Caravan Clock time; range comes from the Nav Cores.
+5. Vosk ambush the lanes past Glass Reach and patrol Cinder Gate and Verdance. Fights use the M2
+   combat; the server checks every result by replaying your fight.
+6. **H** shows Colony Readiness: a Cradle world, the four resource quotas, safety (no hostile race
+   within 2 jumps of the Cradle) and the clock. Meet all four, go to the Cradle and signal the Caravan.
+
+The game autosaves after every action; the pause menu (Esc → Save / load) keeps three manual slots.
 
 ## Repository layout
 

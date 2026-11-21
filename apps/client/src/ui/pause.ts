@@ -14,7 +14,14 @@ import { type Settings, saveSettings } from '../settings.js';
 import { currentTheme, setTheme } from '../themes/theme.js';
 import { MOUSE_HELP, esc, helpTable } from './help.js';
 
-type Tab = 'main' | 'controls' | 'settings' | 'help';
+type Tab = 'main' | 'controls' | 'settings' | 'help' | 'saves';
+
+/** Save/load hooks, present only while a campaign is running. */
+export interface SaveHooks {
+  list(): Promise<{ id: string; label: string; slot: string }[]>;
+  save(slot: '1' | '2' | '3'): Promise<void>;
+  load(id: string): Promise<void>;
+}
 
 export interface PauseHandlers {
   resume(): void;
@@ -28,12 +35,14 @@ export class PauseMenu {
   private tab: Tab = 'main';
   private waiting: { action: Action; slot: number } | null = null;
   private note = '';
+  saveHooks: SaveHooks | null = null;
+  private saveList: { id: string; label: string; slot: string }[] = [];
 
   constructor(
     parent: HTMLElement,
     private readonly input: Input,
     private settings: Settings,
-    private readonly profile: string,
+    private profile: string,
     private readonly h: PauseHandlers,
   ) {
     this.el = document.createElement('div');
@@ -42,6 +51,11 @@ export class PauseMenu {
     parent.appendChild(this.el);
     this.el.addEventListener('click', this.onClick);
     this.el.addEventListener('input', this.onInput);
+  }
+
+  setProfile(profile: string, settings: Settings): void {
+    this.profile = profile;
+    this.settings = settings;
   }
 
   get isOpen(): boolean {
@@ -68,6 +82,7 @@ export class PauseMenu {
   private render(): void {
     const tabs: [Tab, string][] = [
       ['main', 'Paused'],
+      ...(this.saveHooks ? ([['saves', 'Save / load']] as [Tab, string][]) : []),
       ['controls', 'Controls'],
       ['settings', 'Settings'],
       ['help', 'Key help'],
@@ -92,6 +107,8 @@ export class PauseMenu {
       body = this.controlsBody();
     } else if (this.tab === 'settings') {
       body = this.settingsBody();
+    } else if (this.tab === 'saves') {
+      body = this.savesBody();
     } else {
       body = helpTable(this.settings.bindings, MOUSE_HELP);
     }
@@ -120,6 +137,27 @@ export class PauseMenu {
       <div class="sw-row"><button class="sw-btn" data-act="reset-keys">Reset all to defaults</button></div>`;
   }
 
+  private savesBody(): string {
+    const label = (slot: string) => this.saveList.find((x) => x.slot === slot)?.label ?? 'empty';
+    const rows = (['1', '2', '3'] as const)
+      .map(
+        (slot) => `<tr><td>Slot ${slot}</td><td>${esc(label(slot))}</td>
+          <td><button class="sw-btn" data-save="${slot}">Save here</button></td>
+          <td>${this.saveList.some((x) => x.slot === slot) ? `<button class="sw-btn" data-load="${this.saveList.find((x) => x.slot === slot)!.id}">Load</button>` : ''}</td></tr>`,
+      )
+      .join('');
+    return `<p class="sw-meta">The game autosaves after every action. Manual slots keep a copy you can return to.</p>
+      <div class="sw-note" role="status">${esc(this.note)}</div>
+      <table class="sw-table"><tr><th>Slot</th><th>Saved</th><th></th><th></th></tr>
+      <tr><td>Autosave</td><td>${esc(label('auto'))}</td><td></td><td></td></tr>${rows}</table>`;
+  }
+
+  private async refreshSaves(): Promise<void> {
+    if (!this.saveHooks) return;
+    this.saveList = await this.saveHooks.list();
+    if (this.tab === 'saves') this.render();
+  }
+
   private settingsBody(): string {
     const s = this.settings;
     return `<div class="sw-menu">
@@ -134,13 +172,32 @@ export class PauseMenu {
 
   private onClick = (e: MouseEvent): void => {
     const t = (e.target as HTMLElement).closest<HTMLElement>(
-      '[data-act],[data-tab],[data-bind],[data-theme-id]',
+      '[data-act],[data-tab],[data-bind],[data-theme-id],[data-save],[data-load]',
     );
     if (!t) return;
+    if (t.dataset.save && this.saveHooks) {
+      const slot = t.dataset.save as '1' | '2' | '3';
+      void this.saveHooks.save(slot).then(
+        () => {
+          this.note = `Saved to slot ${slot}.`;
+          void this.refreshSaves();
+        },
+        (err: Error) => {
+          this.note = err.message;
+          this.render();
+        },
+      );
+      return;
+    }
+    if (t.dataset.load && this.saveHooks) {
+      void this.saveHooks.load(t.dataset.load);
+      return;
+    }
     if (t.dataset.tab) {
       this.tab = t.dataset.tab as Tab;
       this.note = '';
       this.render();
+      if (this.tab === 'saves') void this.refreshSaves();
     } else if (t.dataset.act === 'resume') this.h.resume();
     else if (t.dataset.act === 'quit') this.h.quit();
     else if (t.dataset.act === 'reset-keys') {

@@ -342,6 +342,7 @@ export class Encounter {
     const p = this.player;
     const sp = this.c.player;
     const riding = cmd.drone && this.get(cmd.drone.id)?.alive;
+    if (cmd.toggleAssist) p.f = { ...p.f, assist: !p.f.assist };
     p.f = stepFlight(p.f, riding ? { ...NO_INPUT } : cmd.flight, sp.flight, dt);
 
     // Shields recharge after a quiet spell.

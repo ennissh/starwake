@@ -18,16 +18,36 @@ export class Modal {
     return !this.el.hidden;
   }
 
-  show(title: string, body: string, handlers: Record<string, (el: HTMLElement) => void>): void {
+  /** Which panel is showing (for callers that toggle a panel with the same key). */
+  kind: string | null = null;
+
+  show(
+    title: string,
+    body: string,
+    handlers: Record<string, (el: HTMLElement) => void>,
+    opts: { wide?: boolean; kind?: string; closable?: boolean } = {},
+  ): void {
     this.handlers = handlers;
-    this.el.innerHTML = `<section class="sw-panel sw-dialog" role="dialog" aria-modal="true" aria-labelledby="sw-modal-title">
-      <div class="sw-dialog__head"><h2 id="sw-modal-title">${title}</h2></div>${body}</section>`;
+    this.kind = opts.kind ?? null;
+    const close = opts.closable
+      ? '<button class="sw-btn" data-act="close" aria-label="Close">Close (Esc)</button>'
+      : '';
+    this.el.innerHTML = `<section class="sw-panel sw-dialog ${opts.wide ? 'sw-dialog--wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="sw-modal-title">
+      <div class="sw-dialog__head"><h2 id="sw-modal-title">${title}</h2>${close}</div><div class="sw-dialog__body">${body}</div></section>`;
     this.el.hidden = false;
-    this.el.querySelector<HTMLElement>('[data-act]')?.focus();
+    if (!this.el.contains(document.activeElement))
+      this.el.querySelector<HTMLElement>('button[data-act]:not([data-act="close"]):not(:disabled)')?.focus();
+  }
+
+  /** Replace just the body, keeping title and handlers (no focus jump). */
+  update(body: string): void {
+    const b = this.el.querySelector('.sw-dialog__body');
+    if (b) b.innerHTML = body;
   }
 
   close(): void {
     this.el.hidden = true;
     this.handlers = {};
+    this.kind = null;
   }
 }

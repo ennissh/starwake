@@ -643,6 +643,7 @@ Build in order. Stop for review after each one.
 - A fight against 1 frigate + 4 fighters is winnable with sensible tactics and losable without them. Record playtest notes.
 
 ### M3 · Campaign layer
+**Status (2026-11-21): built.** All four acceptance items are covered by tests: new game in Harbor; jumping, probing and claiming across all six systems; clock and fuel per the rules; save → reload deep-equal (server test across a restart, and Playwright through the UI). Decisions taken: jumps follow lanes (R10); the Glass Reach–Saltmarrow shortcut needs a Nav Core Mk II; Data Cores (2 at start) buy Mk I parts at the Waystation; docking fabricates 5 Provender (R9); fights are verified server-side by replaying the client's command log (Chromium matches Node exactly; a plausibility check covers browsers that might not). Clock length (10 years) is still to tune in a playtest.
 - Content files for the Shoal; star map; fold jump with fuel, time and range.
 - Ambushes; Waystation dock (refuel, repair, restock).
 - Probe and system report; claim beacons; Colony Readiness screen.

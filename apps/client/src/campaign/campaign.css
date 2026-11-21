@@ -1,0 +1,232 @@
+.sw-dialog--wide {
+  width: min(1040px, calc(100vw - 32px));
+}
+.cmap {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: var(--space-4);
+}
+.cmap__svg {
+  width: 100%;
+  height: auto;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: grab;
+  user-select: none;
+}
+.cmap__svg text {
+  fill: var(--ink);
+  font: 12px var(--font-mono);
+}
+[data-theme='vga'] .cmap__svg text {
+  font-size: 18px;
+}
+.map-lane {
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+.map-lane--here {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+.map-lane--far {
+  stroke-dasharray: 6 5;
+  opacity: 0.6;
+}
+.map-lane-label {
+  fill: var(--ink-muted) !important;
+  font-size: 10px !important;
+}
+.map-node {
+  cursor: pointer;
+}
+.map-node--unknown circle:first-child {
+  opacity: 0.45;
+}
+.map-node--unknown text {
+  fill: var(--ink-muted) !important;
+}
+.map-here {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.map-sel {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+.sw-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 8px 0;
+}
+.sw-dl dt {
+  color: var(--ink-muted);
+}
+.sw-dl dd {
+  margin: 0;
+}
+.sw-warn {
+  color: var(--signal);
+}
+.sw-ok {
+  color: var(--positive);
+}
+.sw-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-2);
+}
+.sw-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: grid;
+  gap: 6px;
+  background: var(--surface-sunken);
+}
+.sw-chip {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+}
+.sw-chip--hab {
+  background: var(--positive);
+  color: var(--on-accent);
+  border-color: transparent;
+}
+.sw-chip--ice {
+  border-color: #7fb8e0;
+}
+.sw-chip--biomass {
+  border-color: #5cc48f;
+}
+.sw-chip--ore {
+  border-color: #b08a5a;
+}
+.sw-chip--isotopes {
+  border-color: #d0a0ff;
+}
+.sw-meter {
+  position: relative;
+  height: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--danger),
+    var(--surface-raised) 45%,
+    var(--surface-raised) 55%,
+    var(--positive)
+  );
+  border-radius: 4px;
+}
+.sw-meter i {
+  position: absolute;
+  top: -3px;
+  width: 3px;
+  height: 14px;
+  background: var(--ink);
+}
+.sw-meter--fill {
+  background: var(--surface-raised);
+  width: 140px;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 8px;
+}
+.sw-meter--fill i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 8px;
+  background: var(--accent);
+  width: auto;
+  border-radius: 4px;
+}
+.sw-rel {
+  display: grid;
+  gap: 4px;
+  max-width: 360px;
+}
+.sw-log {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 2px;
+}
+.sw-link {
+  background: none;
+  border: 0;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  padding: 0 4px;
+}
+.sw-btn--danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.sw-ready {
+  display: grid;
+  gap: var(--space-3);
+}
+.sw-quota {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 0 16px;
+}
+.sw-checks {
+  list-style: none;
+  padding: 0;
+}
+.chbar {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 14px;
+  padding: 4px 12px;
+  color: var(--hud-ink);
+  background: var(--hud-panel);
+  border: 1px solid var(--hud-dim);
+  border-radius: var(--radius-md);
+  font: 12px var(--hud-font);
+  pointer-events: none;
+  white-space: nowrap;
+}
+[data-theme='vga'] .chbar {
+  font-size: 18px;
+}
+.chbar b {
+  color: var(--hud-accent);
+  font-weight: 500;
+}
+.chbar .chbar--low {
+  color: var(--hud-warn);
+}
+.map-node:focus {
+  outline: none;
+}
+.map-node:focus-visible circle:first-child {
+  stroke: var(--focus);
+  stroke-width: 3;
+}
+.cmap__svg text,
+.map-lane,
+.map-here,
+.map-sel {
+  pointer-events: none;
+}
+.map-hit {
+  fill: transparent;
+}
