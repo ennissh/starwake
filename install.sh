@@ -10,7 +10,8 @@
 #   --tag TAG             image tag (default: latest, or the saved one)
 #   --settings MODE       when .env exists: saved (use it, no questions), review (ask each,
 #                         saved values as defaults) or fresh (ask each, built-in defaults)
-#   --no-start            write compose.yaml and .env only; pull and start nothing
+#   --no-start            write compose.yaml and .env; pull the image (for the Ollama probe) but
+#                         start nothing (add --no-pull to skip the pull too)
 #   --no-pull             use an image already on this host (e.g. from ./build.sh --local)
 #   -h, --help            this help
 #
@@ -45,7 +46,7 @@ while [[ $# -gt 0 ]]; do
         --settings) [[ $# -ge 2 ]] || die "--settings needs saved, review or fresh"; SETTINGS="$2"; shift ;;
         --no-start) START=0 ;;
         --no-pull) PULL=0 ;;
-        -h|--help) sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) die "unknown option: $1 (see --help)" ;;
     esac
     shift

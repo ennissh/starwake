@@ -74,11 +74,19 @@ test('title → flight: throttle, cameras, assist, pause, help, rebinding persis
   await page.getByRole('button', { name: 'Cycle camera key 1' }).click();
   await page.keyboard.press('KeyG');
   await expect(page.getByRole('button', { name: 'Cycle camera key 1' })).toHaveText('G');
+  // Esc cancels a capture without closing the menu; a mouse button can be bound.
+  await page.getByRole('button', { name: 'Cycle camera key 2' }).click();
+  await page.keyboard.press('Escape');
+  await expect.poll(() => hook(page, (h) => h.paused())).toBe(true);
+  await expect(page.getByRole('button', { name: 'Cycle camera key 2' })).toHaveText('—');
+  await page.getByRole('button', { name: 'Cycle camera key 2' }).click();
+  await page.mouse.click(10, 10, { button: 'middle' });
+  await expect(page.getByRole('button', { name: 'Cycle camera key 2' })).toHaveText('Middle mouse');
   await page.getByRole('tab', { name: 'Key help' }).click();
   await expect(page.getByRole('dialog')).toContainText('Cycle camera');
 
   await page.reload();
-  expect(await hook(page, (h) => h.bindings().cycleCamera)).toEqual(['KeyG']);
+  expect(await hook(page, (h) => h.bindings().cycleCamera)).toEqual(['KeyG', 'Mouse1']);
   expect(errors).toEqual([]);
 });
 
@@ -161,6 +169,12 @@ test('campaign: pilot → new game → probe → claim → map → jump → save
   await page.keyboard.press('Escape');
   await expect.poll(async () => (await camp(page))?.panel).toBeNull();
 
+  // Tab toggles the map shut again (and stays shut); then reopen it to jump.
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('dialog')).toContainText('Star map');
+  await page.keyboard.press('Tab');
+  await page.waitForTimeout(300);
+  expect((await camp(page))!.panel).toBeNull();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('dialog')).toContainText('Star map');
   await page.locator('[data-act="select"][data-id="saltmarrow"]').dispatchEvent('click');

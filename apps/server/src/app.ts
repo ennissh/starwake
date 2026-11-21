@@ -68,7 +68,7 @@ export async function buildApp(cfg: Config, deps: AppDeps = {}): Promise<Fastify
   const content = deps.content ?? (await loadContent(cfg.CONTENT_DIR ?? defaultContentDir()));
   app.log.info({ dir: cfg.CONTENT_DIR ?? defaultContentDir() }, 'content loaded and validated');
 
-  healthRoutes(app, cfg, llm);
+  healthRoutes(app, cfg, llm, content);
 
   const store = new Store(cfg.DATA_DIR);
   profileRoutes(app, store);

@@ -4,7 +4,12 @@ import type { Health, Ready } from '@starwake/shared';
 import type { Config } from '../config.js';
 import type { LlmProbe } from '../llm/ollama.js';
 
-export function healthRoutes(app: FastifyInstance, cfg: Config, llm: LlmProbe): void {
+export function healthRoutes(
+  app: FastifyInstance,
+  cfg: Config,
+  llm: LlmProbe,
+  content: { systems: unknown[] },
+): void {
   // Liveness: no dependencies may fail it (Ollama down is reported, not fatal).
   app.get('/healthz', async (): Promise<Health> => {
     return {
@@ -19,7 +24,8 @@ export function healthRoutes(app: FastifyInstance, cfg: Config, llm: LlmProbe): 
 
   // Readiness: the things the game needs to serve a player.
   app.get('/readyz', async (_req, reply) => {
-    const checks: Ready['checks'] = {};
+    // Content was validated at start (the server refuses to start without it); report it here too.
+    const checks: Ready['checks'] = { content: { ok: content.systems.length > 0 } };
     try {
       await mkdir(cfg.DATA_DIR, { recursive: true });
       await access(cfg.DATA_DIR, constants.W_OK);

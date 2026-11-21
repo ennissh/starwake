@@ -477,6 +477,7 @@ export class Encounter {
           this.applyHit(tgt, sub, this.weapon(def.weapon), d.f.pos);
           this.events.push({ t: 'detonate', id: d.id, pos: d.f.pos });
           d.alive = false;
+          this.dronesLost[d.droneType!]++; // spent
         }
         continue;
       } else if (ridden) {

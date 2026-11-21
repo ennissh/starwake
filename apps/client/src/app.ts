@@ -359,6 +359,7 @@ export class Game {
   };
 
   private onKeyDown = (e: KeyboardEvent): void => {
+    if (this.input.capturing) return; // the rebinding UI owns this key (Esc cancels the capture only)
     if (this.campaign?.handlePanelKey(e)) return;
     if (e.code !== 'Escape' || e.repeat) return;
     if (performance.now() - this.lastAutoPause < 400) return; // same Esc that just released the lock

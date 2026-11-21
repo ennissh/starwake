@@ -68,15 +68,18 @@ export class Hologram {
   render(renderer: THREE.WebGLRenderer, rect: { x: number; y: number; size: number }): void {
     if (!this.active) return;
     const size = renderer.getSize(new THREE.Vector2());
-    const k = size.x / window.innerWidth;
-    const x = Math.round(rect.x * k);
-    const y = Math.round(rect.y * k);
-    const s = Math.round(rect.size * k);
+    // The VGA theme renders at 320×200 and stretches it: scale x and y separately.
+    const kx = size.x / window.innerWidth;
+    const ky = size.y / window.innerHeight;
+    const x = Math.round(rect.x * kx);
+    const y = Math.round(rect.y * ky);
+    const s = Math.round(rect.size * kx);
+    const sy = Math.round(rect.size * ky);
     const autoClear = renderer.autoClear;
     renderer.autoClear = false;
     renderer.setScissorTest(true);
-    renderer.setScissor(x, y, s, s);
-    renderer.setViewport(x, y, s, s);
+    renderer.setScissor(x, y, s, sy);
+    renderer.setViewport(x, y, s, sy);
     renderer.clearDepth();
     renderer.render(this.scene, this.camera);
     renderer.setScissorTest(false);

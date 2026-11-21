@@ -2,6 +2,13 @@
 
 ## 0.1.0 (in progress)
 
+### Review fixes (M3 stop)
+- Closing a campaign panel with its own key (Tab/I/H) no longer reopens it.
+- Esc while rebinding cancels only the capture; mouse buttons can be bound from the Controls screen.
+- Failed fight starts show "Signal lost" with Retry instead of a blank screen.
+- Detonated drones count as spent; VGA radar/hologram placement fixed on any window shape;
+  `/readyz` reports content; save loads that migrate run under the save's lock.
+
 ### M3 · Campaign layer
 - The Shoal: six systems with planets (resources, temperatures, the habitable Cradle), fold lanes
   with Vosk ambushes, patrols, the Waystation; races' diplomacy defaults; campaign rules in

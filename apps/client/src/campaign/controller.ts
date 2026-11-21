@@ -16,6 +16,7 @@ import { SpaceScene } from '../space/spaceScene.js';
 import type { Renderer } from '../render.js';
 import type { Input } from '../input/input.js';
 import { Modal } from '../ui/modal.js';
+import { esc } from '../ui/help.js';
 import { crippledBody, resultBody, resultTitle } from '../ui/combatScreens.js';
 import { ApiFailure, type SaveView, act, postEncounterResult, startEncounter } from '../net/api.js';
 import { systemBackdrop } from './backdrop.js';
@@ -70,12 +71,39 @@ export class Campaign {
   }
 
   dispose(): void {
+    this.disposed = true;
     this.modal.el.remove();
     this.bar.remove();
   }
 
   // ---- scenes --------------------------------------------------------------------------------
+  private disposed = false;
+
+  /** Show the current system or fight; on a server failure, say so and offer a way out. */
   private async enter(): Promise<void> {
+    try {
+      await this.enterInner();
+    } catch (err) {
+      if (this.disposed) return;
+      this.host.panelOpened();
+      const msg = esc((err as Error).message || 'The server did not answer.');
+      this.modal.show(
+        'Signal lost',
+        `<p>${msg}</p><div class="sw-row"><button class="sw-btn sw-btn--primary" data-act="retry">Retry</button><button class="sw-btn" data-act="title">Back to title</button></div>`,
+        {
+          retry: () => {
+            this.modal.close();
+            this.host.panelClosed();
+            void this.enter();
+          },
+          title: () => this.host.exitToTitle(),
+        },
+      );
+    }
+  }
+
+  private async enterInner(): Promise<void> {
+    if (this.disposed) return;
     const s = this.view.state;
     if (s.pendingEncounter) return this.startFight();
     this.fighting = false;
@@ -96,6 +124,7 @@ export class Campaign {
     this.fighting = true;
     const s = this.view.state;
     const start = await startEncounter(this.saveId);
+    if (this.disposed) return;
     const sys = system(this.c, s.systemId);
     this.scene = new SpaceScene(this.host.renderer, this.host.ui, this.host.input, this.c, {
       mode: 'fight',
@@ -181,6 +210,13 @@ export class Campaign {
 
   /** Keys that still work while a campaign panel is open. */
   handlePanelKey(e: KeyboardEvent): boolean {
+    const handled = this.panelKey(e);
+    // Stop the same keydown reaching Input (which may be re-enabled by now) and re-opening a panel.
+    if (handled) e.stopImmediatePropagation();
+    return handled;
+  }
+
+  private panelKey(e: KeyboardEvent): boolean {
     if (this.modal.isOpen && ['map', 'system', 'readiness'].includes(this.modal.kind ?? '')) {
       const bind = this.host.input.keyMap;
       const is = (a: Action) => bind[a].includes(e.code);

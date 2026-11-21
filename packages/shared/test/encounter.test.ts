@@ -143,6 +143,16 @@ describe('encounter: drones', () => {
     expect(noTarget.some((x) => x.t === 'launchFailed')).toBe(true);
   });
 
+  it('a detonated one-use drone counts as spent', () => {
+    const e = make('arena-patrol', 3);
+    const tgt = e.hostiles().find((h) => h.hullClass === 'frigate')!;
+    e.step({ ...IDLE_COMMAND, launch: 'lance', targetId: tgt.id });
+    let boom = false;
+    for (let i = 0; i < 60 * 20 && !boom; i++) boom = e.step(IDLE_COMMAND).some((x) => x.t === 'detonate');
+    expect(boom).toBe(true);
+    expect(e.result().dronesLost.lance).toBe(1);
+  });
+
   it('a recalled Hornet docks and returns its frame', () => {
     const e = make('arena-patrol', 4, { frames: 2, distance: 30000 } as never);
     e.step({ ...IDLE_COMMAND, launch: 'hornet' });

@@ -39,6 +39,9 @@ export class Input {
     window.addEventListener('keyup', this.onKeyUp);
     window.addEventListener('blur', this.onBlur);
     el.addEventListener('mousedown', this.onMouseDown);
+    // Rebinding a mouse button: the menu overlay covers the canvas, so listen on the window.
+    window.addEventListener('mousedown', this.onCaptureMouse, true);
+    window.addEventListener('click', this.onCaptureClick, true);
     window.addEventListener('mouseup', this.onMouseUp);
     window.addEventListener('mousemove', this.onMouseMove);
     el.addEventListener('wheel', this.onWheel, { passive: false });
@@ -97,6 +100,28 @@ export class Input {
     this.stick = { x: 0, y: 0 };
   }
 
+  /** True while the rebinding UI waits for a key or button. */
+  get capturing(): boolean {
+    return this.captureCb !== null;
+  }
+
+  private suppressClick = false;
+
+  private onCaptureMouse = (e: MouseEvent): void => {
+    if (!this.captureCb) return;
+    e.preventDefault();
+    e.stopPropagation();
+    this.suppressClick = true; // the click that follows must not start another capture
+    this.finishCapture(`Mouse${e.button}`);
+  };
+
+  private onCaptureClick = (e: MouseEvent): void => {
+    if (!this.suppressClick) return;
+    this.suppressClick = false;
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   /** Capture the next key or mouse button as a binding (rebinding UI). Esc cancels (null). */
   capture(cb: (b: Binding | null) => void): void {
     this.captureCb = cb;
@@ -109,6 +134,8 @@ export class Input {
     this.el.removeEventListener('mousedown', this.onMouseDown);
     window.removeEventListener('mouseup', this.onMouseUp);
     window.removeEventListener('mousemove', this.onMouseMove);
+    window.removeEventListener('mousedown', this.onCaptureMouse, true);
+    window.removeEventListener('click', this.onCaptureClick, true);
   }
 
   private emit(binding: Binding): boolean {

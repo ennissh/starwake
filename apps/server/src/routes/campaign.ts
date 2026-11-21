@@ -142,8 +142,9 @@ export function campaignRoutes(app: FastifyInstance, store: Store, content: Cont
     });
   });
 
+  // Under the save's lock: loading may migrate (and rewrite) an old save.
   app.get<{ Params: { id: string } }>('/api/saves/:id', async (req) =>
-    view(req.params.id, await load(req.params.id), content),
+    locked(req.params.id, async () => view(req.params.id, await load(req.params.id), content)),
   );
 
   app.delete<{ Params: { id: string } }>('/api/saves/:id', async (req) => {
