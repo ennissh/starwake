@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -6,6 +6,7 @@ import { Health } from '@starwake/shared';
 import { buildApp } from '../src/app.js';
 import { loadConfig } from '../src/config.js';
 import { createLlmProbe } from '../src/llm/ollama.js';
+import { defaultContentDir } from '../src/content.js';
 
 const dirs: string[] = [];
 function tmp(): string {
@@ -182,6 +183,7 @@ describe('/api/content', () => {
 
   it('refuses to start on broken content, naming the file', async () => {
     const dir = tmp();
+    cpSync(defaultContentDir(), dir, { recursive: true });
     writeFileSync(join(dir, 'player.json'), '{"name": ""}');
     await expect(
       buildApp(loadConfig({ LLM_MODE: 'off', DATA_DIR: tmp(), LOG_LEVEL: 'silent', CONTENT_DIR: dir })),

@@ -1,0 +1,170 @@
+[
+  {
+    "id": "coil-1",
+    "name": "Coil Mk I",
+    "family": "coil",
+    "tier": 1,
+    "output": 8,
+    "baseValue": 10
+  },
+  {
+    "id": "coil-2",
+    "name": "Coil Mk II",
+    "family": "coil",
+    "tier": 2,
+    "output": 14,
+    "baseValue": 30
+  },
+  {
+    "id": "coil-3",
+    "name": "Coil Mk III",
+    "family": "coil",
+    "tier": 3,
+    "output": 20,
+    "baseValue": 80
+  },
+  {
+    "id": "capacitor-1",
+    "name": "Capacitor Mk I",
+    "family": "capacitor",
+    "tier": 1,
+    "output": 8,
+    "baseValue": 10
+  },
+  {
+    "id": "capacitor-2",
+    "name": "Capacitor Mk II",
+    "family": "capacitor",
+    "tier": 2,
+    "output": 14,
+    "baseValue": 30
+  },
+  {
+    "id": "capacitor-3",
+    "name": "Capacitor Mk III",
+    "family": "capacitor",
+    "tier": 3,
+    "output": 20,
+    "baseValue": 80
+  },
+  {
+    "id": "manifold-1",
+    "name": "Manifold Mk I",
+    "family": "manifold",
+    "tier": 1,
+    "output": 8,
+    "baseValue": 10
+  },
+  {
+    "id": "manifold-2",
+    "name": "Manifold Mk II",
+    "family": "manifold",
+    "tier": 2,
+    "output": 14,
+    "baseValue": 30
+  },
+  {
+    "id": "manifold-3",
+    "name": "Manifold Mk III",
+    "family": "manifold",
+    "tier": 3,
+    "output": 20,
+    "baseValue": 80
+  },
+  {
+    "id": "navcore-1",
+    "name": "Nav Core Mk I",
+    "family": "navcore",
+    "tier": 1,
+    "output": 8,
+    "baseValue": 10
+  },
+  {
+    "id": "navcore-2",
+    "name": "Nav Core Mk II",
+    "family": "navcore",
+    "tier": 2,
+    "output": 14,
+    "baseValue": 30
+  },
+  {
+    "id": "navcore-3",
+    "name": "Nav Core Mk III",
+    "family": "navcore",
+    "tier": 3,
+    "output": 20,
+    "baseValue": 80
+  },
+  {
+    "id": "gyro-1",
+    "name": "Gyro Mk I",
+    "family": "gyro",
+    "tier": 1,
+    "output": 8,
+    "baseValue": 10
+  },
+  {
+    "id": "gyro-2",
+    "name": "Gyro Mk II",
+    "family": "gyro",
+    "tier": 2,
+    "output": 14,
+    "baseValue": 30
+  },
+  {
+    "id": "gyro-3",
+    "name": "Gyro Mk III",
+    "family": "gyro",
+    "tier": 3,
+    "output": 20,
+    "baseValue": 80
+  },
+  {
+    "id": "lens-1",
+    "name": "Lens Mk I",
+    "family": "lens",
+    "tier": 1,
+    "output": 8,
+    "baseValue": 10
+  },
+  {
+    "id": "lens-2",
+    "name": "Lens Mk II",
+    "family": "lens",
+    "tier": 2,
+    "output": 14,
+    "baseValue": 30
+  },
+  {
+    "id": "lens-3",
+    "name": "Lens Mk III",
+    "family": "lens",
+    "tier": 3,
+    "output": 20,
+    "baseValue": 80
+  },
+  {
+    "id": "emitter-1",
+    "name": "Emitter Mk I",
+    "family": "emitter",
+    "tier": 1,
+    "output": 8,
+    "baseValue": 10
+  },
+  {
+    "id": "emitter-2",
+    "name": "Emitter Mk II",
+    "family": "emitter",
+    "tier": 2,
+    "output": 14,
+    "baseValue": 30
+  },
+  {
+    "id": "emitter-3",
+    "name": "Emitter Mk III",
+    "family": "emitter",
+    "tier": 3,
+    "output": 20,
+    "baseValue": 80
+  }
+]

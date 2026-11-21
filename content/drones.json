@@ -1,0 +1,62 @@
+[
+  {
+    "id": "hornet",
+    "name": "Hornet",
+    "hp": 40,
+    "armor": 0,
+    "radius": 8,
+    "flight": {
+      "maxSpeed": 160,
+      "accel": 90,
+      "pitchRate": 1.9,
+      "yawRate": 1.7,
+      "rollRate": 3,
+      "angAccel": 6,
+      "driftDamping": 0
+    },
+    "weapon": "hornet-gun",
+    "oneUse": false,
+    "proximity": 0,
+    "life": 600
+  },
+  {
+    "id": "lance",
+    "name": "Lance",
+    "hp": 14,
+    "armor": 0,
+    "radius": 4,
+    "flight": {
+      "maxSpeed": 320,
+      "accel": 220,
+      "pitchRate": 2.6,
+      "yawRate": 2.6,
+      "rollRate": 3,
+      "angAccel": 10,
+      "driftDamping": 0
+    },
+    "weapon": "lance-warhead",
+    "oneUse": true,
+    "proximity": 24,
+    "life": 14
+  },
+  {
+    "id": "ram",
+    "name": "Ram",
+    "hp": 140,
+    "armor": 1,
+    "radius": 10,
+    "flight": {
+      "maxSpeed": 110,
+      "accel": 40,
+      "pitchRate": 0.9,
+      "yawRate": 0.9,
+      "rollRate": 1.5,
+      "angAccel": 2,
+      "driftDamping": 0
+    },
+    "weapon": "ram-warhead",
+    "oneUse": true,
+    "proximity": 32,
+    "life": 40
+  }
+]

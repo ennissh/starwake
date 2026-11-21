@@ -9,5 +9,115 @@
     "angAccel": 0.32,
     "driftDamping": 0
   },
-  "flightFloor": 0.3
+  "flightFloor": 0.3,
+  "hp": 600,
+  "wakeTurretSpread": 1.2,
+  "hitSpheres": [
+    {
+      "offset": {
+        "x": 0,
+        "y": 0,
+        "z": -100
+      },
+      "radius": 50
+    },
+    {
+      "offset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "radius": 50
+    },
+    {
+      "offset": {
+        "x": 0,
+        "y": 0,
+        "z": 100
+      },
+      "radius": 55
+    }
+  ],
+  "shields": {
+    "fore": 200,
+    "aft": 120,
+    "rechargePerS": 10,
+    "rechargeDelayS": 3
+  },
+  "lance": {
+    "weapon": "spinal-lance",
+    "muzzle": {
+      "x": 0,
+      "y": -11,
+      "z": -146
+    }
+  },
+  "turret": {
+    "weapon": "wake-turret",
+    "mount": {
+      "x": 0,
+      "y": 19,
+      "z": 0
+    }
+  },
+  "droneBay": {
+    "frames": 8,
+    "maxActive": 3,
+    "mount": {
+      "x": 0,
+      "y": -20,
+      "z": 66
+    }
+  },
+  "wearPerHullHp": 0.12,
+  "emergencyFoldLoses": {
+    "min": 2,
+    "max": 3
+  },
+  "systems": {
+    "fold": {
+      "name": "Fold Drive",
+      "slots": 4,
+      "accepts": ["coil", "capacitor", "manifold", "navcore"],
+      "maxOutput": 80
+    },
+    "thrusters": {
+      "name": "Thrusters",
+      "slots": 3,
+      "accepts": ["manifold", "gyro", "coil"],
+      "maxOutput": 60
+    },
+    "lance": {
+      "name": "Spinal Lance",
+      "slots": 3,
+      "accepts": ["lens", "capacitor", "coil"],
+      "maxOutput": 60
+    },
+    "turret": {
+      "name": "Turret",
+      "slots": 3,
+      "accepts": ["lens", "gyro", "capacitor"],
+      "maxOutput": 60
+    },
+    "foreShield": {
+      "name": "Fore Shield",
+      "slots": 2,
+      "accepts": ["emitter", "capacitor"],
+      "maxOutput": 40
+    },
+    "aftShield": {
+      "name": "Aft Shield",
+      "slots": 2,
+      "accepts": ["emitter", "capacitor"],
+      "maxOutput": 40
+    }
+  },
+  "loadout": {
+    "fold": ["coil-1", "capacitor-1", "manifold-1", "navcore-1"],
+    "thrusters": ["manifold-1", "gyro-1", "coil-1"],
+    "lance": ["lens-1", "capacitor-2", "coil-1"],
+    "turret": ["lens-2", "gyro-1", "capacitor-1"],
+    "foreShield": ["emitter-2", "capacitor-1"],
+    "aftShield": ["emitter-1", "capacitor-1"]
+  }
 }

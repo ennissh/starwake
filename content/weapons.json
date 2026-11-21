@@ -1,0 +1,93 @@
+[
+  {
+    "id": "spinal-lance",
+    "name": "Spinal Lance",
+    "kind": "beam",
+    "damage": 220,
+    "penetration": 3,
+    "range": 5000,
+    "cooldown": 5,
+    "speed": 1,
+    "arc": 1
+  },
+  {
+    "id": "wake-turret",
+    "name": "Turret",
+    "kind": "bolt",
+    "damage": 4,
+    "penetration": 1,
+    "range": 2400,
+    "cooldown": 0.12,
+    "speed": 2400,
+    "arc": 180
+  },
+  {
+    "id": "hornet-gun",
+    "name": "Hornet cannon",
+    "kind": "bolt",
+    "damage": 3,
+    "penetration": 1,
+    "range": 1500,
+    "cooldown": 0.18,
+    "speed": 2200,
+    "arc": 4
+  },
+  {
+    "id": "lance-warhead",
+    "name": "Lance drone warhead",
+    "kind": "bolt",
+    "damage": 70,
+    "penetration": 2,
+    "range": 40,
+    "cooldown": 1,
+    "speed": 1,
+    "arc": 180
+  },
+  {
+    "id": "ram-warhead",
+    "name": "Ram drone warhead",
+    "kind": "bolt",
+    "damage": 420,
+    "penetration": 3,
+    "range": 40,
+    "cooldown": 1,
+    "speed": 1,
+    "arc": 180
+  },
+  {
+    "id": "vosk-bolt",
+    "name": "Vosk bolt",
+    "kind": "bolt",
+    "damage": 3,
+    "penetration": 1,
+    "range": 1400,
+    "cooldown": 0.4,
+    "speed": 1800,
+    "arc": 8,
+    "spread": 1.5
+  },
+  {
+    "id": "vosk-cannon",
+    "name": "Vosk cannon",
+    "kind": "bolt",
+    "damage": 10,
+    "penetration": 2,
+    "range": 2600,
+    "cooldown": 1.6,
+    "speed": 1300,
+    "arc": 180,
+    "spread": 0.8
+  },
+  {
+    "id": "vosk-heavy-cannon",
+    "name": "Vosk heavy cannon",
+    "kind": "bolt",
+    "damage": 12,
+    "penetration": 2,
+    "range": 2000,
+    "cooldown": 2.2,
+    "speed": 1200,
+    "arc": 180,
+    "spread": 0.8
+  }
+]

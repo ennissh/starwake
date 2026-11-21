@@ -1,0 +1,35 @@
+[
+  {
+    "id": "quillari",
+    "name": "Quillari",
+    "palette": {
+      "hull": "#e9e1cf",
+      "trim": "#4b6b8a",
+      "glow": "#7fe0ff",
+      "accent": "#e0b84a"
+    },
+    "summary": "Tall avian merchant-poets. Every deal is a performance."
+  },
+  {
+    "id": "vosk",
+    "name": "Vosk",
+    "palette": {
+      "hull": "#5a4636",
+      "trim": "#2c2520",
+      "glow": "#ff7a2a",
+      "accent": "#c8902a"
+    },
+    "summary": "Armoured, hive-ranked salvagers who respect strength and tribute."
+  },
+  {
+    "id": "murmur",
+    "name": "Murmur",
+    "palette": {
+      "hull": "#6b5a8a",
+      "trim": "#2a2340",
+      "glow": "#c8a0ff",
+      "accent": "#9fe0d0"
+    },
+    "summary": "A choir-intelligence living in a gas cloud. Trades in knowledge and songs."
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "arena-patrol",
+    "name": "Vosk patrol",
+    "description": "One Gnasher frigate and four Biter fighters. Turret and drones for the fighters, the Lance for the frigate.",
+    "roster": {
+      "hulls": ["vosk-frigate", "vosk-fighter", "vosk-fighter", "vosk-fighter", "vosk-fighter"],
+      "reserve": []
+    },
+    "distance": 3500
+  },
+  {
+    "id": "arena-base",
+    "name": "Vosk raider base",
+    "description": "Cinder Hold: three shield emitters block the Lance until you knock them out with the turret or drones. It launches fighters from a finite reserve.",
+    "roster": {
+      "hulls": ["vosk-base", "vosk-fighter", "vosk-fighter"],
+      "reserve": ["vosk-fighter", "vosk-fighter", "vosk-fighter", "vosk-fighter"]
+    },
+    "distance": 4200
+  }
+]
