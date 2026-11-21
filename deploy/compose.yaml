@@ -1,0 +1,26 @@
+# Starwake on dwarf. install.sh copies this file and writes .env next to it; don't edit .env by hand
+# unless you know the setting (re-run install.sh --settings review instead).
+services:
+  starwake:
+    image: ${STARWAKE_IMAGE:-ghcr.io/ennissh/starwake}:${STARWAKE_TAG:-latest}
+    container_name: ${STARWAKE_CONTAINER:-starwake}
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - '${PORT:-8090}:8080'
+    volumes:
+      - ${STARWAKE_DATA:-/opt/docker/starwake/data}:/data
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ['CMD', 'node', 'apps/server/dist/healthcheck.js']
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '3' }

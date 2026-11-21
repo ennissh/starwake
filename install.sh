@@ -1,0 +1,398 @@
+#!/usr/bin/env bash
+###############################################################################
+# install.sh - install (or reconfigure) Starwake on this Docker host (dwarf)
+#
+#   sudo ./install.sh                     interactive: asks every setting, probes Ollama, starts it
+#   sudo ./install.sh --non-interactive   answers from STARWAKE_*/OLLAMA_*/... environment
+#                                         variables, else the existing .env, else defaults
+# Options:
+#   --dir DIR             install directory (default /opt/docker/starwake)
+#   --tag TAG             image tag (default: latest, or the saved one)
+#   --settings MODE       when .env exists: saved (use it, no questions), review (ask each,
+#                         saved values as defaults) or fresh (ask each, built-in defaults)
+#   --no-start            write compose.yaml and .env only; pull and start nothing
+#   --no-pull             use an image already on this host (e.g. from ./build.sh --local)
+#   -h, --help            this help
+#
+# What it asks: install dir, port, hostname, image tag, data dir, translator mode, Ollama URL
+# (probed from inside a container: the real path through DOCKER-USER), model (from the host's
+# list), timeouts, content rating, log level, and whether to install a daily backup.
+# It writes DIR/compose.yaml, DIR/.env (mode 600), DIR/backup.sh and chowns the data dir to
+# uid 1000. Re-running is safe: saves are never touched, only settings you change.
+#
+# It never edits the firewall (docker-lan-only.sh), Pi-hole or other stacks: it checks and
+# tells you what to change.
+###############################################################################
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# ---------------------------------------------------------------------------- output
+if [[ -t 1 ]]; then B=$'\033[1m' DIM=$'\033[2m' RED=$'\033[31m' GRN=$'\033[32m' YEL=$'\033[33m' CYN=$'\033[36m' RST=$'\033[0m'
+else B="" DIM="" RED="" GRN="" YEL="" CYN="" RST=""; fi
+say()  { printf '%s\n' "$*"; }
+hdr()  { printf '\n%s== %s%s\n' "$B$CYN" "$*" "$RST"; }
+ok()   { printf '  %s✓%s %s\n' "$GRN" "$RST" "$*"; }
+warn() { printf '  %s!%s %s\n' "$YEL" "$RST" "$*"; }
+die()  { printf '%serror:%s %s\n' "$RED" "$RST" "$*" >&2; exit 1; }
+
+# ---------------------------------------------------------------------------- options
+INTERACTIVE=1 START=1 PULL=1 SETTINGS="" DIR_ARG="" TAG_ARG=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --non-interactive) INTERACTIVE=0 ;;
+        --dir) [[ $# -ge 2 ]] || die "--dir needs a path"; DIR_ARG="$2"; shift ;;
+        --tag) [[ $# -ge 2 ]] || die "--tag needs a value"; TAG_ARG="$2"; shift ;;
+        --settings) [[ $# -ge 2 ]] || die "--settings needs saved, review or fresh"; SETTINGS="$2"; shift ;;
+        --no-start) START=0 ;;
+        --no-pull) PULL=0 ;;
+        -h|--help) sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        *) die "unknown option: $1 (see --help)" ;;
+    esac
+    shift
+done
+[[ -z "$SETTINGS" || "$SETTINGS" =~ ^(saved|review|fresh)$ ]] || die "--settings must be saved, review or fresh"
+[[ $INTERACTIVE == 1 && ! -t 0 ]] && die "no terminal for questions: use --non-interactive with environment variables"
+
+# ---------------------------------------------------------------------------- .env helpers
+# env_get KEY FILE : value of KEY in a KEY=VALUE file (parsed, never sourced).
+env_get() {
+    local key="$1" file="$2" line v
+    [[ -f "$file" ]] || return 0
+    line="$(grep -E "^${key}=" "$file" | tail -n1 || true)"
+    v="${line#*=}"
+    v="${v%%#*}"                              # strip trailing comment
+    v="$(printf '%s' "$v" | sed -e 's/[[:space:]]*$//' -e "s/^'\(.*\)'$/\1/" -e 's/^"\(.*\)"$/\1/')"
+    printf '%s' "$v"
+}
+
+ENV_FILE=""   # set once the install dir is known
+# current KEY DEFAULT : environment variable, else the saved .env (unless fresh), else DEFAULT
+current() {
+    local key="$1" def="${2:-}" v="${!1:-}"
+    if [[ -z "$v" && "$SETTINGS" != fresh && -n "$ENV_FILE" ]]; then v="$(env_get "$key" "$ENV_FILE")"; fi
+    printf '%s' "${v:-$def}"
+}
+
+ASK=$INTERACTIVE
+# ask VAR "Question" DEFAULT : sets VAR (accepts the default on Enter or when not asking)
+ask() {
+    local _var="$1" _q="$2" _def="$3" _reply
+    if [[ $ASK == 0 ]]; then printf -v "$_var" '%s' "$_def"; return; fi
+    read -r -p "  $_q [${_def}]: " _reply
+    printf -v "$_var" '%s' "${_reply:-$_def}"
+}
+# choose VAR "Question" DEFAULT opt1 opt2 ... : one of the listed options
+choose() {
+    local var="$1" q="$2" def="$3"; shift 3
+    local opts=("$@") ans=""
+    while true; do
+        ask ans "$q ($(IFS='/'; echo "${opts[*]}"))" "$def"
+        for o in "${opts[@]}"; do [[ "$ans" == "$o" ]] && { printf -v "$var" '%s' "$ans"; return; }; done
+        [[ $ASK == 0 ]] && die "$q: '$ans' is not one of: ${opts[*]}"
+        warn "choose one of: ${opts[*]}"
+    done
+}
+yesno() {  # yesno "Question" y|n → exit status
+    local ans=""; ask ans "$1 (y/n)" "$2"
+    [[ "$ans" =~ ^[Yy] ]]
+}
+
+# ---------------------------------------------------------------------------- preflight
+hdr "Checking this host"
+command -v docker >/dev/null || die "Docker is not installed (need Docker Engine with Compose v2)"
+docker info >/dev/null 2>&1 || die "cannot talk to Docker: run with sudo, or as a user in the docker group"
+docker compose version >/dev/null 2>&1 || die "Docker Compose v2 is missing (the 'docker compose' plugin)"
+ok "Docker $(docker version --format '{{.Server.Version}}'), $(docker compose version --short 2>/dev/null || echo 'compose v2')"
+ARCH="$(uname -m)"
+case "$ARCH" in
+    x86_64|amd64|aarch64|arm64) ok "architecture $ARCH" ;;
+    *) die "unsupported architecture $ARCH (images are built for amd64 and arm64)" ;;
+esac
+[[ -f "$HERE/deploy/compose.yaml" ]] || die "run this from a Starwake checkout (deploy/compose.yaml not found next to install.sh)"
+SUDO=""
+[[ $EUID -ne 0 ]] && { command -v sudo >/dev/null && SUDO="sudo"; warn "not root: will use sudo for the data directory and cron"; }
+
+# ---------------------------------------------------------------------------- install dir
+hdr "Where Starwake lives"
+DEFAULT_DIR="${DIR_ARG:-${STARWAKE_DIR:-/opt/docker/starwake}}"
+ask STARWAKE_DIR "Install directory" "$DEFAULT_DIR"
+[[ "$STARWAKE_DIR" == /* ]] || die "install directory must be an absolute path"
+ENV_FILE="$STARWAKE_DIR/.env"
+
+if [[ -f "$ENV_FILE" && -z "$SETTINGS" ]]; then
+    if [[ $INTERACTIVE == 1 ]]; then
+        say "  Found saved settings in $ENV_FILE."
+        choose SETTINGS "Use them as they are, review each, or start fresh" review saved review fresh
+    else
+        SETTINGS=saved
+    fi
+fi
+[[ "$SETTINGS" == saved ]] && ASK=0
+
+# ---------------------------------------------------------------------------- network
+hdr "Network"
+port_in_use() {  # port_in_use PORT → 0 if something other than our container listens on it
+    local p="$1"
+    command -v ss >/dev/null || return 1
+    if ss -ltnH "sport = :$p" 2>/dev/null | grep -q .; then
+        # Our own running container holding the port is fine (reconfigure).
+        docker ps --format '{{.Names}} {{.Ports}}' | grep -E "(^| )$(current STARWAKE_CONTAINER starwake) .*:$p->" -q && return 1
+        return 0
+    fi
+    return 1
+}
+while true; do
+    ask PORT "Host port to publish (container listens on 8080)" "$(current PORT 8090)"
+    [[ "$PORT" =~ ^[0-9]+$ ]] && (( PORT >= 1 && PORT <= 65535 )) || { warn "not a port number"; [[ $ASK == 0 ]] && die "bad PORT"; continue; }
+    if port_in_use "$PORT"; then
+        warn "port $PORT is already in use on this host:"; ss -ltnpH "sport = :$PORT" 2>/dev/null | sed 's/^/      /' || true
+        [[ $ASK == 0 ]] && die "PORT $PORT is taken; set another"
+        continue
+    fi
+    ok "port $PORT is free"; break
+done
+ask STARWAKE_HOSTNAME "Hostname players will use (for DNS and links)" "$(current STARWAKE_HOSTNAME starwake.citus.cloud)"
+
+# ---------------------------------------------------------------------------- image
+hdr "Image"
+ask STARWAKE_IMAGE "Image repository" "$(current STARWAKE_IMAGE ghcr.io/ennissh/starwake)"
+ask STARWAKE_TAG "Image tag (latest = every build, or an exact X.Y.Z-N)" "${TAG_ARG:-$(current STARWAKE_TAG latest)}"
+ask STARWAKE_CONTAINER "Container name" "$(current STARWAKE_CONTAINER starwake)"
+IMAGE_REF="$STARWAKE_IMAGE:$STARWAKE_TAG"
+if [[ $START == 1 || $PULL == 1 ]]; then
+    if [[ $PULL == 1 ]]; then
+        say "  pulling $IMAGE_REF ..."
+        if ! docker pull -q "$IMAGE_REF" >/dev/null; then
+            warn "pull failed. If the GHCR package is private: 'docker login ghcr.io' (a read:packages token),"
+            warn "or make the package public on GitHub. To use a local build: ./build.sh --local, then --no-pull --tag local"
+            die "could not pull $IMAGE_REF"
+        fi
+    fi
+    docker image inspect "$IMAGE_REF" >/dev/null 2>&1 || die "image $IMAGE_REF is not on this host"
+    IMG_VERSION="$(docker image inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$IMAGE_REF" | sed -n 's/^STARWAKE_VERSION=//p')"
+    ok "image $IMAGE_REF (Starwake ${IMG_VERSION:-unknown})"
+fi
+
+# ---------------------------------------------------------------------------- data
+hdr "Saves and logs"
+ask STARWAKE_DATA "Data directory (saves, profiles, translator logs)" "$(current STARWAKE_DATA "$STARWAKE_DIR/data")"
+[[ "$STARWAKE_DATA" == /* ]] || die "data directory must be an absolute path"
+
+# ---------------------------------------------------------------------------- translator
+hdr "Translator (alien dialogue)"
+say "  ${DIM}ollama = live aliens from your Ollama host · mock = canned replies (testing) · off = scripted only${RST}"
+choose LLM_MODE "Translator mode" "$(current LLM_MODE ollama)" ollama mock off
+
+OLLAMA_URL="$(current OLLAMA_URL "")"
+OLLAMA_MODEL="$(current OLLAMA_MODEL gemma4:12b)"
+MODELS=""
+
+# probe_ollama URL → sets MODELS (newline list) and returns 0, or prints why and returns 1.
+# Probes from INSIDE a container on the default bridge: the same DOCKER-USER path Starwake uses.
+probe_ollama() {
+    local url="$1" out host port
+    host="$(printf '%s' "$url" | sed -E 's#^[a-z]+://([^/:]+).*#\1#')"
+    port="$(printf '%s' "$url" | sed -nE 's#^[a-z]+://[^/:]+:([0-9]+).*#\1#p')"; port="${port:-11434}"
+    if docker image inspect "$IMAGE_REF" >/dev/null 2>&1; then
+        out="$(docker run --rm --network bridge --entrypoint node "$IMAGE_REF" -e '
+            const u = new URL("/api/tags", process.argv[1]);
+            fetch(u, { signal: AbortSignal.timeout(8000) })
+              .then(r => r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status)))
+              .then(j => { for (const m of j.models ?? []) console.log(m.name); })
+              .catch(e => { console.error("PROBE_FAIL " + (e.cause?.code ?? e.name) + " " + e.message); process.exit(3); });
+        ' "$url" 2>&1)" && { MODELS="$out"; return 0; }
+    else
+        warn "image not on this host yet: skipping the in-container probe"; return 0
+    fi
+    warn "Ollama at $url is not reachable from a container: ${out##*PROBE_FAIL }"
+    # Narrow it down: does the HOST reach it? Then it's the container path (DOCKER-USER), not Ollama.
+    if timeout 5 bash -c "exec 3<>/dev/tcp/$host/$port" 2>/dev/null; then
+        warn "...but this HOST reaches $host:$port, so container traffic is being blocked."
+        warn "Likely cause: the DOCKER-USER / DOCKER-LAN-ONLY chain drops traffic that starts in a container."
+        warn "It needs to allow containers → $host:$port, plus ESTABLISHED,RELATED returns."
+        if [[ $EUID -eq 0 ]] && command -v iptables >/dev/null && iptables -S DOCKER-LAN-ONLY >/dev/null 2>&1; then
+            say "  ${DIM}current DOCKER-LAN-ONLY rules (read-only, nothing changed):${RST}"
+            iptables -S DOCKER-LAN-ONLY | sed 's/^/      /'
+        fi
+        warn "This installer never edits the firewall: change /usr/local/sbin/docker-lan-only.sh yourself, then re-run."
+    else
+        warn "This host can't reach $host:$port either. On the Mac Studio check that:"
+        warn "  1. Ollama listens on all interfaces: launchctl setenv OLLAMA_HOST 0.0.0.0, then restart Ollama"
+        warn "  2. the macOS firewall allows incoming connections to Ollama"
+        warn "  3. the name resolves from this host: getent hosts $host"
+    fi
+    return 1
+}
+
+if [[ "$LLM_MODE" == ollama ]]; then
+    while true; do
+        ask OLLAMA_URL "Ollama URL on the Mac Studio (e.g. http://mac-studio.lan:11434)" "${OLLAMA_URL:-http://}"
+        if ! [[ "$OLLAMA_URL" =~ ^https?://[^/[:space:]]+(/.*)?$ ]] || [[ "$OLLAMA_URL" == "http://" ]]; then
+            warn "that is not an http(s) URL"; [[ $ASK == 0 ]] && die "OLLAMA_URL is not set or not a URL"; continue
+        fi
+        OLLAMA_URL="${OLLAMA_URL%/}"
+        if probe_ollama "$OLLAMA_URL"; then
+            ok "Ollama reachable from a container at $OLLAMA_URL"
+            break
+        fi
+        [[ $ASK == 0 ]] && { warn "continuing: the game uses the scripted fallback until Ollama is reachable"; break; }
+        next=""
+        choose next "Retry, change the URL, keep it anyway, or switch to scripted (off)" retry retry url keep off
+        case "$next" in
+            retry) continue ;;
+            url) OLLAMA_URL="http://"; continue ;;
+            keep) warn "keeping it: the game falls back to scripted dialogue until Ollama answers"; break ;;
+            off) LLM_MODE=off; break ;;
+        esac
+    done
+fi
+
+if [[ "$LLM_MODE" == ollama ]]; then
+    if [[ -n "$MODELS" ]]; then
+        say "  Models installed on that host:"
+        i=0; while IFS= read -r m; do [[ -n "$m" ]] && { i=$((i+1)); printf '    %2d) %s\n' "$i" "$m"; }; done <<< "$MODELS"
+        (( i == 0 )) && warn "none: on the Mac Studio run: ollama pull gemma4:12b"
+    fi
+    ask pick "Model (name or number from the list)" "$OLLAMA_MODEL"
+    if [[ "$pick" =~ ^[0-9]+$ && -n "$MODELS" ]]; then
+        pick="$(sed -n "${pick}p" <<< "$(grep -v '^$' <<< "$MODELS")")"
+        [[ -n "$pick" ]] || die "no model with that number"
+    fi
+    OLLAMA_MODEL="$pick"
+    if [[ -n "$MODELS" ]] && ! grep -qxF "$OLLAMA_MODEL" <<< "$MODELS"; then
+        warn "$OLLAMA_MODEL is not installed on the Ollama host. On the Mac Studio run: ollama pull $OLLAMA_MODEL"
+        warn "(until then /healthz reports llm:\"down\" and aliens use the scripted fallback)"
+    else
+        ok "model $OLLAMA_MODEL"
+    fi
+    while true; do
+        ask OLLAMA_TIMEOUT_MS "Per-reply timeout in ms (the translator falls back after this)" "$(current OLLAMA_TIMEOUT_MS 20000)"
+        [[ "$OLLAMA_TIMEOUT_MS" =~ ^[0-9]+$ ]] && (( OLLAMA_TIMEOUT_MS >= 1000 && OLLAMA_TIMEOUT_MS <= 120000 )) && break
+        warn "between 1000 and 120000"; [[ $ASK == 0 ]] && die "bad OLLAMA_TIMEOUT_MS"
+    done
+    while true; do
+        ask LLM_TEMPERATURE "Alien creativity (temperature 0.0-2.0)" "$(current LLM_TEMPERATURE 0.7)"
+        [[ "$LLM_TEMPERATURE" =~ ^([01](\.[0-9]+)?|2(\.0+)?)$ ]] && break
+        warn "a number from 0.0 to 2.0"; [[ $ASK == 0 ]] && die "bad LLM_TEMPERATURE"
+    done
+else
+    OLLAMA_TIMEOUT_MS="$(current OLLAMA_TIMEOUT_MS 20000)"
+    LLM_TEMPERATURE="$(current LLM_TEMPERATURE 0.7)"
+fi
+
+say "  ${DIM}everyone · teen · mature (strong language, graphic violence, dark themes) · adult (adds crude"
+say "  humour and innuendo). No level allows explicit sexual content.${RST}"
+choose CONTENT_RATING "Content rating for alien dialogue" "$(current CONTENT_RATING mature)" everyone teen mature adult
+choose LOG_LEVEL "Server log level" "$(current LOG_LEVEL info)" error warn info debug
+
+# ---------------------------------------------------------------------------- backups
+hdr "Backups"
+CRON_FILE=/etc/cron.d/starwake-backup
+if yesno "Install a daily backup of the data directory (03:17, keeps the last 14)?" "$(current STARWAKE_BACKUP y)"; then
+    STARWAKE_BACKUP=y
+else
+    STARWAKE_BACKUP=n
+fi
+
+# ---------------------------------------------------------------------------- summary
+hdr "Summary"
+cat <<EOF
+  install dir   $STARWAKE_DIR
+  address       http://$STARWAKE_HOSTNAME:$PORT
+  image         $IMAGE_REF
+  data          $STARWAKE_DATA
+  translator    $LLM_MODE${OLLAMA_URL:+  ($OLLAMA_URL, $OLLAMA_MODEL)}
+  rating        $CONTENT_RATING
+  backups       $([[ $STARWAKE_BACKUP == y ]] && echo "daily, keep 14 → $STARWAKE_DIR/backups" || echo off)
+EOF
+if [[ $INTERACTIVE == 1 ]]; then
+    ASK=1; yesno "Write these settings$([[ $START == 1 ]] && echo ' and start Starwake')?" y || die "cancelled; nothing was changed"
+fi
+
+# ---------------------------------------------------------------------------- write files
+hdr "Writing files"
+$SUDO mkdir -p "$STARWAKE_DIR" "$STARWAKE_DATA" "$STARWAKE_DIR/backups"
+$SUDO chown -R 1000:1000 "$STARWAKE_DATA"
+ok "data directory $STARWAKE_DATA (owned by uid 1000, the container user)"
+
+install_file() {  # install_file SRC DEST MODE : copies, keeping a .bak of a changed original
+    local src="$1" dest="$2" mode="$3"
+    if [[ -f "$dest" ]] && ! cmp -s "$src" "$dest"; then $SUDO cp -p "$dest" "$dest.bak"; fi
+    $SUDO install -m "$mode" "$src" "$dest"
+}
+install_file "$HERE/deploy/compose.yaml" "$STARWAKE_DIR/compose.yaml" 644
+install_file "$HERE/scripts/backup.sh" "$STARWAKE_DIR/backup.sh" 755
+ok "compose.yaml and backup.sh"
+
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
+cat > "$tmp" <<EOF
+# Starwake settings, written by install.sh on $(date -u +%Y-%m-%dT%H:%M:%SZ).
+# Change them with: sudo ./install.sh --settings review   (then it restarts the container)
+PORT=$PORT
+STARWAKE_HOSTNAME=$STARWAKE_HOSTNAME
+STARWAKE_IMAGE=$STARWAKE_IMAGE
+STARWAKE_TAG=$STARWAKE_TAG
+STARWAKE_CONTAINER=$STARWAKE_CONTAINER
+STARWAKE_DATA=$STARWAKE_DATA
+STARWAKE_BACKUP=$STARWAKE_BACKUP
+LLM_MODE=$LLM_MODE
+OLLAMA_URL=$OLLAMA_URL
+OLLAMA_MODEL=$OLLAMA_MODEL
+OLLAMA_TIMEOUT_MS=$OLLAMA_TIMEOUT_MS
+LLM_TEMPERATURE=$LLM_TEMPERATURE
+CONTENT_RATING=$CONTENT_RATING
+LOG_LEVEL=$LOG_LEVEL
+EOF
+[[ -f "$ENV_FILE" ]] && $SUDO cp -p "$ENV_FILE" "$ENV_FILE.bak"
+$SUDO install -m 600 "$tmp" "$ENV_FILE"
+ok ".env (mode 600)"
+
+if [[ $STARWAKE_BACKUP == y ]]; then
+    printf '# Starwake daily backup (install.sh)\n17 3 * * * root %q %q %q 14 >/dev/null 2>&1\n' \
+        "$STARWAKE_DIR/backup.sh" "$STARWAKE_DATA" "$STARWAKE_DIR/backups" > "$tmp"
+    $SUDO install -m 644 "$tmp" "$CRON_FILE"
+    ok "daily backup in $CRON_FILE"
+elif [[ -f "$CRON_FILE" ]]; then
+    $SUDO rm -f "$CRON_FILE"; ok "daily backup removed"
+fi
+
+# ---------------------------------------------------------------------------- start
+if [[ $START == 0 ]]; then
+    say; ok "settings written. Start it with: cd $STARWAKE_DIR && sudo docker compose up -d"
+    exit 0
+fi
+hdr "Starting"
+( cd "$STARWAKE_DIR" && $SUDO docker compose up -d --remove-orphans ) || die "docker compose up failed"
+say "  waiting for the health check ..."
+health=""
+for _ in $(seq 1 30); do
+    health="$(docker exec "$STARWAKE_CONTAINER" node -e '
+        fetch("http://127.0.0.1:8080/healthz").then(r => r.text()).then(t => console.log(t)).catch(() => process.exit(1));
+    ' 2>/dev/null || true)"
+    [[ "$health" == *'"ok":true'* ]] && break
+    sleep 2
+done
+[[ "$health" == *'"ok":true'* ]] || { docker logs --tail 30 "$STARWAKE_CONTAINER" >&2 || true; die "Starwake did not become healthy (logs above)"; }
+ok "healthy: $health"
+llm="$(printf '%s' "$health" | sed -nE 's/.*"llm":"([a-z]+)".*/\1/p')"
+case "$llm" in
+    up) ok "translator online ($OLLAMA_MODEL)" ;;
+    down) warn "translator is DOWN: aliens use the scripted fallback. See the Ollama notes above, then: sudo ./install.sh --settings review" ;;
+    *) ok "translator mode: $llm" ;;
+esac
+
+# ---------------------------------------------------------------------------- next steps
+HOST_IP="$(ip -4 route get 1.1.1.1 2>/dev/null | sed -nE 's/.* src ([0-9.]+).*/\1/p' | head -n1)"
+hdr "Next steps (by hand; this installer doesn't touch them)"
+cat <<EOF
+  1. DNS: add  ${B}$STARWAKE_HOSTNAME → ${HOST_IP:-<this host LAN IP>}${RST}  to Pi-hole local DNS (your local-dns.txt).
+  2. Firewall: make sure the LAN subnets you play from are allowed in the DOCKER-LAN-ONLY chain
+     for port $PORT (check: sudo iptables -S DOCKER-LAN-ONLY).
+  3. Uptime Kuma: HTTP(s) - Keyword monitor on  http://$STARWAKE_HOSTNAME:$PORT/healthz  keyword  "ok":true
+  4. Play: open  ${B}http://$STARWAKE_HOSTNAME:$PORT${RST}  in desktop Chrome, Edge or Firefox.
+
+  Logs:      sudo docker logs -f $STARWAKE_CONTAINER
+  Upgrade:   sudo ./install.sh --settings saved     (pulls $STARWAKE_TAG again and restarts)
+  Backup:    sudo $STARWAKE_DIR/backup.sh $STARWAKE_DATA $STARWAKE_DIR/backups
+EOF

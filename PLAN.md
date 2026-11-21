@@ -605,6 +605,8 @@ The volume must be writable by uid 1000. Do `sudo chown -R 1000:1000 /opt/docker
 Build in order. Stop for review after each one.
 
 ### M0 · Skeleton and deploy pipeline
+**Status (2026-11-21): built.** `./test.sh` green; image runs locally (uid 1000, read-only root fs, healthy). Waiting on Shawn for the dwarf acceptance steps (install.sh on dwarf, `llm:"up"`, page on the LAN).
+- Added (R3): `install.sh`, the interactive installer for dwarf.
 - Monorepo, tooling, `VERSION`, `test.sh`, `build.sh`, Dockerfile, compose, `.env.example`.
 - Fastify serves a placeholder page showing a rotating low-poly *Starwake* model, plus `/healthz` with an Ollama ping.
 

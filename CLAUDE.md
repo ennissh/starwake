@@ -223,7 +223,7 @@ the dwarf/Ollama acceptance steps for Shawn, with exact commands.
 ## Milestone status (PLAN.md §8 is authoritative)
 
 ```
-M0 — Skeleton, deploy pipeline, /healthz with Ollama ping              [ ]
+M0 — Skeleton, deploy pipeline, /healthz, install.sh                    [x] built; dwarf acceptance pending (Shawn)
 M1 — Flight and cameras, HUD, key help, rebinding, pause               [ ]
 M2 — Combat, drones, subsystems, crippled state, salvage, arena        [ ]
 M3 — Campaign: Shoal content, star map, jumps, probe, claims, saves    [ ]

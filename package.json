@@ -1,0 +1,41 @@
+{
+  "name": "starwake",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "workspaces": [
+    "packages/shared",
+    "apps/server",
+    "apps/client"
+  ],
+  "scripts": {
+    "dev": "npm run build -w @starwake/shared && concurrently -k -n server,client -c cyan,magenta \"npm run dev -w @starwake/server\" \"npm run dev -w @starwake/client\"",
+    "build": "tsc -b && npm run build -w @starwake/client",
+    "typecheck": "tsc -b && tsc -p apps/client --noEmit && tsc -p e2e --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test --trace off",
+    "start": "node apps/server/dist/index.js",
+    "eval:llm": "echo 'eval:llm arrives in M5' && exit 1"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.65.1",
+    "@types/node": "24.10.1",
+    "concurrently": "10.0.7",
+    "eslint": "10.15.0",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "17.14.0",
+    "prettier": "3.10.1",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.73.0",
+    "vitest": "5.1.1"
+  }
+}

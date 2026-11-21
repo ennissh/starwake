@@ -1,0 +1,41 @@
+# Clean-room banned terms (PLAN.md §0.1). One per line, matched case-insensitively as whole words
+# in content/, apps/ and packages/ by scripts/check-cleanroom.sh. Only README.md, PLAN.md, CLAUDE.md
+# and this file may contain them.
+Lightspeed
+Hyperspeed
+MicroProse
+Trailblazer
+Conestoga
+Spindrive
+Hyades
+Cerberus
+Sasanid
+Sassanid
+Ragnarok
+Stentor
+Zor
+Jot
+Monad
+Halicot
+Fel
+Lutin
+Cicisbeo
+Broodmaster
+Didinium
+Vorticella
+Balathide
+Athdalde
+Zeveult
+Automata
+Vorc
+Rill
+Thoth
+Trajan
+Collector
+Acari
+Dacian
+Dignee
+Venge
+Vitagen
+Moon Chi
+Blepharisma
