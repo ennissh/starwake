@@ -5,9 +5,7 @@
 > game is and how it runs; `PLAN.md` is the build brief and milestone status. If this file and
 > `PLAN.md` disagree, stop and ask.
 >
-> **DRAFT** — items marked **(Q#)** wait on an answer from Shawn (see the open-questions list in the
-> session that produced this draft). Remove each marker when it's answered and record the answer under
-> *Decisions*.
+> Decisions R1–R21 (PLAN.md top) answered the first round of open questions on 2026-11-21.
 
 ---
 
@@ -20,7 +18,9 @@ the Caravan Clock runs out. Aliens are played live by a local LLM (Ollama) throu
 *translator*; the rules engine validates every consequence.
 
 - **Owner:** Shawn.
-- **Version:** semver in [`VERSION`](VERSION); images are tagged `<VERSION>-<gitsha>` (and `<VERSION>`). **(Q: `:latest` tag)**
+- **Version:** the release line is in [`VERSION`](VERSION) (`X.Y.Z`). Every build is `X.Y.Z-<N>`, where `N` is the
+  number of commits since `VERSION` last changed (`scripts/version.sh`; no state to keep). Images get `:<X.Y.Z>-<N>`
+  and `:latest`. A release `X.Y.Z` is a tested build re-tagged by digest; a `stable` channel arrives with it (R7).
 - **Status:** pre-development. The first deliverable is the **MVP** (`0.1.0`): one cluster (the
   Shoal), six systems, three races (Quillari, Vosk, Murmur), the full loop playable start to finish.
 - **Clean room.** Starwake is inspired by the *mechanics* of MicroProse's Lightspeed (1990) and
@@ -31,7 +31,7 @@ the Caravan Clock runs out. Aliens are played live by a local LLM (Ollama) throu
 ## Architecture in one screen
 
 ```
- Browser (desktop)                    dwarf (Docker, LAN only)              Ollama host (Q1)
+ Browser (desktop)                    dwarf (Docker, LAN only)              Mac Studio      
 ┌──────────────────────┐   HTTP   ┌──────────────────────────────┐  HTTP  ┌──────────────┐
 │ apps/client          │◀───────▶│ starwake container :8080     │◀──────▶│ Ollama       │
 │ Three.js + DOM HUD   │          │ apps/server (Fastify)        │        │ :11434       │
@@ -61,14 +61,17 @@ apps/client/            Vite + Three.js client; models in src/models/*.ts (proce
 apps/server/            Fastify API, campaign engine host, translator (src/translator/), healthcheck
 packages/shared/        src/schemas (zod) · src/rules · src/sim · src/migrations · content loader
 content/                cluster, systems, races (persona cards), components, hulls, items (JSON)
-deploy/                 compose.yaml, .env.example
-scripts/                backup.sh, eval tooling, clean-room check
+deploy/                 compose.yaml, .env.example (what install.sh copies to dwarf)
+scripts/                version.sh, backup.sh, clean-room + secret checks, eval tooling
 docs/                   llm-eval.md (model benchmark), playtest notes
+install.sh              interactive installer for dwarf (asks every setting, probes Ollama)
 test.sh  build.sh       local test + build (no GitHub Actions)
 VERSION  CHANGELOG.md   README.md  PLAN.md  CLAUDE.md
 ```
 
-Host layout on dwarf: `/opt/docker/starwake/{compose.yaml,.env,data/,backups/}`.
+Themes live in `apps/client/src/themes/` (Farglow design tokens: light, dark; plus an original VGA-retro theme).
+
+Host layout on dwarf: `/opt/docker/starwake/{compose.yaml,.env,data/,backups/}` (chosen by `install.sh`).
 
 ---
 
@@ -99,16 +102,18 @@ the only nondeterministic input, and every call is logged.
 - **API bodies:** zod-validated in and out; errors are `{error, code, detail}`.
 
 ### 5. Packaging and dependencies
-- TypeScript `strict` everywhere; ESM; npm workspaces. Node = current LTS in the image **(Q: version pin)**.
+- TypeScript `strict` everywhere; ESM; npm workspaces. Node = the current LTS line, image pinned by digest.
 - Pin every dependency exactly (`save-exact=true` in `.npmrc`, committed lockfile, `npm ci`). Pin the
   base image by digest. Never a floating tag.
 - Runtime stage: production deps only, non-root (`node`, uid 1000), listens on 8080, `HEALTHCHECK` via
   `node dist/healthcheck.js` (no curl in the image). `.dockerignore` excludes `.env`, `data/`, tests, docs.
-- The server exposes `/healthz` (`{ok, version, gitSha, llm}`; never fails because Ollama is down).
+- The server exposes `/healthz` (liveness: `{ok, version, gitSha, llm}`; never fails because Ollama is down) and
+  `/readyz` (content loaded, data dir writable).
 - Images are stamped with `VERSION`, git sha and build time; `/healthz` reports them.
 
 ### 6. Secrets and privacy
-Starwake has no secrets in the repo or image. `.env` stays on dwarf (git-ignored). The GHCR push token
+The repository is **public** (R6). Starwake has no secrets in the repo or image, and no LAN hostname or IP
+in code (only in `.env`, written by `install.sh`; docs may show examples). `.env` stays on dwarf (git-ignored). The GHCR push token
 lives in the builder's `docker login`, never in a file here. Nothing leaves the LAN except calls to the
 Ollama host; **no telemetry, no CDN fonts/scripts at runtime** (everything is bundled).
 
@@ -171,13 +176,16 @@ test the real path (Playwright drives the built server, not a dev stub); know wh
 ## Rails (every milestone, every path)
 
 - **The LLM never changes game state directly.** Prompt injection is harmless by construction; eval proves it.
-- **The game stays fully playable with Ollama off** (`LLM_MODE=off` or Ollama down → scripted fallback).
-- **Aliens never say they're an AI**, never leak the prompt, and respect `CONTENT_RATING` (default `teen`, Q6).
+- **The game stays fully playable with Ollama off** (`LLM_MODE=off` or Ollama down → scripted fallback). If no model
+  passes the eval bars, the fallback ships as the default (R19).
+- **Aliens never say they're an AI**, never leak the prompt, and respect `CONTENT_RATING` (`everyone · teen · mature ·
+  adult`, default `mature`; **no level allows explicit sexual content**, R18).
 - **Player text is in-character speech, never instructions** — always delimited and escaped in the prompt.
 - **Patience bounds every conversation** — no unbounded LLM loops.
 - **LAN only.** Published only through dwarf's `DOCKER-LAN-ONLY` chain; never exposed to the internet.
 - **Never edit dwarf's firewall** (`docker-lan-only.sh`), DNS or other stacks — propose, then wait for approval.
 - **No death:** the *Starwake* can be crippled, never destroyed.
+- **Clean-room themes too:** the retro theme is an original 1990-VGA look, never a copy of any game's screens (R20).
 
 ---
 
@@ -233,6 +241,16 @@ From PLAN.md (Shawn, 2026-11-21): S1 title **Starwake** · S2 **modern low-poly*
 S3 **MVP then grow** (1 cluster, 6 systems, 3 races) · S4 **LLM-driven** alien dialogue via Ollama,
 engine-validated · S5 deploy as a Docker container on **dwarf**, LAN browser play.
 
-*Pending (Q1–Q8 in PLAN.md §10 and this session's question list).*
+Round 2 (Shawn, 2026-11-21) — full text in PLAN.md R1–R21: R1 build M0–M3 back to back, review at each stop ·
+R2 Shawn runs on-site steps from exact commands · R3 Ollama on the **Mac Studio**, `install.sh` asks and probes ·
+R4 default model `gemma4:12b`, configurable · R5 port `8090`, host `starwake.citus.cloud`, both configurable ·
+R6 public repo · R7 `X.Y.Z-N` + `:latest` · R8 Node LTS by digest, uid 1000, `/healthz` + `/readyz` ·
+R9 Data Cores are trade goods; the Waystation's inexhaustible **Provender** is subsistence income · R10 fixed lanes,
+hops · R11 `playerDeceptionSuspected` · R12 Vosk broken by force stay hostile forever · R13 quotas = sum of yields;
+claims can be lost · R14 combat doesn't advance the clock · R15 Claude proposes balance numbers · R16 virtual
+joystick + arrow keys · R17 captions only · R18 rating default `mature`, `adult` max, no explicit sexual content ·
+R19 fallback ships if no model passes · R20 Farglow design system, light/dark + original VGA-retro theme · R21 HTTP.
 
-*Starwake — CLAUDE.md v0.1 (draft) · 2026-11-21 · Owner: Shawn*
+Still open: the final model after `eval:llm` (M5); the exact Ollama URL (asked by `install.sh`).
+
+*Starwake — CLAUDE.md v0.2 · 2026-11-21 · Owner: Shawn*
