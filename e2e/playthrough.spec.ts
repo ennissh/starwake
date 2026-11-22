@@ -429,6 +429,8 @@ test.describe('headless playthrough', () => {
           (await run.snap()).systemId !== 'cinder-gate'
         )
           continue;
+        // Occupants (and their base) show only once the system is surveyed.
+        if (!(await run.snap()).state.known.includes('cinder-gate')) await run.probe();
         await run.openReport();
         await run.page.locator('[data-act="attack"]').click();
         await ep(async () => (await run.snap()).fighting).toBe(true);
