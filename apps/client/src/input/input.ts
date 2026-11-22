@@ -34,6 +34,7 @@ export class Input {
     map: KeyMap,
   ) {
     this.map = map;
+    document.addEventListener('pointerlockchange', this.onLockChange);
     this.idx = bindingIndex(map);
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
@@ -60,18 +61,35 @@ export class Input {
     return document.pointerLockElement === this.el;
   }
 
+  /**
+   * Whether the game currently wants the mouse. Pointer lock is granted asynchronously, so a panel
+   * can open (and release the mouse) before a lock asked for a moment earlier arrives; a lock that
+   * arrives when it's no longer wanted is dropped at once.
+   */
+  private wantLock = false;
+
   async lockPointer(): Promise<boolean> {
+    this.wantLock = true;
     if (this.pointerLocked) return true;
     try {
       await this.el.requestPointerLock();
-      return this.pointerLocked;
     } catch {
       return false; // e.g. headless browsers, or the cooldown right after Esc
     }
+    if (!this.wantLock) {
+      this.unlockPointer();
+      return false;
+    }
+    return this.pointerLocked;
   }
   unlockPointer(): void {
+    this.wantLock = false;
     if (this.pointerLocked) document.exitPointerLock();
   }
+
+  private onLockChange = (): void => {
+    if (this.pointerLocked && !this.wantLock) document.exitPointerLock();
+  };
 
   /** True while any binding of a held action is down. */
   held(a: Action): boolean {
@@ -135,6 +153,7 @@ export class Input {
     window.removeEventListener('mouseup', this.onMouseUp);
     window.removeEventListener('mousemove', this.onMouseMove);
     window.removeEventListener('mousedown', this.onCaptureMouse, true);
+    document.removeEventListener('pointerlockchange', this.onLockChange);
     window.removeEventListener('click', this.onCaptureClick, true);
   }
 
