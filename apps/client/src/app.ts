@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { ContentBundle, EncounterResult } from '@starwake/shared';
+import { type ContentBundle, type EncounterResult, sensiblePilot } from '@starwake/shared';
 import { Input } from './input/input.js';
 import type { Action } from './input/keymap.js';
 import { type Backdrop, SpaceScene } from './space/spaceScene.js';
@@ -70,6 +70,9 @@ export class Game {
   private content: ContentBundle | null = null;
   private arenaId: string | null = null;
   private last = performance.now();
+  // Test hooks only (headless playthrough): a scripted fight pilot and a sim time scale.
+  private autopilot = false;
+  private timeScale = 1;
   private lastAutoPause = 0;
 
   constructor(
@@ -231,6 +234,7 @@ export class Game {
   private setScene(s: SpaceScene): void {
     if (this.scene && this.scene !== s) this.scene.dispose();
     this.scene = s;
+    this.applyTestHooks();
     this.screen = 'flight';
     this.paused = false;
     if (!this.anyModal()) {
@@ -391,6 +395,12 @@ export class Game {
     this.perf.frame(dt * 1000, this.renderer.gl);
   };
 
+  private applyTestHooks(): void {
+    if (!this.scene) return;
+    this.scene.autopilot = this.autopilot ? sensiblePilot : null;
+    this.scene.timeScale = this.timeScale;
+  }
+
   /** Read-only hook for the Playwright smoke tests and debugging in the console. */
   private exposeTestHook(): void {
     (window as unknown as { __starwake: unknown }).__starwake = {
@@ -401,6 +411,18 @@ export class Game {
       bindings: () => this.settings.bindings,
       profile: () => this.profile,
       debugCripple: () => this.scene?.debugCripple() ?? false,
+      /** Fights are flown by the scripted sensible pilot (the server still verifies them by replay). */
+      autopilot: (on: boolean) => {
+        this.autopilot = !!on;
+        this.applyTestHooks();
+        return this.autopilot;
+      },
+      /** Run the sim faster than real time (1–8×); commands per tick are unchanged. */
+      timeScale: (n: number) => {
+        this.timeScale = Math.max(1, Math.min(8, Number(n) || 1));
+        this.applyTestHooks();
+        return this.timeScale;
+      },
     };
   }
 }

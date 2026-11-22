@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Encounter, TICK } from '../src/sim/combat/encounter.js';
 import { CommandRecorder, plausible, quantize, replay } from '../src/sim/combat/replay.js';
-import { sensiblePilot } from './bots.js';
+import { sensiblePilot } from '../src/sim/combat/pilots.js';
 import { loadTestContent } from './helpers.js';
 
 const c = loadTestContent();

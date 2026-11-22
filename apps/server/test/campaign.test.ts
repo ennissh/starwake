@@ -3,10 +3,16 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { FastifyInstance } from 'fastify';
-import { CommandRecorder, Encounter, TICK, quantize, type CampaignState } from '@starwake/shared';
+import {
+  CommandRecorder,
+  Encounter,
+  TICK,
+  quantize,
+  sensiblePilot,
+  type CampaignState,
+} from '@starwake/shared';
 import { buildApp } from '../src/app.js';
 import { loadConfig } from '../src/config.js';
-import { sensiblePilot } from '../../../packages/shared/test/bots.js';
 
 let dir: string;
 let app: FastifyInstance;
@@ -93,6 +99,15 @@ describe('campaign', () => {
     expect(
       (await app.inject(`/api/saves?profile=${profile}`)).json().map((s: { id: string }) => s.id),
     ).toEqual([`${profile}.auto`, `${profile}.1`]);
+  });
+
+  it('a chosen seed gives the same campaign', async () => {
+    await post('/api/profiles', { name: 'Seedy' });
+    const a = (await post('/api/saves', { profile: 'seedy', slot: '1', seed: 'run-42' })).json().state;
+    const b = (await post('/api/saves', { profile: 'seedy', slot: '2', seed: 'run-42' })).json().state;
+    expect(a).toEqual(b);
+    expect(a.seed).toBe('run-42');
+    expect((await post('/api/saves', { profile: 'seedy', slot: '3', seed: '../x' })).statusCode).toBe(400);
   });
 
   it('writes atomically: no temp files left behind', async () => {

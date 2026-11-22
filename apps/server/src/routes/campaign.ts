@@ -42,6 +42,11 @@ const NewSave = z.object({
   profile: z.string().regex(PROFILE_ID),
   slot: z.enum(SLOTS),
   copyFrom: SaveId.optional(),
+  /** A chosen seed replays the same campaign (seeded runs, reproducible tests). */
+  seed: z
+    .string()
+    .regex(/^[A-Za-z0-9._-]{1,64}$/)
+    .optional(),
 });
 const ActionBody = z.object({ action: CampaignActionSchema });
 const StartBody = z.object({ saveId: SaveId });
@@ -134,7 +139,7 @@ export function campaignRoutes(app: FastifyInstance, store: Store, content: Cont
           throw httpError(400, 'OTHER_PROFILE', 'Saves stay with their pilot.');
         state = (await load(body.copyFrom)).state;
       } else {
-        state = newGame(content, randomUUID());
+        state = newGame(content, body.seed ?? randomUUID());
         req.log.info({ save: id }, 'new game');
       }
       const f = await write(id, state);

@@ -367,6 +367,12 @@ export class Campaign {
 
   /** Re-render whichever panel is open with the latest state. */
   private refresh(): void {
+    // Docking or repairing can spend the last of the clock: show the ending, not a stale panel.
+    if (this.view.state.outcome !== 'ongoing') {
+      this.renderBar();
+      if (this.modal.kind !== 'ending') this.showEnding();
+      return;
+    }
     if (this.modal.kind === 'system')
       this.modal.update(systemBody(this.view.state, this.c, this.view.readiness));
     else if (this.modal.kind === 'map')
@@ -459,6 +465,8 @@ export class Campaign {
       fighting: this.fighting,
       verification: this.lastVerification,
       state: this.view.state,
+      ship: this.view.ship,
+      readiness: this.view.readiness,
     };
   }
 }

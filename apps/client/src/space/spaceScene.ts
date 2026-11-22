@@ -117,6 +117,9 @@ export class SpaceScene {
   private lastLaunched: string | null = null;
   private ended = false;
   private recorder = new CommandRecorder();
+  /** Test hooks (e2e/playthrough.spec.ts): a scripted pilot for fights, and a faster sim clock. */
+  autopilot: ((e: Encounter) => PlayerCommand) | null = null;
+  timeScale = 1;
   private holoT = 0;
 
   constructor(
@@ -286,6 +289,19 @@ export class SpaceScene {
   }
 
   private command(): PlayerCommand {
+    if (this.autopilot && this.o.mode === 'fight') {
+      this.pendingThrottle = undefined;
+      this.pendingLaunch = null;
+      this.pendingRecall = false;
+      this.pendingAssist = false;
+      const cmd = this.autopilot(this.sim);
+      // A held emergency fold still works under the autopilot.
+      if (this.pendingFold) {
+        this.pendingFold = false;
+        return { ...cmd, emergencyFold: true };
+      }
+      return cmd;
+    }
     const mode = this.rig.mode;
     const firing = this.input.held('fire');
     const riding = mode === 'drone' && this.ridingId ? this.sim.get(this.ridingId) : undefined;
@@ -324,7 +340,7 @@ export class SpaceScene {
           this.foldHoldStart = null;
         }
       }
-      this.acc += Math.min(dt, 0.25);
+      this.acc += Math.min(dt, 0.25) * this.timeScale;
       while (this.acc >= TICK) {
         this.capturePrev();
         // Quantised so the server's replay of the recorded log sees the very same numbers.

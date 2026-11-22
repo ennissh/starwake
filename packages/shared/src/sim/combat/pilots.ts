@@ -1,8 +1,14 @@
-import { type Encounter, IDLE_COMMAND } from '../src/sim/combat/encounter.js';
-import { toWorld } from '../src/sim/combat/geometry.js';
-import { steerToward } from '../src/sim/combat/steer.js';
-import type { Ent, PlayerCommand } from '../src/sim/combat/types.js';
-import { dist, normalize, sub } from '../src/sim/math.js';
+import { type Encounter, IDLE_COMMAND } from './encounter.js';
+import { toWorld } from './geometry.js';
+import { steerToward } from './steer.js';
+import type { Ent, PlayerCommand } from './types.js';
+import { dist, normalize, sub } from '../math.js';
+
+/*
+ * Scripted pilots. They stand in for a human's hands, nothing else: their commands go through the
+ * same sim, recorder and server replay as a player's. Used by the combat balance tests and, through a
+ * test-only client hook, by the headless playthrough (e2e/playthrough.spec.ts). Listed in docs/FAKES.md.
+ */
 
 /** Does nothing; WAKE still crews the turret (the ship's default). */
 export const passivePilot = (): PlayerCommand => IDLE_COMMAND;

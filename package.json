@@ -20,7 +20,9 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "playwright test --trace off",
+    "e2e": "playwright test e2e/smoke.spec.ts --trace off",
+    "e2e:ux": "playwright test e2e/ux.spec.ts --trace off",
+    "e2e:playthrough": "playwright test e2e/playthrough.spec.ts --trace off",
     "start": "node apps/server/dist/index.js",
     "eval:llm": "echo 'eval:llm arrives in M5' && exit 1"
   },

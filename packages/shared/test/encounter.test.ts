@@ -4,7 +4,7 @@ import { toWorld } from '../src/sim/combat/geometry.js';
 import { steerToward } from '../src/sim/combat/steer.js';
 import type { CombatEvent, PlayerCommand } from '../src/sim/combat/types.js';
 import { normalize, sub } from '../src/sim/math.js';
-import { passivePilot, sensiblePilot } from './bots.js';
+import { passivePilot, sensiblePilot } from '../src/sim/combat/pilots.js';
 import { loadTestContent } from './helpers.js';
 
 const c = loadTestContent();
