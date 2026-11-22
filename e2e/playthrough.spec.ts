@@ -22,6 +22,10 @@ const SEED = process.env.PLAYTHROUGH_SEED ?? 'playthrough-1';
 const TIME_SCALE = Number(process.env.PLAYTHROUGH_TIME_SCALE ?? 6);
 const OUT = 'test-results/playthrough';
 
+/** expect.poll that checks often: the UI answers in tens of milliseconds. */
+const ep = <T>(fn: () => Promise<T>, o: { timeout?: number } = {}) =>
+  expect.poll(fn, { intervals: [50, 100, 200], timeout: 10_000, ...o });
+
 type Snap = {
   systemId: string;
   panel: string | null;
@@ -122,9 +126,10 @@ class Run {
 
   async closePanel(): Promise<void> {
     await this.resume();
+    await this.takeSalvage(); // the one panel Esc can't close: it needs a choice
     if ((await this.snap()).panel) {
       await this.page.keyboard.press('Escape');
-      await expect.poll(async () => (await this.snap()).panel).toBeNull();
+      await ep(async () => (await this.snap()).panel).toBeNull();
     }
   }
 
@@ -132,14 +137,14 @@ class Run {
     if ((await this.snap()).panel === 'system') return;
     await this.closePanel();
     await this.key('KeyI');
-    await expect.poll(async () => (await this.snap()).panel).toBe('system');
+    await ep(async () => (await this.snap()).panel).toBe('system');
   }
 
   async probe(): Promise<void> {
     await this.closePanel();
     await this.key('KeyP');
-    await expect.poll(async () => (await this.snap()).panel).toBe('system');
-    await expect.poll(async () => (await this.snap()).state.known).toContain((await this.snap()).systemId);
+    await ep(async () => (await this.snap()).panel).toBe('system');
+    await ep(async () => (await this.snap()).state.known).toContain((await this.snap()).systemId);
     await this.record(`probe ${(await this.snap()).systemId}`);
   }
 
@@ -156,7 +161,7 @@ class Run {
     const before = (await this.snap()).state.clock;
     await this.openReport();
     await this.page.locator('[data-act="dock"]').click();
-    await expect.poll(async () => (await this.snap()).state.clock).toBeLessThan(before);
+    await ep(async () => (await this.snap()).state.clock).toBeLessThan(before);
     await this.record('dock');
   }
 
@@ -190,7 +195,7 @@ class Run {
     await this.closePanel();
     const from = (await this.snap()).systemId;
     await this.key('Tab');
-    await expect.poll(async () => (await this.snap()).panel).toBe('map');
+    await ep(async () => (await this.snap()).panel).toBe('map');
     await this.page.locator(`[data-act="select"][data-id="${to}"]`).dispatchEvent('click');
     await expect(this.page.locator('.cmap__side h3')).toHaveText(
       this.c.systems.find((s) => s.id === to)!.name,
@@ -252,19 +257,19 @@ class Run {
       }
       await this.page.waitForTimeout(400);
     }
-    await expect.poll(async () => (await this.snap()).fighting).toBe(false);
+    await ep(async () => (await this.snap()).fighting).toBe(false);
     await this.record(`fight (${reason}) at ${where}: ${this.fights[this.fights.length - 1]!.outcome}`);
-    // Salvage: take what fits.
-    if (
-      await this.page
-        .getByRole('dialog', { name: 'Salvage' })
-        .isVisible({ timeout: 1500 })
-        .catch(() => false)
-    ) {
-      await this.page.getByRole('button', { name: 'Take selected' }).click();
-      await expect.poll(async () => (await this.snap()).panel, { timeout: 5000 }).not.toBe('salvage');
-      await this.record('salvage');
-    }
+    await this.takeSalvage();
+  }
+
+  /** The salvage panel opens just after the result screen, whenever the server offered salvage. */
+  async takeSalvage(): Promise<void> {
+    if (!(await this.snap()).state.salvageOffer.length) return;
+    await ep(async () => (await this.snap()).panel).toBe('salvage');
+    await this.page.getByRole('button', { name: 'Take selected' }).click();
+    await ep(async () => (await this.snap()).state.salvageOffer.length).toBe(0);
+    await ep(async () => (await this.snap()).panel).not.toBe('salvage');
+    await this.record('salvage');
   }
 
   async goTo(to: string): Promise<void> {
@@ -375,7 +380,8 @@ function save(run: Run, outcome: string): void {
 }
 
 test.describe('headless playthrough', () => {
-  test.use({ viewport: { width: 1280, height: 720 }, colorScheme: 'dark' });
+  // No silent hangs: every click or key gives up after 15 s.
+  test.use({ viewport: { width: 1280, height: 720 }, colorScheme: 'dark', actionTimeout: 15_000 });
 
   test('win: claim the quotas, break the Vosk, signal the Caravan from Verdance', async ({ page }) => {
     test.setTimeout(20 * 60_000);
@@ -425,7 +431,7 @@ test.describe('headless playthrough', () => {
           continue;
         await run.openReport();
         await run.page.locator('[data-act="attack"]').click();
-        await expect.poll(async () => (await run.snap()).fighting).toBe(true);
+        await ep(async () => (await run.snap()).fighting).toBe(true);
         await run.fight();
       }
       expect((await run.snap()).state.flags).toContain('vosk_broken');
@@ -437,17 +443,17 @@ test.describe('headless playthrough', () => {
       // 5. Colony Readiness: all four met at the Cradle → signal.
       await run.closePanel();
       await run.key('Tab');
-      await expect.poll(async () => (await run.snap()).panel).toBe('map');
+      await ep(async () => (await run.snap()).panel).toBe('map');
       await run.shot('star-map');
       await run.closePanel();
       await run.key('KeyH');
-      await expect.poll(async () => (await run.snap()).panel).toBe('readiness');
+      await ep(async () => (await run.snap()).panel).toBe('readiness');
       const r = (await run.snap()).readiness;
       expect(r.cradle.ok && r.safety.ok && r.clock.ok, JSON.stringify(r)).toBe(true);
       expect(r.canSignal).toBe(true);
       await run.shot('readiness');
       await page.locator('[data-act="signal"]').click();
-      await expect.poll(async () => (await run.snap()).state.outcome).toBe('won');
+      await ep(async () => (await run.snap()).state.outcome).toBe('won');
       await expect(page.getByRole('dialog', { name: 'The Caravan is coming' })).toBeVisible();
       await run.record('signal the Caravan');
       await run.shot('ending');
