@@ -45,7 +45,13 @@ the Vosk → Slag → Verdance: Verdance Prime → Colony Readiness → signal t
    pilot finished every fight at 100% hull. A human will wander, refit and lose fights, but the clock
    currently puts no pressure on the run. See the proposal below.
 
-## Clock proposal (for Shawn to decide)
+## Decision: option B (R22, 2026-11-22)
+
+Jumps now cost 0.15 years per parsec and a Waystation refit 0.25 years; the clock stays at 10 years.
+Rerun after the change: the win uses **3.14 of 10 years** (playthrough-1, 1.6 min), and the lose run
+reaches 0 in 1.5 min.
+
+## Clock proposal (as presented)
 
 The perfect route spends 0.86 years on jumps (17.2 pc × 0.05) and 0.1 on one refit. Options:
 

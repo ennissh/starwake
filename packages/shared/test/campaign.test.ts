@@ -80,7 +80,7 @@ describe('jump', () => {
     const { state, events } = act(s, { type: 'jump', to: 'glass-reach' });
     expect(state.systemId).toBe('glass-reach');
     expect(state.fuel).toBeCloseTo(100 - pc * fuelPerParsec(s.installed, c), 3);
-    expect(state.clock).toBeCloseTo(10 - pc * 0.05, 3);
+    expect(state.clock).toBeCloseTo(10 - pc * c.rules.clock.jumpYearsPerParsec, 3);
     expect(events[0]).toMatchObject({ t: 'jumped', from: 'harbor', to: 'glass-reach' });
   });
   it('follows lanes only', () => {

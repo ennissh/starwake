@@ -249,7 +249,8 @@ R9 Data Cores are trade goods; the Waystation's inexhaustible **Provender** is s
 hops · R11 `playerDeceptionSuspected` · R12 Vosk broken by force stay hostile forever · R13 quotas = sum of yields;
 claims can be lost · R14 combat doesn't advance the clock · R15 Claude proposes balance numbers · R16 virtual
 joystick + arrow keys · R17 captions only · R18 rating default `mature`, `adult` max, no explicit sexual content ·
-R19 fallback ships if no model passes · R20 Farglow design system, light/dark + original VGA-retro theme · R21 HTTP.
+R19 fallback ships if no model passes · R20 Farglow design system, light/dark + original VGA-retro theme · R21 HTTP ·
+R22 Caravan Clock: jumps 0.15 yr/pc, Waystation refit 0.25 yr, 10-year clock (headless playthrough: 3.14 yr for a perfect win).
 
 Still open: the final model after `eval:llm` (M5); the exact Ollama URL (asked by `install.sh`).
 

@@ -1,8 +1,8 @@
 {
   "clock": {
     "startYears": 10,
-    "jumpYearsPerParsec": 0.05,
-    "refitYears": 0.1,
+    "jumpYearsPerParsec": 0.15,
+    "refitYears": 0.25,
     "lifeboatYears": 1.5,
     "repairYears": 0.02,
     "swapYears": 0.01

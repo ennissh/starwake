@@ -2,6 +2,10 @@
 
 ## 0.1.0 (in progress)
 
+### Caravan Clock (R22)
+- Jumps cost 0.15 years per parsec (was 0.05) and a Waystation refit 0.25 years (was 0.1). A perfect
+  playthrough now uses 3.14 of the 10 years (was 1.06).
+
 ### Headless playthrough
 - `e2e/playthrough.spec.ts`: a full campaign through the real UI to a win (claims, jumps, Waystation,
   fights flown by the scripted pilot and verified by server replay, readiness, signal) and to a loss

@@ -37,6 +37,7 @@ This document is the build brief for Claude Code. Read all of it before writing 
 | R19 | No model passes eval | Ship with the scripted fallback as the default, LLM opt-in |
 | R20 | Look | Share **Farglow's design system** for now (tokens, fonts, light/dark). Themes are switchable: Farglow light, Farglow dark, and an original **1990-VGA** retro theme (era-evoking, not a copy of any game) |
 | R21 | HTTPS | Plain HTTP for 0.1.0 |
+| R22 | Caravan Clock (2026-11-22) | Option B: jumps cost **0.15 yr/pc**, a Waystation refit **0.25 yr**; the clock stays at 10 years. A perfect headless playthrough now uses 3.14 years |
 
 Anything below marked **(proposed)** is a best-practice default. Use it unless Shawn says otherwise. Anything under "Open questions" must be confirmed before the milestone that needs it.
 
@@ -76,8 +77,8 @@ The **Colony Readiness** screen (H) tracks four requirements:
 - **Win:** all four are met, then you signal the Caravan from the Cradle system. An ending summary shows rating, time left, treaties, races fought and the choices you made.
 - **Lose:** the Caravan Clock hits 0.
 - **Time costs (proposed):**
-  - fold jump: 0.05 years per parsec
-  - refit at the Waystation: 0.1 years
+  - fold jump: 0.15 years per parsec (R22)
+  - refit at the Waystation: 0.25 years (R22)
   - lifeboat bail-out: 1.5 years
   - waiting or repairing in place: 0.02 years per action
 - There is no "death". The *Starwake* can be crippled but never destroyed (§1.5).
@@ -723,7 +724,6 @@ All eight original questions were answered on 21 Nov 2026 (table R1–R21 at the
 | # | Question | Needed by |
 |---|---|---|
 | 5 | Final Ollama model: confirm `gemma4:12b` (or another) from the `eval:llm` report | M5 |
-| 10 | Caravan Clock: the headless playthrough wins with ~1.1 of 10 years. Pick option A, B (recommended) or C in `docs/playthrough.md` | M6 |
 | 9 | Exact Ollama URL on the Mac Studio (LAN IP or Tailscale name); the installer asks and probes it | M0 deploy |
 
 ## 11. Reference: what was borrowed (ideas only) and what is new
