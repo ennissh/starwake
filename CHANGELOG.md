@@ -2,6 +2,15 @@
 
 ## 0.1.0 (in progress)
 
+### Headless playthrough
+- `e2e/playthrough.spec.ts`: a full campaign through the real UI to a win (claims, jumps, Waystation,
+  fights flown by the scripted pilot and verified by server replay, readiness, signal) and to a loss
+  (clock runs out); timelines in `test-results/playthrough/`. Results and a clock proposal in
+  `docs/playthrough.md`.
+- Test hooks `autopilot` and `timeScale`; optional `seed` for a new save; `./test.sh --full`.
+- Fixed: the mouse could end up pointer-locked under the salvage panel; running out of clock at the
+  Waystation didn't show the ending.
+
 ### UI/UX validation and mockups
 - `e2e/ux.spec.ts`: headless UX audit of every built view (axe WCAG 2.2 AA, layout, overflow,
   target size, keyboard focus, console) at three viewports and three themes; see `docs/ux-validation.md`.

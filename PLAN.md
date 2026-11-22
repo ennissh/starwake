@@ -723,6 +723,7 @@ All eight original questions were answered on 21 Nov 2026 (table R1–R21 at the
 | # | Question | Needed by |
 |---|---|---|
 | 5 | Final Ollama model: confirm `gemma4:12b` (or another) from the `eval:llm` report | M5 |
+| 10 | Caravan Clock: the headless playthrough wins with ~1.1 of 10 years. Pick option A, B (recommended) or C in `docs/playthrough.md` | M6 |
 | 9 | Exact Ollama URL on the Mac Studio (LAN IP or Tailscale name); the installer asks and probes it | M0 deploy |
 
 ## 11. Reference: what was borrowed (ideas only) and what is new
