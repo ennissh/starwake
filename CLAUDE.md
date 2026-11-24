@@ -65,7 +65,8 @@ deploy/                 compose.yaml, .env.example (what install.sh copies to dw
 scripts/                version.sh, backup.sh, clean-room + secret checks, eval tooling
 docs/                   llm-eval.md (model benchmark), playtest notes
 install.sh              interactive installer for dwarf (asks every setting, probes Ollama)
-test.sh  build.sh       local test + build (no GitHub Actions)
+test.sh  build.sh       local test + build
+.github/workflows/      images.yml only: manual "Publish images" (workflow_dispatch), R23
 VERSION  CHANGELOG.md   README.md  PLAN.md  CLAUDE.md
 ```
 
@@ -143,8 +144,10 @@ are exempt). The same list is part of the translator's output post-filter.
 
 ### 11. Git
 Develop on the session's designated branch; small commits with clear messages; never push elsewhere
-without permission; open a PR only when asked. **No GitHub Actions** — test and build are local
-(`./test.sh`, `./build.sh`).
+without permission; open a PR only when asked. **One manual-only workflow (R23)**:
+`.github/workflows/images.yml` runs `./test.sh` then `./build.sh --push`, and only when started by hand
+(`workflow_dispatch`). Never add push/pull_request/schedule triggers, more workflows, or checks that block a
+merge; the test cycle stays local (`./test.sh`). Actions are pinned to commit SHAs.
 
 ---
 
@@ -213,10 +216,12 @@ the dwarf/Ollama acceptance steps for Shawn, with exact commands.
 - Let model output change state outside `validate.ts` → `shared/rules`.
 - Use `Math.random()`/wall-clock time in `packages/shared`, or hard-code balance numbers.
 - Add any clean-room-banned term, asset or text; search for or fetch the original games' assets.
-- Add GitHub Actions, telemetry, or runtime calls to anything except the Ollama host.
+- Add automatic CI triggers or new workflows (R23), telemetry, or runtime calls to anything except the Ollama host.
 - Hard-code an Ollama model, hostname or IP (they come from `.env`).
 - Edit dwarf's firewall, Pi-hole DNS or other stacks, or `rm` `/opt/docker/starwake/data` or saves.
-- Push images any way but `./build.sh --push`; commit `.env`, saves or transcripts.
+- Push images any way but the Publish images workflow or `./build.sh --push`; commit `.env`, saves or transcripts.
+- Edit the embedded copies in `install.sh` by hand: change `deploy/compose.yaml` or `scripts/backup.sh`, then
+  run `scripts/sync-installer.sh` (`./test.sh` checks they match).
 
 ---
 
@@ -250,7 +255,8 @@ hops · R11 `playerDeceptionSuspected` · R12 Vosk broken by force stay hostile 
 claims can be lost · R14 combat doesn't advance the clock · R15 Claude proposes balance numbers · R16 virtual
 joystick + arrow keys · R17 captions only · R18 rating default `mature`, `adult` max, no explicit sexual content ·
 R19 fallback ships if no model passes · R20 Farglow design system, light/dark + original VGA-retro theme · R21 HTTP ·
-R22 Caravan Clock: jumps 0.15 yr/pc, Waystation refit 0.25 yr, 10-year clock (headless playthrough: 3.14 yr for a perfect win).
+R22 Caravan Clock: jumps 0.15 yr/pc, Waystation refit 0.25 yr, 10-year clock (headless playthrough: 3.14 yr for a perfect win) ·
+R23 (2026-11-24) images publish from a manual-only GitHub Actions workflow; `install.sh` is a single self-contained file.
 
 Still open: the final model after `eval:llm` (M5); the exact Ollama URL (asked by `install.sh`).
 

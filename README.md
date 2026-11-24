@@ -59,25 +59,34 @@ LLM_MODE=mock npm run dev       # play without Ollama (canned alien replies)
 
 ## Deploy to dwarf
 
-Build and publish (on the build machine):
+**1. Publish an image.** On GitHub: **Actions → Publish images → Run workflow** (branch `main`). It runs
+`./test.sh`, then pushes `ghcr.io/ennissh/starwake:<X.Y.Z-N>` and `:latest` for amd64 and arm64. Tick
+*release* to also promote that build to `X.Y.Z` and `:stable`. It never runs on its own.
 
-```bash
-./build.sh --push          # runs ./test.sh, then pushes ghcr.io/ennissh/starwake:<X.Y.Z-N> and :latest
-```
+The first time, make the package pullable without a login: GitHub → your profile → **Packages →
+starwake → Package settings → Change visibility → Public** (or run `docker login ghcr.io` on dwarf with
+a token that has `read:packages`).
+
+Without Actions, the same thing from any machine with Docker: `docker login ghcr.io`, then
+`./build.sh --push`.
 
 Install or reconfigure (on dwarf). `install.sh` asks every setting, checks the port, probes Ollama
 **from inside a container** (the real path through `DOCKER-USER`), lists the models on the Ollama host,
 writes `/opt/docker/starwake/{compose.yaml,.env}`, chowns the data directory to uid 1000, optionally
-installs a daily backup, starts the container and waits for `/healthz`:
+installs a daily backup, starts the container and waits for `/healthz`.
+
+**2. Install on dwarf.** `install.sh` is one self-contained file (it carries the compose file and the
+backup script), so dwarf needs nothing else from the repository:
 
 ```bash
-git clone https://github.com/ennissh/starwake.git && cd starwake
-sudo ./install.sh
+curl -fsSLO https://raw.githubusercontent.com/ennissh/starwake/main/install.sh
+sudo bash install.sh
 ```
 
 - Re-run it any time: it offers your saved answers (`--settings saved|review|fresh`).
-- Upgrade to the newest build: `git pull && sudo ./install.sh --settings saved`.
-- Scripted: `sudo OLLAMA_URL=http://mac-studio.lan:11434 ./install.sh --non-interactive`.
+- Upgrade to the newest build: fetch `install.sh` again, then `sudo bash install.sh --settings saved`.
+- A specific build: `sudo bash install.sh --tag 0.1.0-17`.
+- Scripted: `sudo OLLAMA_URL=http://mac-studio.lan:11434 bash install.sh --non-interactive`.
 - It never edits the firewall, Pi-hole or other stacks; it prints what to change. Then by hand:
   1. Pi-hole local DNS: `starwake.citus.cloud → <dwarf's LAN IP>` (your `local-dns.txt`).
   2. Check that the LAN subnets you play from are allowed for the port in `DOCKER-LAN-ONLY`.
@@ -173,7 +182,8 @@ starwake/
 ├── scripts/            version.sh, backup.sh, clean-room + secret checks, eval tooling
 ├── e2e/                Playwright smoke tests (against the built server, mock LLM)
 ├── install.sh          interactive installer for dwarf
-├── test.sh · build.sh  local test cycle and image build (no GitHub Actions)
+├── test.sh · build.sh  local test cycle and image build
+├── .github/workflows/  images.yml: the manual-only "Publish images" workflow
 ├── Dockerfile
 ├── README.md
 └── PLAN.md
