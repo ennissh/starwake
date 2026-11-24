@@ -1,0 +1,76 @@
+# Publish Starwake images to GHCR (R23). Runs ONLY when started by hand:
+# GitHub → Actions → "Publish images" → Run workflow. No push or pull_request triggers, and nothing
+# here blocks a merge. It runs ./test.sh first (the same local cycle), then ./build.sh --push, which
+# tags ghcr.io/ennissh/starwake:<X.Y.Z-N> and :latest for linux/amd64 and linux/arm64.
+# Action versions are pinned to commit SHAs.
+name: Publish images
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Also promote this build to X.Y.Z and :stable (./build.sh --release)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-images
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out (full history, for the X.Y.Z-N build number)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Node LTS
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install the Playwright browser for the smoke tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Test (./test.sh)
+        run: ./test.sh
+
+      - name: QEMU (arm64 builds)
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+
+      - name: Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push (amd64 + arm64)
+        run: ./build.sh --push --skip-tests
+
+      - name: Promote to a release
+        if: ${{ inputs.release }}
+        run: ./build.sh --release
+
+      - name: Summary
+        run: |
+          v="$(scripts/version.sh)"
+          {
+            echo "### Published ghcr.io/ennissh/starwake:${v} and :latest"
+            echo ""
+            echo "On dwarf: \`sudo bash install.sh --tag ${v}\` (or keep \`latest\`)."
+          } >> "$GITHUB_STEP_SUMMARY"

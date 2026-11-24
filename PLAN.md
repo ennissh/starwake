@@ -37,6 +37,7 @@ This document is the build brief for Claude Code. Read all of it before writing 
 | R19 | No model passes eval | Ship with the scripted fallback as the default, LLM opt-in |
 | R20 | Look | Share **Farglow's design system** for now (tokens, fonts, light/dark). Themes are switchable: Farglow light, Farglow dark, and an original **1990-VGA** retro theme (era-evoking, not a copy of any game) |
 | R21 | HTTPS | Plain HTTP for 0.1.0 |
+| R23 | CI and installer (2026-11-24) | A manual-only GitHub Actions workflow publishes images to GHCR; `install.sh` is a single self-contained file (`curl -fsSLO …/install.sh && sudo bash install.sh`), no checkout needed on dwarf |
 | R22 | Caravan Clock (2026-11-22) | Option B: jumps cost **0.15 yr/pc**, a Waystation refit **0.25 yr**; the clock stays at 10 years. A perfect headless playthrough now uses 3.14 years |
 
 Anything below marked **(proposed)** is a best-practice default. Use it unless Shawn says otherwise. Anything under "Open questions" must be confirmed before the milestone that needs it.
@@ -51,7 +52,7 @@ Anything below marked **(proposed)** is a best-practice default. Use it unless S
 4. **Deterministic core.** Campaign rules and AI decisions use a seeded PRNG. Given the same seed, save and inputs, the result must be identical. The LLM is the only nondeterministic part, and its outputs are logged.
 5. **Ask, don't assume.** If something here is ambiguous or conflicts with what you find on the machine, stop and ask. Don't guess. This applies especially to hostnames, ports and firewall rules on dwarf.
 6. **Small commits, tests with features.** Every rule added to `packages/shared` comes with unit tests in the same commit.
-7. **No GitHub Actions.** Building and testing are local (`build.sh`, `test.sh`), the same as Shawn's other projects.
+7. **CI is manual only (R23).** Testing is local (`test.sh`). Images publish from one GitHub Actions workflow started by hand (`.github/workflows/images.yml`: `test.sh`, then `build.sh --push`), or from `build.sh --push` on any machine. No automatic triggers.
 
 ---
 

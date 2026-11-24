@@ -2,6 +2,13 @@
 
 ## 0.1.0 (in progress)
 
+### CI and a standalone installer (R23)
+- `.github/workflows/images.yml` ("Publish images"): started by hand from the Actions tab; runs
+  `./test.sh`, then pushes amd64 + arm64 images (`X.Y.Z-N` and `:latest`) to GHCR; optional release
+  promotion. Actions pinned to commit SHAs. No automatic triggers.
+- `install.sh` now carries `compose.yaml` and `backup.sh` inside it: download that one file and run it
+  on dwarf. `scripts/sync-installer.sh` keeps the copies in step; `./test.sh` checks them.
+
 ### Caravan Clock (R22)
 - Jumps cost 0.15 years per parsec (was 0.05) and a Waystation refit 0.25 years (was 0.1). A perfect
   playthrough now uses 3.14 of the 10 years (was 1.06).
