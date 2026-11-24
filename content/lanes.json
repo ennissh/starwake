@@ -1,0 +1,36 @@
+[
+  {
+    "a": "harbor",
+    "b": "glass-reach"
+  },
+  {
+    "a": "harbor",
+    "b": "saltmarrow"
+  },
+  {
+    "a": "glass-reach",
+    "b": "cinder-gate",
+    "ambush": {
+      "raceId": "vosk",
+      "encounterId": "vosk-lane-ambush",
+      "chance": 0.35
+    }
+  },
+  {
+    "a": "cinder-gate",
+    "b": "verdance",
+    "ambush": {
+      "raceId": "vosk",
+      "encounterId": "vosk-lane-ambush",
+      "chance": 0.3
+    }
+  },
+  {
+    "a": "saltmarrow",
+    "b": "the-hush"
+  },
+  {
+    "a": "glass-reach",
+    "b": "saltmarrow"
+  }
+]

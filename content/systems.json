@@ -1,0 +1,254 @@
+[
+  {
+    "id": "harbor",
+    "name": "Harbor",
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "starType": "G2 V",
+    "starColor": "#ffe2b0",
+    "tint": "#1d3350",
+    "description": "Where the Caravan waits, asleep. The automated Waystation keeps the lights on.",
+    "station": "waystation",
+    "planets": [
+      {
+        "id": "anvil",
+        "name": "Anvil",
+        "kind": "rock",
+        "tempK": 310,
+        "atmosphere": "thin CO2",
+        "resources": [
+          {
+            "kind": "ore",
+            "yield": 2
+          }
+        ],
+        "habitable": false
+      }
+    ],
+    "patrols": []
+  },
+  {
+    "id": "glass-reach",
+    "name": "Glass Reach",
+    "position": {
+      "x": 3.0,
+      "y": 0.4,
+      "z": -1.0
+    },
+    "starType": "F7 V",
+    "starColor": "#fff3d8",
+    "tint": "#183a48",
+    "description": "A Quillari trade spire turns slowly above a bright ocean world.",
+    "occupant": "quillari",
+    "planets": [
+      {
+        "id": "lumen",
+        "name": "Lumen",
+        "kind": "ocean",
+        "tempK": 288,
+        "atmosphere": "nitrogen-oxygen",
+        "resources": [
+          {
+            "kind": "biomass",
+            "yield": 2
+          }
+        ],
+        "habitable": false
+      },
+      {
+        "id": "frostglass",
+        "name": "Frostglass",
+        "kind": "ice",
+        "tempK": 140,
+        "atmosphere": "none",
+        "resources": [
+          {
+            "kind": "ice",
+            "yield": 2
+          }
+        ],
+        "habitable": false
+      }
+    ],
+    "patrols": []
+  },
+  {
+    "id": "cinder-gate",
+    "name": "Cinder Gate",
+    "position": {
+      "x": 5.4,
+      "y": 1.0,
+      "z": -3.9
+    },
+    "starType": "K4 III",
+    "starColor": "#ffb070",
+    "tint": "#3a1d14",
+    "description": "Vosk salvage-hive country. Cinder Hold squats over the lane like a toll gate.",
+    "occupant": "vosk",
+    "baseEncounter": "cinder-hold",
+    "planets": [
+      {
+        "id": "slag",
+        "name": "Slag",
+        "kind": "desert",
+        "tempK": 420,
+        "atmosphere": "sulphurous",
+        "resources": [
+          {
+            "kind": "ore",
+            "yield": 2
+          },
+          {
+            "kind": "isotopes",
+            "yield": 1
+          }
+        ],
+        "habitable": false
+      },
+      {
+        "id": "ember",
+        "name": "Ember",
+        "kind": "rock",
+        "tempK": 510,
+        "atmosphere": "none",
+        "resources": [
+          {
+            "kind": "isotopes",
+            "yield": 2
+          }
+        ],
+        "habitable": false
+      }
+    ],
+    "patrols": [
+      {
+        "raceId": "vosk",
+        "encounterId": "vosk-patrol",
+        "chance": 0.45
+      }
+    ]
+  },
+  {
+    "id": "the-hush",
+    "name": "The Hush",
+    "position": {
+      "x": -1.8,
+      "y": 1.2,
+      "z": -7.4
+    },
+    "starType": "M1 V",
+    "starColor": "#ff9a8a",
+    "tint": "#2a2240",
+    "description": "A violet gas cloud that sings to itself. The Murmur live here.",
+    "occupant": "murmur",
+    "planets": [
+      {
+        "id": "veil",
+        "name": "Veil",
+        "kind": "gas",
+        "tempK": 90,
+        "atmosphere": "hydrogen-helium",
+        "resources": [],
+        "habitable": false
+      }
+    ],
+    "patrols": []
+  },
+  {
+    "id": "saltmarrow",
+    "name": "Saltmarrow",
+    "position": {
+      "x": -2.4,
+      "y": -0.8,
+      "z": -3.2
+    },
+    "starType": "K0 V",
+    "starColor": "#ffd2a0",
+    "tint": "#1f2c36",
+    "description": "Quiet, cold and empty. Good ice, a little ore-rich rock.",
+    "planets": [
+      {
+        "id": "brinehold",
+        "name": "Brinehold",
+        "kind": "ice",
+        "tempK": 180,
+        "atmosphere": "thin nitrogen",
+        "resources": [
+          {
+            "kind": "ice",
+            "yield": 2
+          }
+        ],
+        "habitable": false
+      },
+      {
+        "id": "marrow",
+        "name": "Marrow",
+        "kind": "rock",
+        "tempK": 240,
+        "atmosphere": "none",
+        "resources": [
+          {
+            "kind": "isotopes",
+            "yield": 1
+          }
+        ],
+        "habitable": false
+      }
+    ],
+    "patrols": []
+  },
+  {
+    "id": "verdance",
+    "name": "Verdance",
+    "position": {
+      "x": 6.0,
+      "y": -0.6,
+      "z": -7.6
+    },
+    "starType": "G5 V",
+    "starColor": "#fff0c8",
+    "tint": "#173a2a",
+    "description": "A green world under a kind sun. The Vosk patrol it like a prize.",
+    "planets": [
+      {
+        "id": "verdance-prime",
+        "name": "Verdance Prime",
+        "kind": "jungle",
+        "tempK": 295,
+        "atmosphere": "nitrogen-oxygen",
+        "resources": [
+          {
+            "kind": "biomass",
+            "yield": 2
+          }
+        ],
+        "habitable": true
+      },
+      {
+        "id": "thorn",
+        "name": "Thorn",
+        "kind": "desert",
+        "tempK": 350,
+        "atmosphere": "thin CO2",
+        "resources": [
+          {
+            "kind": "ore",
+            "yield": 1
+          }
+        ],
+        "habitable": false
+      }
+    ],
+    "patrols": [
+      {
+        "raceId": "vosk",
+        "encounterId": "vosk-patrol",
+        "chance": 0.55
+      }
+    ]
+  }
+]

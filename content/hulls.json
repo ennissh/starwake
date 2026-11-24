@@ -1,0 +1,251 @@
+[
+  {
+    "id": "vosk-fighter",
+    "name": "Vosk Biter",
+    "raceId": "vosk",
+    "class": "fighter",
+    "armor": 0,
+    "hp": 30,
+    "radius": 14,
+    "flight": {
+      "maxSpeed": 140,
+      "accel": 70,
+      "pitchRate": 1.6,
+      "yawRate": 1.4,
+      "rollRate": 2.5,
+      "angAccel": 5,
+      "driftDamping": 0
+    },
+    "weapons": [
+      {
+        "weapon": "vosk-bolt",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": -10
+        }
+      }
+    ],
+    "subsystems": [],
+    "salvage": {
+      "rolls": 1,
+      "chance": 0.35,
+      "table": [
+        {
+          "componentId": "coil-1",
+          "weight": 3
+        },
+        {
+          "componentId": "gyro-1",
+          "weight": 3
+        },
+        {
+          "componentId": "manifold-1",
+          "weight": 2
+        },
+        {
+          "componentId": "lens-1",
+          "weight": 1
+        }
+      ]
+    },
+    "meshId": "vosk-fighter"
+  },
+  {
+    "id": "vosk-frigate",
+    "name": "Vosk Gnasher",
+    "raceId": "vosk",
+    "class": "frigate",
+    "armor": 1,
+    "hp": 520,
+    "radius": 70,
+    "flight": {
+      "maxSpeed": 45,
+      "accel": 10,
+      "pitchRate": 0.35,
+      "yawRate": 0.32,
+      "rollRate": 0.5,
+      "angAccel": 0.4,
+      "driftDamping": 0
+    },
+    "weapons": [
+      {
+        "weapon": "vosk-cannon",
+        "offset": {
+          "x": 0,
+          "y": 12,
+          "z": -30
+        }
+      },
+      {
+        "weapon": "vosk-cannon",
+        "offset": {
+          "x": 0,
+          "y": 12,
+          "z": 30
+        }
+      }
+    ],
+    "subsystems": [],
+    "salvage": {
+      "rolls": 2,
+      "chance": 0.8,
+      "table": [
+        {
+          "componentId": "capacitor-1",
+          "weight": 3
+        },
+        {
+          "componentId": "coil-2",
+          "weight": 1
+        },
+        {
+          "componentId": "lens-1",
+          "weight": 2
+        },
+        {
+          "componentId": "emitter-1",
+          "weight": 2
+        },
+        {
+          "componentId": "gyro-2",
+          "weight": 1
+        }
+      ]
+    },
+    "meshId": "vosk-frigate"
+  },
+  {
+    "id": "vosk-base",
+    "name": "Cinder Hold",
+    "raceId": "vosk",
+    "class": "base",
+    "armor": 2,
+    "hp": 2600,
+    "radius": 240,
+    "flight": null,
+    "weapons": [],
+    "subsystems": [
+      {
+        "id": "emitter-a",
+        "kind": "emitter",
+        "offset": {
+          "x": 0,
+          "y": 255,
+          "z": 0
+        },
+        "radius": 28,
+        "hp": 60,
+        "armor": 1
+      },
+      {
+        "id": "emitter-b",
+        "kind": "emitter",
+        "offset": {
+          "x": 200,
+          "y": 130,
+          "z": -90
+        },
+        "radius": 28,
+        "hp": 60,
+        "armor": 1
+      },
+      {
+        "id": "emitter-c",
+        "kind": "emitter",
+        "offset": {
+          "x": -200,
+          "y": 130,
+          "z": -90
+        },
+        "radius": 28,
+        "hp": 60,
+        "armor": 1
+      },
+      {
+        "id": "turret-fore",
+        "kind": "turret",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": -265
+        },
+        "radius": 26,
+        "hp": 90,
+        "armor": 1,
+        "weapon": "vosk-heavy-cannon"
+      },
+      {
+        "id": "turret-aft",
+        "kind": "turret",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 265
+        },
+        "radius": 26,
+        "hp": 90,
+        "armor": 1,
+        "weapon": "vosk-heavy-cannon"
+      },
+      {
+        "id": "turret-port",
+        "kind": "turret",
+        "offset": {
+          "x": -265,
+          "y": 40,
+          "z": -60
+        },
+        "radius": 26,
+        "hp": 90,
+        "armor": 1,
+        "weapon": "vosk-heavy-cannon"
+      },
+      {
+        "id": "turret-starboard",
+        "kind": "turret",
+        "offset": {
+          "x": 265,
+          "y": 40,
+          "z": -60
+        },
+        "radius": 26,
+        "hp": 90,
+        "armor": 1,
+        "weapon": "vosk-heavy-cannon"
+      }
+    ],
+    "salvage": {
+      "rolls": 3,
+      "chance": 1,
+      "table": [
+        {
+          "componentId": "emitter-2",
+          "weight": 2
+        },
+        {
+          "componentId": "capacitor-2",
+          "weight": 2
+        },
+        {
+          "componentId": "lens-2",
+          "weight": 2
+        },
+        {
+          "componentId": "coil-2",
+          "weight": 2
+        },
+        {
+          "componentId": "manifold-2",
+          "weight": 2
+        },
+        {
+          "componentId": "gyro-3",
+          "weight": 1
+        }
+      ]
+    },
+    "launchInterval": 25,
+    "meshId": "vosk-base"
+  }
+]

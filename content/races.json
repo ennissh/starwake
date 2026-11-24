@@ -1,0 +1,86 @@
+[
+  {
+    "id": "quillari",
+    "name": "Quillari",
+    "palette": {
+      "hull": "#e9e1cf",
+      "trim": "#4b6b8a",
+      "glow": "#7fe0ff",
+      "accent": "#e0b84a"
+    },
+    "summary": "Tall avian merchant-poets. Every deal is a performance.",
+    "diplomacy": {
+      "startRelation": 0,
+      "hostileActs": [
+        {
+          "act": "claimWithoutPermission",
+          "delta": -12
+        },
+        {
+          "act": "destroyShip",
+          "delta": -10
+        },
+        {
+          "act": "firstStrike",
+          "delta": -15
+        }
+      ]
+    }
+  },
+  {
+    "id": "vosk",
+    "name": "Vosk",
+    "palette": {
+      "hull": "#8a6a4e",
+      "trim": "#4a3a30",
+      "glow": "#ff7a2a",
+      "accent": "#c8902a"
+    },
+    "summary": "Armoured, hive-ranked salvagers who respect strength and tribute.",
+    "diplomacy": {
+      "startRelation": -40,
+      "hostileActs": [
+        {
+          "act": "claimWithoutPermission",
+          "delta": -6
+        },
+        {
+          "act": "destroyShip",
+          "delta": -3
+        },
+        {
+          "act": "firstStrike",
+          "delta": -5
+        }
+      ]
+    }
+  },
+  {
+    "id": "murmur",
+    "name": "Murmur",
+    "palette": {
+      "hull": "#6b5a8a",
+      "trim": "#2a2340",
+      "glow": "#c8a0ff",
+      "accent": "#9fe0d0"
+    },
+    "summary": "A choir-intelligence living in a gas cloud. Trades in knowledge and songs.",
+    "diplomacy": {
+      "startRelation": 10,
+      "hostileActs": [
+        {
+          "act": "claimWithoutPermission",
+          "delta": -8
+        },
+        {
+          "act": "destroyShip",
+          "delta": -12
+        },
+        {
+          "act": "firstStrike",
+          "delta": -12
+        }
+      ]
+    }
+  }
+]

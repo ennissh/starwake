@@ -1,0 +1,80 @@
+{
+  "clock": {
+    "startYears": 10,
+    "jumpYearsPerParsec": 0.15,
+    "refitYears": 0.25,
+    "lifeboatYears": 1.5,
+    "repairYears": 0.02,
+    "swapYears": 0.01
+  },
+  "fuel": {
+    "capacity": 100,
+    "start": 100,
+    "perParsec": 2,
+    "minFoldOutput": 0.15
+  },
+  "range": {
+    "baseParsecs": 3,
+    "parsecsPerNavOutput": 0.25
+  },
+  "start": {
+    "systemId": "harbor",
+    "beacons": 3,
+    "dataCores": 2,
+    "hold": 12
+  },
+  "waystation": {
+    "provenderPerDock": 5,
+    "sells": [
+      {
+        "componentId": "coil-1",
+        "price": 1
+      },
+      {
+        "componentId": "capacitor-1",
+        "price": 1
+      },
+      {
+        "componentId": "manifold-1",
+        "price": 1
+      },
+      {
+        "componentId": "navcore-1",
+        "price": 2
+      },
+      {
+        "componentId": "gyro-1",
+        "price": 1
+      },
+      {
+        "componentId": "lens-1",
+        "price": 1
+      },
+      {
+        "componentId": "emitter-1",
+        "price": 2
+      }
+    ]
+  },
+  "repairInPlaceHull": 0.15,
+  "emergencyFoldHull": 0.25,
+  "salvage": {
+    "diminishPerFight": 0.5
+  },
+  "beaconRaidChance": 0.15,
+  "relations": {
+    "hostile": -25,
+    "wary": -5,
+    "friendly": 15,
+    "allied": 40
+  },
+  "readiness": {
+    "quotas": {
+      "ice": 3,
+      "biomass": 2,
+      "ore": 3,
+      "isotopes": 2
+    },
+    "safetyHops": 2
+  }
+}

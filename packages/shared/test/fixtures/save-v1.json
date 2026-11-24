@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "seed": "fixture",
+  "rng": [1929857270, 1397575104, 359664498, 3440419916],
+  "clock": 10,
+  "systemId": "harbor",
+  "lastSystemId": "harbor",
+  "fuel": 100,
+  "hull": 1,
+  "installed": [
+    {
+      "system": "fold",
+      "slot": 0,
+      "componentId": "coil-1",
+      "condition": 100
+    },
+    {
+      "system": "fold",
+      "slot": 1,
+      "componentId": "capacitor-1",
+      "condition": 100
+    },
+    {
+      "system": "fold",
+      "slot": 2,
+      "componentId": "manifold-1",
+      "condition": 100
+    },
+    {
+      "system": "fold",
+      "slot": 3,
+      "componentId": "navcore-1",
+      "condition": 100
+    },
+    {
+      "system": "thrusters",
+      "slot": 0,
+      "componentId": "manifold-1",
+      "condition": 100
+    },
+    {
+      "system": "thrusters",
+      "slot": 1,
+      "componentId": "gyro-1",
+      "condition": 100
+    },
+    {
+      "system": "thrusters",
+      "slot": 2,
+      "componentId": "coil-1",
+      "condition": 100
+    },
+    {
+      "system": "lance",
+      "slot": 0,
+      "componentId": "lens-1",
+      "condition": 100
+    },
+    {
+      "system": "lance",
+      "slot": 1,
+      "componentId": "capacitor-2",
+      "condition": 100
+    },
+    {
+      "system": "lance",
+      "slot": 2,
+      "componentId": "coil-1",
+      "condition": 100
+    },
+    {
+      "system": "turret",
+      "slot": 0,
+      "componentId": "lens-2",
+      "condition": 100
+    },
+    {
+      "system": "turret",
+      "slot": 1,
+      "componentId": "gyro-1",
+      "condition": 100
+    },
+    {
+      "system": "turret",
+      "slot": 2,
+      "componentId": "capacitor-1",
+      "condition": 100
+    },
+    {
+      "system": "foreShield",
+      "slot": 0,
+      "componentId": "emitter-2",
+      "condition": 100
+    },
+    {
+      "system": "foreShield",
+      "slot": 1,
+      "componentId": "capacitor-1",
+      "condition": 100
+    },
+    {
+      "system": "aftShield",
+      "slot": 0,
+      "componentId": "emitter-1",
+      "condition": 100
+    },
+    {
+      "system": "aftShield",
+      "slot": 1,
+      "componentId": "capacitor-1",
+      "condition": 100
+    }
+  ],
+  "hold": [
+    {
+      "type": "item",
+      "itemId": "data-core",
+      "qty": 2
+    }
+  ],
+  "droneFrames": 8,
+  "beacons": 3,
+  "claims": [],
+  "relations": {
+    "quillari": 0,
+    "vosk": -40,
+    "murmur": 10
+  },
+  "treaties": [],
+  "flags": [],
+  "codex": [],
+  "visits": {
+    "harbor": {
+      "count": 1,
+      "probedOn": null,
+      "fights": 0
+    }
+  },
+  "known": [],
+  "conversationMemory": {},
+  "pendingEncounter": null,
+  "salvageOffer": [],
+  "outcome": "ongoing",
+  "stats": {
+    "jumps": 0,
+    "parsecs": 0,
+    "fights": 0,
+    "destroyed": {},
+    "claimsLost": 0,
+    "lifeboats": 0,
+    "emergencyFolds": 0
+  },
+  "log": [
+    {
+      "clock": 10,
+      "text": "The Starwake wakes in Harbor. 10 years until the Caravan's life support fails."
+    }
+  ]
+}
