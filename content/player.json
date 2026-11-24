@@ -50,7 +50,8 @@
       "x": 0,
       "y": -11,
       "z": -146
-    }
+    },
+    "assistConeDeg": 4
   },
   "turret": {
     "weapon": "wake-turret",

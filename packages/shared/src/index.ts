@@ -14,3 +14,4 @@ export * from './rules/ship.js';
 export * from './rules/readiness.js';
 export * from './rules/campaign.js';
 export * from './migrations/index.js';
+export * from './rules/advisor.js';

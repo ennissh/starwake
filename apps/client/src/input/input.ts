@@ -27,6 +27,8 @@ export class Input {
   look = { dx: 0, dy: 0, wheel: 0 };
   /** When false, the mouse drives `look` instead of the stick (orbit and turret views). */
   mouseFlies = true;
+  /** Player setting: may the mouse steer at all (else bridge/chase leave the cursor free). */
+  mouseSteering = false;
   enabled = false;
 
   constructor(
@@ -81,6 +83,10 @@ export class Input {
       return false;
     }
     return this.pointerLocked;
+  }
+  /** True while the game wants the pointer locked (a release now came from the browser: Esc). */
+  get lockWanted(): boolean {
+    return this.wantLock;
   }
   unlockPointer(): void {
     this.wantLock = false;

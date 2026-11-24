@@ -38,6 +38,7 @@ This document is the build brief for Claude Code. Read all of it before writing 
 | R20 | Look | Share **Farglow's design system** for now (tokens, fonts, light/dark). Themes are switchable: Farglow light, Farglow dark, and an original **1990-VGA** retro theme (era-evoking, not a copy of any game) |
 | R21 | HTTPS | Plain HTTP for 0.1.0 |
 | R23 | CI and installer (2026-11-24) | A manual-only GitHub Actions workflow publishes images to GHCR; `install.sh` is a single self-contained file (`curl -fsSLO …/install.sh && sudo bash install.sh`), no checkout needed on dwarf |
+| R24 | Playtest batch 1 (2026-11-24) | Tutorial on new game (WAKE first-flight checklist); advisors = WAKE + Navigator, Quartermaster, Tactical (scripted now, translator later); mouse steering off by default with a toggle (L); Lance assist cone (4°, content) + hold-to-face-target (G); VGA = full resolution with the 16-colour palette and dither, no big pixels; fold-jump transition; Hail explains it arrives in M5 |
 | R22 | Caravan Clock (2026-11-22) | Option B: jumps cost **0.15 yr/pc**, a Waystation refit **0.25 yr**; the clock stays at 10 years. A perfect headless playthrough now uses 3.14 years |
 
 Anything below marked **(proposed)** is a best-practice default. Use it unless Shawn says otherwise. Anything under "Open questions" must be confirmed before the milestone that needs it.

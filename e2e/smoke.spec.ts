@@ -144,6 +144,8 @@ type CampSnap = {
   panel: string | null;
   pending: boolean;
   fighting: boolean;
+  folding: boolean;
+  tutorial?: string | null;
   verification: string | null;
   state: unknown;
 };
@@ -161,6 +163,21 @@ test('campaign: pilot → new game → probe → claim → map → jump → save
   await page.getByRole('button', { name: 'Add pilot' }).click();
   await page.getByRole('button', { name: 'New game' }).click();
   await expect.poll(async () => (await camp(page))?.systemId).toBe('harbor');
+
+  // Playtest batch 1: WAKE's first-flight tutorial starts on a new game, and the advisors answer.
+  await expect.poll(async () => (await camp(page))?.tutorial).toBe('throttle');
+  await expect(page.locator('.sw-tutor')).toContainText('First flight 1/');
+  await page.keyboard.press('Enter');
+  const adv = page.getByRole('dialog', { name: 'Advisors' });
+  await expect(adv).toBeVisible();
+  await adv.getByRole('button', { name: 'What should I do next?' }).click();
+  await expect(adv.getByRole('log')).toContainText('Probe Harbor first');
+  await adv.getByLabel('Your question').fill('how do I launch a kamikaze probe?');
+  await page.keyboard.press('Enter');
+  await expect(adv.getByRole('log')).toContainText('kamikaze torpedo');
+  await page.keyboard.press('Escape');
+  await expect(adv).toBeHidden();
+  await expect.poll(async () => (await camp(page))?.tutorial).toBe('throttle');
 
   await page.keyboard.press('KeyP');
   await expect(page.getByRole('dialog')).toContainText('Anvil');
@@ -219,6 +236,7 @@ test('campaign fight: attack Cinder Hold, fold out; the server verifies the brow
     await expect(page.locator('.cmap__side h3')).toHaveText(byName[to]!);
     await page.keyboard.press('KeyJ');
     await expect.poll(async () => (await camp(page))?.systemId).toBe(to);
+    await expect.poll(async () => (await camp(page))?.folding).toBe(false);
   };
   await jump('glass-reach');
   await jump('cinder-gate');

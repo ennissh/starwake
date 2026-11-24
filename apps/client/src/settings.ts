@@ -10,6 +10,10 @@ export interface Settings {
   bindings: KeyMap;
   mouseSensitivity: number;
   invertY: boolean;
+  /** The mouse steers the ship in bridge/chase views (off: a free cursor; arrows steer). */
+  mouseSteering: boolean;
+  /** The first-flight tutorial was finished or skipped. */
+  tutorialDone: boolean;
   theme: ThemeId | null;
 }
 
@@ -17,7 +21,14 @@ export const DEFAULT_PROFILE = 'pilot';
 const key = (profile: string) => `sw-settings:${profile}`;
 
 export function defaultSettings(): Settings {
-  return { bindings: defaultKeyMap(), mouseSensitivity: 1, invertY: false, theme: null };
+  return {
+    bindings: defaultKeyMap(),
+    mouseSensitivity: 1,
+    invertY: false,
+    mouseSteering: false,
+    tutorialDone: false,
+    theme: null,
+  };
 }
 
 export function sanitizeSettings(raw: unknown): Settings {
@@ -29,6 +40,8 @@ export function sanitizeSettings(raw: unknown): Settings {
     bindings: sanitizeKeyMap(r.bindings),
     mouseSensitivity: Number.isFinite(sens) ? Math.min(4, Math.max(0.25, sens)) : d.mouseSensitivity,
     invertY: r.invertY === true,
+    mouseSteering: r.mouseSteering === true,
+    tutorialDone: r.tutorialDone === true,
     theme: isThemeId(r.theme) ? r.theme : null,
   };
 }

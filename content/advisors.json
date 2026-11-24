@@ -1,0 +1,229 @@
+{
+  "advisors": [
+    {
+      "id": "wake",
+      "name": "WAKE",
+      "role": "Ship intelligence",
+      "greeting": "I am WAKE, the Starwake's mind. Ask me what to do next, how to win, or how to fly.",
+      "miss": "I don't have a good answer to that, and a guess could cost the Caravan. Try one of these, or ask another advisor.",
+      "suggestions": [
+        "What should I do next?",
+        "How do I win?",
+        "How do I fly?",
+        "How long is left on the clock?"
+      ]
+    },
+    {
+      "id": "navigator",
+      "name": "Navigator Teo Marrin",
+      "role": "Routes, probes and claims",
+      "greeting": "Marrin, navigation. I can tell you where to fold, what a probe is for, and where to plant beacons.",
+      "miss": "That's off my charts. Ask me about routes, jumps, probes or claims.",
+      "suggestions": [
+        "Where should I go?",
+        "What can I reach from here?",
+        "How do probes work?",
+        "Where can I claim?"
+      ]
+    },
+    {
+      "id": "quartermaster",
+      "name": "Quartermaster Ilse Varga",
+      "role": "Fold mass, repairs and trade",
+      "greeting": "Varga, stores. Fold mass, repairs, beacons, cargo and what things are worth: that's me.",
+      "miss": "Not my ledger. Ask me about fold mass, repairs, beacons, the hold or trade.",
+      "suggestions": [
+        "How do I refuel?",
+        "How do I repair?",
+        "What can I trade?",
+        "How do I get more beacons?"
+      ]
+    },
+    {
+      "id": "tactical",
+      "name": "Tactical Officer Sena Okafor",
+      "role": "Combat and threats",
+      "greeting": "Okafor, tactical. Weapons, drones, threats, and how not to lose the ship.",
+      "miss": "I can't call that one. Ask me about the Lance, drones, threats or what happens if we're crippled.",
+      "suggestions": [
+        "How do I aim the Lance?",
+        "How do I launch a kamikaze drone?",
+        "Who is a threat?",
+        "What if we're crippled?"
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "id": "next-steps",
+      "advisor": "wake",
+      "keywords": ["next", "what now", "what should", "what do i do", "stuck", "lost", "objective"],
+      "weak": ["help", "start", "begin"],
+      "dynamic": "nextSteps"
+    },
+    {
+      "id": "win",
+      "advisor": "wake",
+      "keywords": ["win", "victory", "goal", "readiness", "cradle", "quota", "quotas", "colony", "signal"],
+      "weak": ["ready", "caravan"],
+      "dynamic": "readiness"
+    },
+    {
+      "id": "clock",
+      "advisor": "wake",
+      "keywords": ["clock", "years", "how long", "deadline", "run out"],
+      "weak": ["time"],
+      "dynamic": "clock"
+    },
+    {
+      "id": "flying",
+      "advisor": "wake",
+      "keywords": ["fly", "flying", "steer", "throttle", "controls", "keys", "keyboard", "mouse", "camera"],
+      "weak": ["move", "speed", "turn"],
+      "answer": "The arrow keys steer (↑ dives, ↓ climbs), {key:rollLeft}/{key:rollRight} roll, {key:throttleUp}/{key:throttleDown} set the throttle and {key:throttleStop} stops. {key:mouseSteer} turns mouse steering on or off; with it off the cursor is free. {key:cycleCamera} cycles the cameras. {key:help} lists every key, and you can rebind them under Esc → Controls."
+    },
+    {
+      "id": "how-to-play",
+      "advisor": "wake",
+      "keywords": ["how to play", "how do i play", "tutorial", "basics", "explain", "rules"],
+      "answer": "You fly ahead of the sleeping Long Caravan to ready a world before the Caravan Clock runs out. The loop: open the star map ({key:starMap}), fold to a system, probe it ({key:probe}), read the system report ({key:systemReport}) and place claim beacons on worlds that yield what the colony needs. Claim one habitable Cradle world, meet the resource quotas, make the Cradle's neighbourhood safe, then signal the Caravan from the Cradle. {key:colony} shows how ready the colony is."
+    },
+    {
+      "id": "route",
+      "advisor": "navigator",
+      "keywords": [
+        "route",
+        "jump",
+        "jumps",
+        "fold",
+        "lane",
+        "lanes",
+        "travel",
+        "reach",
+        "range",
+        "neighbour",
+        "neighbor"
+      ],
+      "weak": ["where", "go", "system", "systems", "map"],
+      "dynamic": "route"
+    },
+    {
+      "id": "probe",
+      "advisor": "navigator",
+      "keywords": ["probe", "probes", "scan", "survey", "explore", "unexplored"],
+      "answer": "Press {key:probe} once per visit and the surveyor probe reports every planet in the system: what it yields, and who lives there. You can only claim in a system you have probed. The report stays on file in {key:systemReport}."
+    },
+    {
+      "id": "claims",
+      "advisor": "navigator",
+      "keywords": [
+        "claim",
+        "claims",
+        "beacon",
+        "resource",
+        "resources",
+        "ice",
+        "ore",
+        "biomass",
+        "isotopes",
+        "habitable"
+      ],
+      "weak": ["planet", "planets"],
+      "dynamic": "claims"
+    },
+    {
+      "id": "fuel",
+      "advisor": "quartermaster",
+      "keywords": ["fuel", "refuel", "fold mass", "mass", "empty", "stranded"],
+      "dynamic": "fuel"
+    },
+    {
+      "id": "repair",
+      "advisor": "quartermaster",
+      "keywords": ["repair", "hull", "damage", "damaged", "refit", "fix"],
+      "weak": ["condition", "dock", "waystation"],
+      "dynamic": "repair"
+    },
+    {
+      "id": "trade",
+      "advisor": "quartermaster",
+      "keywords": [
+        "trade",
+        "buy",
+        "sell",
+        "money",
+        "credits",
+        "price",
+        "prices",
+        "data core",
+        "data cores",
+        "provender",
+        "cargo",
+        "shop"
+      ],
+      "weak": ["hold", "component", "components"],
+      "dynamic": "trade"
+    },
+    {
+      "id": "beacons",
+      "advisor": "quartermaster",
+      "keywords": ["more beacons", "beacons", "restock", "out of beacons"],
+      "dynamic": "beacons"
+    },
+    {
+      "id": "lance",
+      "advisor": "tactical",
+      "keywords": ["lance", "aim", "aiming", "beam"],
+      "weak": ["hit", "weapon", "weapons", "fire", "shoot"],
+      "answer": "The Spinal Lance fires along the keel, so you aim it with the whole ship. Target a ship with {key:targetNext} (and a subsystem with {key:targetSubsystem}), then hold {key:faceTarget} and the helm turns the nose onto it. The HUD says how many degrees off you are; inside a few degrees the beam bends onto the target by itself, and the bracket turns green. Fire with {key:fire} when the Lance bar is full. The turret ({key:cycleCamera} to the turret view) leads its shots for you."
+    },
+    {
+      "id": "drones",
+      "advisor": "tactical",
+      "keywords": ["drone", "drones", "kamikaze", "ram", "torpedo", "hornet", "missile"],
+      "weak": ["launch"],
+      "answer": "Three drone types, launched from the bay: {key:droneHornet} a Hornet, a fighter that follows your target and can be ridden with {key:cycleCamera}; {key:droneLance} a Lance drone, a homing striker; {key:droneRam} a Ram, the kamikaze torpedo that flies into the target and detonates. Lance and Ram drones need a target first ({key:targetNext}). {key:recallDrones} recalls survivors; frames come back, spent drones don't."
+    },
+    {
+      "id": "threats",
+      "advisor": "tactical",
+      "keywords": [
+        "threat",
+        "threats",
+        "hostile",
+        "danger",
+        "dangerous",
+        "enemy",
+        "enemies",
+        "safety",
+        "patrol",
+        "ambush",
+        "vosk",
+        "quillari",
+        "murmur",
+        "relations"
+      ],
+      "weak": ["safe", "aliens", "alien"],
+      "dynamic": "threats"
+    },
+    {
+      "id": "crippled",
+      "advisor": "tactical",
+      "keywords": ["crippled", "die", "dead", "death", "destroyed", "lose the ship", "lifeboat", "emergency"],
+      "answer": "The Starwake can't be destroyed, only crippled. Crippled, you choose: an emergency fold (you escape but lose some installed components and the salvage), or the lifeboat (the crew is recovered but it costs years on the clock). Hold {key:emergencyFold} in a fight to fold out before it comes to that."
+    },
+    {
+      "id": "combat",
+      "advisor": "tactical",
+      "keywords": ["combat", "fight", "fighting", "battle", "shields", "emitters", "salvage", "win a fight"],
+      "weak": ["attack", "base"],
+      "answer": "Fights: target with {key:targetNext}, face it with {key:faceTarget}, fire the Lance with {key:fire} and send drones. A base's shield emitters block the Lance: take them out first with the turret or drones (target them with {key:targetSubsystem}). Your fore and aft shields recharge after a quiet spell. Destroyed hulls leave salvage you can take aboard. Fights don't cost time on the clock."
+    },
+    {
+      "id": "hail",
+      "advisor": "wake",
+      "keywords": ["hail", "talk", "translator", "speak", "diplomacy", "negotiate", "peace", "treaty"],
+      "answer": "The translator isn't online yet: talking with the Quillari, Vosk and Murmur arrives with the next big update. Until then, relations move with what you do: claiming in their space without permission angers them, and breaking the Vosk by force makes them hostile forever."
+    }
+  ]
+}

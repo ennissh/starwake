@@ -2,6 +2,23 @@
 
 ## 0.1.0 (in progress)
 
+### Playtest batch 1 (R24)
+- **Tutorial**: a new game starts WAKE's first-flight checklist (9 steps, each done when you do it;
+  skippable; Esc → Replay tutorial). Remembered per profile.
+- **Advisors**: Enter (or N) asks WAKE, the Navigator, the Quartermaster or Tactical. Scripted,
+  deterministic answers from `content/advisors.json` and the campaign state (`POST /api/advisor/ask`,
+  read-only); a miss says so instead of guessing.
+- **Mouse steering is off by default**; L toggles it (also in Settings). The cursor stays free;
+  orbit/turret views still look with the mouse.
+- **VGA theme** renders at full resolution, mapped to the 16-colour VGA palette with an ordered
+  dither (was a 320×200 upscale).
+- **Lance aiming**: hold G to face the target; a 4° assist cone (content) bends the beam onto it; the
+  target panel shows degrees off and turns green on target. Part of the deterministic sim and replay.
+- **Fold transition**: star streaks while the jump resolves, a flash and an "Arrived: <system>" card.
+- **Discoverability**: a combat key strip under the ship status (from your bindings); clearer drone
+  names (Ram = kamikaze torpedo); Hail, Engine room and Codex say what they're waiting for.
+- Dialogs keep keyboard focus inside (Tab wraps).
+
 ### CI and a standalone installer (R23)
 - `.github/workflows/images.yml` ("Publish images"): started by hand from the Actions tab; runs
   `./test.sh`, then pushes amd64 + arm64 images (`X.Y.Z-N` and `:latest`) to GHCR; optional release

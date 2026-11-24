@@ -25,7 +25,7 @@ import {
   toWorld,
 } from '@starwake/shared';
 import { CAMERA_LABEL, CameraRig } from '../camera/rig.js';
-import { type Action, ACTIONS } from '../input/keymap.js';
+import { type Action, ACTIONS, keyLabel } from '../input/keymap.js';
 import { stickAxes } from '../input/joystick.js';
 import type { Input } from '../input/input.js';
 import { buildStarwake, type StarwakeModel } from '../models/starwake.js';
@@ -170,8 +170,18 @@ export class SpaceScene {
     this.hud = new Hud(uiRoot);
     this.chud = new CombatHud(this.hud.el);
     this.hud.el.classList.toggle('hud--combat', o.mode === 'fight');
-    this.input.mouseFlies = this.rig.mouseFlies();
+    this.input.mouseFlies = this.rig.mouseFlies() && this.input.mouseSteering;
     this.syncViews();
+  }
+
+  /** The Starwake's speed (units/s). */
+  speed(): number {
+    return len(this.sim.player.f.vel);
+  }
+
+  /** Should the pointer be locked? Look views always; steering views only with mouse steering on. */
+  wantsPointer(): boolean {
+    return !this.rig.mouseFlies() || this.input.mouseSteering;
   }
 
   // ---- input ------------------------------------------------------------------------------------
@@ -192,7 +202,7 @@ export class SpaceScene {
         if (!this.ridingId) this.ridingId = this.pickRide();
         const m = this.rig.cycle();
         if (m !== 'drone') this.ridingId = null;
-        this.input.mouseFlies = this.rig.mouseFlies();
+        this.input.mouseFlies = this.rig.mouseFlies() && this.input.mouseSteering;
         if (this.input.mouseFlies) this.input.centreStick();
         this.hud.toast(m === 'drone' ? `Riding ${sim.get(this.ridingId)?.name ?? 'drone'}` : CAMERA_LABEL[m]);
         return true;
@@ -249,8 +259,8 @@ export class SpaceScene {
         return true;
       default: {
         const def = ACTIONS[a];
-        if ('comingIn' in def) {
-          this.hud.toast(`${def.label}: arrives in ${def.comingIn}`);
+        if ('notYet' in def) {
+          this.hud.toast(def.notYet, 4500);
           return true;
         }
         return false;
@@ -315,6 +325,7 @@ export class SpaceScene {
       recall: this.pendingRecall,
       emergencyFold: this.pendingFold,
       toggleAssist: this.pendingAssist,
+      faceTarget: !riding && this.input.held('faceTarget') && !!this.targetId,
       fireLance: (mode === 'bridge' || mode === 'chase' || mode === 'orbit') && firing,
       turret:
         mode === 'turret'
@@ -358,10 +369,9 @@ export class SpaceScene {
     this.place(a);
 
     this.rig.update(dt, paused ? { dx: 0, dy: 0, wheel: 0 } : this.input.consumeLook());
-    this.input.mouseFlies = this.rig.mouseFlies();
+    this.input.mouseFlies = this.rig.mouseFlies() && this.input.mouseSteering;
     if (this.rig.mode !== 'drone') this.ridingId = null;
     this.space.update(this.camera);
-    this.space.setPixelScale(this.r.vga ? 0.5 : 1);
     this.fx.setBolts(this.sim.bolts);
     this.fx.update(paused ? 0 : dt);
 
@@ -587,6 +597,7 @@ export class SpaceScene {
         edgeAngle: centre.edgeAngle,
         sub: subPos?.screen ?? null,
         lead,
+        align: sim.lanceAlignment(t.id, this.subId),
       };
     } else {
       this.holo.set(null, null, 0, []);
@@ -603,7 +614,25 @@ export class SpaceScene {
       riding: this.rig.mode === 'drone' ? (sim.get(this.ridingId)?.name ?? null) : null,
       target,
       hostiles: sim.hostiles().length,
+      keys: this.combatKeys(),
     };
+  }
+
+  /** The combat key strip, from the player's bindings (so rebinding shows up here too). */
+  private combatKeys(): string {
+    const m = this.input.keyMap;
+    const k = (a: Action) => (m[a][0] ? keyLabel(m[a][0]) : '—');
+    return [
+      `${k('fire')} fire`,
+      `${k('targetNext')} target`,
+      `${k('targetSubsystem')} subsystem`,
+      `${k('faceTarget')} face target`,
+      `${k('droneHornet')} Hornet`,
+      `${k('droneLance')} Lance drone`,
+      `${k('droneRam')} Ram (kamikaze)`,
+      `${k('recallDrones')} recall`,
+      `${k('cycleCamera')} camera`,
+    ].join(' · ');
   }
 
   /** Project a world point to CSS px; when behind the camera, report the edge direction instead. */

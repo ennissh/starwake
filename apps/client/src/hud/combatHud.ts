@@ -19,6 +19,8 @@ export interface TargetHud {
   edgeAngle: number | null;
   sub: ScreenPoint | null;
   lead: ScreenPoint | null;
+  /** Lance alignment: degrees off the aim point, and whether the assist will bend the beam onto it. */
+  align: { deg: number; inCone: boolean } | null;
 }
 
 export interface CombatHudData {
@@ -33,6 +35,8 @@ export interface CombatHudData {
   riding: string | null;
   target: TargetHud | null;
   hostiles: number;
+  /** One line of the main combat keys, from the player's own bindings. */
+  keys: string;
 }
 
 /** Combat overlays: ship status, target panel (with the hologram slot), brackets, damage flash. */
@@ -60,12 +64,14 @@ export class CombatHud {
         <div class="chud__row"><span>Turret</span><b id="chud-turret">WAKE</b></div>
         <div class="chud__row"><span>Drones</span><b id="chud-drones">8 · 0/3</b></div>
         <div class="chud__row" id="chud-riding-row"><span>Riding</span><b id="chud-riding"></b></div>
+        <div class="chud__keys" id="chud-keys"></div>
       </div>
       <div class="chud__target hud__panel" id="chud-target">
         <div class="chud__holo" id="chud-holo"></div>
         <div class="chud__tname" id="chud-tname"></div>
         <div class="chud__row"><span>Hull</span><div class="hud__bar"><i id="chud-thull"></i></div></div>
         <div class="chud__warn" id="chud-twarn">EMITTERS UP · LANCE BLOCKED</div>
+        <div class="chud__align" id="chud-align" role="status"></div>
         <div id="chud-tsubs"></div>
       </div>`;
     parent.appendChild(this.el);
@@ -104,6 +110,8 @@ export class CombatHud {
     this.q<HTMLElement>('#chud-drones').textContent = `${d.frames} frames · ${d.active}/${d.maxActive} out`;
     this.q<HTMLElement>('#chud-riding-row').hidden = !d.riding;
     this.q<HTMLElement>('#chud-riding').textContent = d.riding ?? '';
+    const keys = this.q<HTMLElement>('#chud-keys');
+    if (keys.textContent !== d.keys) keys.textContent = d.keys;
 
     this.flashT = Math.max(0, this.flashT - dt);
     this.q<HTMLElement>('#chud-flash').style.opacity = String(this.flashT * 1.6);
@@ -120,6 +128,18 @@ export class CombatHud {
       `${t.name} · ${t.cls} · ${((t.distance * 10) / 1000).toFixed(1)} km`;
     bar('#chud-thull', t.hull);
     this.q<HTMLElement>('#chud-twarn').hidden = !t.emitters;
+    const al = this.q<HTMLElement>('#chud-align');
+    const ready = d.lance >= 1;
+    const on = !!t.align?.inCone;
+    al.textContent = !t.align
+      ? ''
+      : on
+        ? ready
+          ? 'LANCE ON TARGET · FIRE'
+          : 'Lance on target · charging'
+        : `Lance ${Math.round(t.align.deg)}° off · hold G to face`;
+    al.classList.toggle('chud--on', on && ready);
+    br.setAttribute('stroke', on ? 'var(--hud-ok)' : 'var(--hud-danger)');
     this.q<HTMLElement>('#chud-tsubs').innerHTML = t.subs
       .map(
         (s) =>

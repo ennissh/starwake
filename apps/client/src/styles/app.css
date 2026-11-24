@@ -30,9 +30,6 @@ body {
   height: 100vh;
   display: block;
 }
-[data-theme='vga'] #scene {
-  image-rendering: pixelated;
-}
 #ui {
   position: fixed;
   inset: 0;

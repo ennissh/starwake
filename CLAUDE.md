@@ -256,7 +256,9 @@ claims can be lost · R14 combat doesn't advance the clock · R15 Claude propose
 joystick + arrow keys · R17 captions only · R18 rating default `mature`, `adult` max, no explicit sexual content ·
 R19 fallback ships if no model passes · R20 Farglow design system, light/dark + original VGA-retro theme · R21 HTTP ·
 R22 Caravan Clock: jumps 0.15 yr/pc, Waystation refit 0.25 yr, 10-year clock (headless playthrough: 3.14 yr for a perfect win) ·
-R23 (2026-11-24) images publish from a manual-only GitHub Actions workflow; `install.sh` is a single self-contained file.
+R23 (2026-11-24) images publish from a manual-only GitHub Actions workflow; `install.sh` is a single self-contained file ·
+R24 (2026-11-24) playtest batch 1: tutorial, advisors (WAKE + council, scripted), mouse steering off by default (L),
+Lance assist + face target (G), full-res VGA palette theme, fold transition.
 
 Still open: the final model after `eval:llm` (M5); the exact Ollama URL (asked by `install.sh`).
 

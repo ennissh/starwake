@@ -127,31 +127,55 @@ re-tags a tested build as `X.Y.Z` and `:stable` by digest; then bump `VERSION`.
 ## Themes
 
 Light and dark follow the Farglow design system's colours and fonts (Inter Tight, IBM Plex Mono). **VGA 1990**
-is an original retro look (pixel font, 16-colour-style palette, 320×200 upscaled 3D). Themes switch from the
+is an original retro look: pixel font, 16-colour palette, and the 3D view rendered at full resolution and then mapped onto the
+16-colour VGA palette with an ordered dither (retro colours, modern sharpness). Themes switch from the
 title screen; the choice is remembered per browser (per profile from M3).
 
 ## Controls (default, rebindable)
 
 | Action | Key |
 |---|---|
-| Pitch / yaw | Mouse as a virtual joystick (pointer lock; offset from centre = turn rate) or arrow keys |
+| Pitch / yaw | Arrow keys (↑ dives, ↓ climbs); or the mouse as a virtual joystick when mouse steering is on |
+| Mouse steering on/off (off by default) | L (also Esc → Settings) |
 | Roll | Q / E |
 | Throttle up / down · full · stop | W / S · Shift+W · X |
 | Flight assist on/off (drift mode) | Z |
 | Fire selected weapon | Left mouse / Space |
 | Cycle camera (bridge → chase → orbit → turret → drones) | C |
 | Next / previous target · target subsystem | T / Shift+T · Y |
+| Face target (hold: the helm turns the nose onto it) | G |
 | Match target speed | M |
-| Launch Hornet / Lance / Ram drone · recall drones | 1 / 2 / 3 · R |
+| Launch Hornet (fighter) / Lance (homing) / Ram (kamikaze torpedo) drone · recall | 1 / 2 / 3 · R |
 | Star map · System report and services · Colony Readiness | Tab · I · H |
 | Engine room · Codex | F · K (M4, M6) |
-| Probe system · Hail ship or base | P · V |
+| Probe system · Hail ship or base | P · V (the translator arrives in M5) |
+| Ask the advisors (WAKE and the council) | Enter or N |
 | Fold jump (from star map) · Emergency fold | J · Shift+J (hold 1 s) |
 | Key help overlay | F1 or ? |
 | Performance overlay (fps, draw calls) | ` |
 | Pause / release mouse | Esc |
 
-Browser-reserved keys (Ctrl/Alt/Meta combinations, F5, F11, F12) can never be bound; Esc always pauses. Rebind keys in the pause menu (Esc → Controls). In bridge and chase views the mouse is a virtual joystick; in orbit and turret views it moves the camera and you fly with the arrow keys.
+Browser-reserved keys (Ctrl/Alt/Meta combinations, F5, F11, F12) can never be bound; Esc always pauses. Rebind keys in the pause menu (Esc → Controls).
+
+**Mouse.** Mouse steering is off by default: the arrow keys steer and the cursor stays free (click to fire).
+Press **L** (or Esc → Settings → "Mouse steers the ship") to make the mouse a virtual joystick in the
+bridge and chase views (pointer lock; offset from centre = turn rate). Orbit and turret views always use
+the mouse to look.
+
+**Aiming the Lance.** The Spinal Lance fires along the keel. Target a ship (**T**, a subsystem with **Y**),
+then hold **G**: the helm turns the nose onto it. The target panel shows how many degrees off you are;
+within the assist cone (`player.json` → `lance.assistConeDeg`, 4°) the beam bends onto the target and
+the bracket turns green ("LANCE ON TARGET").
+
+**Advisors.** Press **Enter** to ask WAKE, the Navigator, the Quartermaster or Tactical anything: click a
+suggested question or type your own. Answers come from what you know of the campaign (what to do next,
+routes, readiness, fuel, threats, combat) and use your own key bindings. They are scripted and
+deterministic for now (`content/advisors.json`, `packages/shared/src/rules/advisor.ts`); when a question
+doesn't match, the advisor says so rather than guess. M5 may route them through the translator.
+
+**Tutorial.** A new game starts WAKE's first-flight checklist (throttle, steer, camera, advisors, probe,
+claim, readiness, star map, fold). Each step completes when you do it; skip it from the card, replay it
+from Esc → Replay tutorial.
 
 ## Playing the campaign (M3)
 
@@ -162,7 +186,8 @@ Browser-reserved keys (Ctrl/Alt/Meta combinations, F5, F11, F12) can never be bo
 3. Place **claim beacons** on resource worlds (3 carried; restock by docking). Claiming in someone's
    system without permission angers them; hostile patrols can destroy beacons while you're away.
 4. **Tab** opens the star map: drag to rotate, click a system, **J** to fold along a lane. Jumps cost
-   fold mass and Caravan Clock time; range comes from the Nav Cores.
+   fold mass and Caravan Clock time; range comes from the Nav Cores. The fold plays a short
+   transition and an "Arrived: <system>" card (a plain fade with reduced motion).
 5. Vosk ambush the lanes past Glass Reach and patrol Cinder Gate and Verdance. Fights use the M2
    combat; the server checks every result by replaying your fight.
 6. **H** shows Colony Readiness: a Cradle world, the four resource quotas, safety (no hostile race

@@ -112,3 +112,20 @@ export const postEncounterResult = (
     `/api/encounters/${encounterId}/result`,
     { saveId, result, log },
   );
+
+export interface AdvisorReply {
+  advisorId: string;
+  topicId: string | null;
+  text: string;
+  handoff: boolean;
+  suggestions: string[];
+}
+
+/** Ask WAKE or a council member (read-only; answers from the save when one is given). */
+export async function askAdvisor(
+  saveId: string | null,
+  advisor: string,
+  question: string,
+): Promise<AdvisorReply> {
+  return call('POST', '/api/advisor/ask', { ...(saveId ? { saveId } : {}), advisor, question });
+}
