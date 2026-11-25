@@ -249,3 +249,12 @@ describe('M5 ACCEPT: the Vosk arc three ways (treaty, tribute, force)', () => {
     expect(voskOnlyThreat({ ...s, systemId: 'verdance' })).toEqual([]);
   });
 });
+
+describe('tribute the pilot cannot cover', () => {
+  it('opens without a demand and says why', () => {
+    let s = { ...newGame(c, 'poor'), systemId: 'cinder-gate', hold: [], fuel: 10 };
+    s = openConversation(s, 'vosk', c).state;
+    expect(s.conversation!.demand).toBeNull();
+    expect(s.conversation!.transcript[0]!.text).toMatch(/too little/);
+  });
+});

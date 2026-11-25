@@ -160,10 +160,9 @@ export function openConversation(s0: CampaignState, raceId: string, c: ContentBu
   const race = byId(c.races, raceId);
   const context: Conversation['context'] = s0.pendingEncounter?.raceId === raceId ? 'ambush' : 'hail';
   const rel = s0.relations[raceId] ?? 0;
-  const demand =
-    race.diplomacy.tribute && rel < race.diplomacy.tribute.belowRelation && !isBroken(s0, raceId)
-      ? tributeDemand(s0, raceId, c)
-      : null;
+  const wantsTribute =
+    !!race.diplomacy.tribute && rel < race.diplomacy.tribute.belowRelation && !isBroken(s0, raceId);
+  const demand = wantsTribute ? tributeDemand(s0, raceId, c) : null;
   const conv: Conversation = {
     raceId,
     context,
@@ -174,7 +173,16 @@ export function openConversation(s0: CampaignState, raceId: string, c: ContentBu
     counter: null,
     demand,
     notes: [],
-    transcript: [],
+    // They'd take tribute, but the pilot can't cover it: say so, rather than a demand with no way to pay.
+    transcript:
+      wantsTribute && !demand
+        ? [
+            {
+              who: 'system' as const,
+              text: `They expect tribute worth ${race.diplomacy.tribute!.value}; you carry too little to pay it.`,
+            },
+          ]
+        : [],
     degraded: false,
   };
   return {

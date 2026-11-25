@@ -374,6 +374,12 @@ test('diplomacy (mock): the Vosk tribute arc through the UI', async ({ page }) =
   await page.getByRole('button', { name: 'Skip (Esc)' }).click();
   await expect.poll(async () => (await camp(page))?.systemId).toBe('harbor');
   await page.locator('[data-tutor="skip"]').click();
+  // Stock up for two tributes: Anvil's Ore Crates and the Waystation's Provender.
+  await page.keyboard.press('KeyP');
+  await page.getByRole('button', { name: 'Place claim beacon' }).click();
+  await page.getByRole('button', { name: /Dock and refit/ }).click();
+  await expect.poll(async () => (await camp(page))!.clock).toBeLessThan(10);
+  await page.keyboard.press('Escape');
   type S = { relations: Record<string, number>; flags: string[]; pendingEncounter: unknown };
   const st = async () => (await camp(page))!.state as S;
   const payOnce = async () => {
