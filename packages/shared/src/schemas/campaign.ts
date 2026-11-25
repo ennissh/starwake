@@ -6,7 +6,7 @@ import { SystemId } from './content.js';
  * only through the pure reducers in rules/campaign.ts. Every save carries `version`; migrations in
  * migrations/ upgrade older saves on load.
  */
-export const CAMPAIGN_VERSION = 1;
+export const CAMPAIGN_VERSION = 2;
 
 const u32 = z.number().int().min(0).max(0xffffffff);
 const id = z.string().min(1);
@@ -33,8 +33,48 @@ export const PendingEncounterSchema = z.object({
   fromSystemId: id,
   reason: z.enum(['ambush', 'patrol', 'attack']),
   raceId: id,
+  /** They hailed first (ambush/patrol): the player may talk or pay before fighting (M5). */
+  parley: z.boolean(),
 });
 export type PendingEncounter = z.infer<typeof PendingEncounterSchema>;
+
+/** A trade: good ids (items, components, `fold-mass`, `permit`, `passage`) and quantities. */
+export const GoodQtySchema = z.object({ itemId: id, qty: z.number().int().min(1).max(999) });
+export type GoodQty = z.infer<typeof GoodQtySchema>;
+export const TradeSchema = z.object({
+  playerGives: z.array(GoodQtySchema).max(12),
+  raceGives: z.array(GoodQtySchema).max(12),
+});
+export type Trade = z.infer<typeof TradeSchema>;
+
+/** An open channel with a race (M5). The engine keeps it; the model only sees what it's told. */
+export const ConversationSchema = z.object({
+  raceId: id,
+  context: z.enum(['hail', 'ambush']),
+  patience: z.number().int().min(0),
+  turns: z.number().int().min(0),
+  /** Relation change so far this conversation (capped per PLAN §6.4). */
+  delta: z.number(),
+  /** The player's offer on the table, and the race's counter. */
+  offer: TradeSchema.nullable(),
+  counter: TradeSchema.nullable(),
+  /** Tribute they demand (goods the player holds). */
+  demand: z.array(GoodQtySchema).nullable(),
+  /** What the engine refused last turn, told to the model next turn. */
+  notes: z.array(z.string()),
+  transcript: z.array(
+    z.object({
+      who: z.enum(['player', 'alien', 'system']),
+      text: z.string(),
+      mood: z.string().optional(),
+      tell: z.boolean().optional(),
+      unverified: z.boolean().optional(),
+    }),
+  ),
+  /** The translator fell back to scripted lines (Ollama off or down) during this conversation. */
+  degraded: z.boolean(),
+});
+export type Conversation = z.infer<typeof ConversationSchema>;
 
 export const LogEntrySchema = z.object({ clock: z.number(), text: z.string() });
 
@@ -69,6 +109,9 @@ export const CampaignStateSchema = z.object({
   /** Systems the player has probed. */
   known: z.array(id),
   conversationMemory: z.record(z.string(), z.object({ summary: z.string(), lastTurns: z.array(z.string()) })),
+  /** Races' tradeable stock once it has changed (absent: the content's starting stock). */
+  raceStock: z.record(z.string(), z.record(z.string(), z.number().int().min(0))),
+  conversation: ConversationSchema.nullable(),
   pendingEncounter: PendingEncounterSchema.nullable(),
   /** Components recovered from the last fight, waiting for the player to take or leave them. */
   salvageOffer: z.array(id),
@@ -97,6 +140,26 @@ export const CampaignActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('dropHold'), index: z.number().int().min(0) }),
   z.object({ type: z.literal('attackBase') }),
   z.object({ type: z.literal('signalCaravan') }),
+  /** Refuse to talk when they hail you before a fight (M5 parley): the fight starts. */
+  z.object({ type: z.literal('fight') }),
+  z.object({
+    type: z.literal('refit'),
+    moves: z
+      .array(
+        z.object({
+          a: z.union([
+            z.object({ system: SystemId, slot: z.number().int().min(0) }),
+            z.object({ hold: z.number().int().min(0) }),
+          ]),
+          b: z.union([
+            z.object({ system: SystemId, slot: z.number().int().min(0) }),
+            z.object({ hold: z.number().int().min(0) }),
+          ]),
+        }),
+      )
+      .min(1)
+      .max(40),
+  }),
 ]);
 export type CampaignAction = z.infer<typeof CampaignActionSchema>;
 
@@ -109,6 +172,17 @@ export type CampaignEvent =
   | { t: 'docked' }
   | { t: 'repaired' }
   | { t: 'bought'; componentId: string }
+  | { t: 'refitted'; swaps: number; years: number }
+  | { t: 'treaty'; raceId: string }
+  | { t: 'passage'; raceId: string }
+  | { t: 'knowledge'; raceId: string; knowledgeId: string }
+  | { t: 'tribute'; raceId: string }
+  | { t: 'fightAvoided'; raceId: string }
+  | { t: 'traded'; raceId: string }
+  | { t: 'channelOpened'; raceId: string }
+  | { t: 'channelClosed'; raceId: string }
+  | { t: 'crates'; items: { itemId: string; qty: number }[] }
+  | { t: 'surveyLog' }
   | { t: 'relation'; raceId: string; delta: number; reason: string }
   | { t: 'salvageTaken'; count: number }
   | { t: 'won' }

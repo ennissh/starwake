@@ -65,30 +65,11 @@ export const ACTIONS = {
   cycleCamera: { label: 'Cycle camera', group: 'Views', defaults: ['KeyC'] },
   starMap: { label: 'Star map', group: 'Ship', defaults: ['Tab'] },
   systemReport: { label: 'System report and services', group: 'Ship', defaults: ['KeyI'] },
-  engineRoom: {
-    label: 'Engine room',
-    group: 'Ship',
-    defaults: ['KeyF'],
-    comingIn: 'M4',
-    notYet: 'The engine room is not built yet (next update). Docking at the Waystation refits the ship.',
-  },
+  engineRoom: { label: 'Engine room (refit components)', group: 'Ship', defaults: ['KeyF'] },
   colony: { label: 'Colony readiness', group: 'Ship', defaults: ['KeyH'] },
-  codex: {
-    label: 'Codex',
-    group: 'Ship',
-    defaults: ['KeyK'],
-    comingIn: 'M6',
-    notYet: 'The codex is not built yet. Ask your advisors (Enter) instead.',
-  },
+  codex: { label: 'Codex (everything learned)', group: 'Ship', defaults: ['KeyK'] },
   probe: { label: 'Probe system', group: 'Ship', defaults: ['KeyP'] },
-  hail: {
-    label: 'Hail ship or base',
-    group: 'Ship',
-    defaults: ['KeyV'],
-    comingIn: 'M5',
-    notYet:
-      'The translator is not online yet: talking to aliens arrives in M5. Relations move with what you do (claims, fights, trade).',
-  },
+  hail: { label: 'Hail (open the translator)', group: 'Ship', defaults: ['KeyV'] },
   jump: { label: 'Fold jump (from star map)', group: 'Ship', defaults: ['KeyJ'] },
   emergencyFold: {
     label: 'Emergency fold (hold 1 s)',

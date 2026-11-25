@@ -24,7 +24,7 @@
     "e2e:ux": "playwright test e2e/ux.spec.ts --trace off",
     "e2e:playthrough": "playwright test e2e/playthrough.spec.ts --trace off",
     "start": "node apps/server/dist/index.js",
-    "eval:llm": "echo 'eval:llm arrives in M5' && exit 1"
+    "eval:llm": "tsx --conditions=source --env-file-if-exists=.env apps/server/src/eval/cli.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",

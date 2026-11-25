@@ -30,3 +30,28 @@ describe('save migrations', () => {
     expect(() => migrate(null)).toThrow();
   });
 });
+
+describe('migration 1 → 2 (M5)', () => {
+  it('adds race stock, conversation and parley, keeping everything else', () => {
+    const v1 = JSON.parse(readFileSync(join(fixtures, 'save-v1.json'), 'utf8'));
+    const { state, migratedFrom } = migrate(v1);
+    expect(migratedFrom).toBe(1);
+    expect(state.raceStock).toEqual({});
+    expect(state.conversation).toBeNull();
+    expect(state.clock).toBe(v1.clock);
+    expect(state.installed).toEqual(v1.installed);
+    const pending = {
+      ...v1,
+      pendingEncounter: {
+        id: 'e1',
+        defId: 'x',
+        seed: 's',
+        systemId: 'harbor',
+        fromSystemId: 'harbor',
+        reason: 'ambush',
+        raceId: 'vosk',
+      },
+    };
+    expect(migrate(pending).state.pendingEncounter?.parley).toBe(false);
+  });
+});

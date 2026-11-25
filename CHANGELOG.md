@@ -2,6 +2,40 @@
 
 ## 0.1.0 (in progress)
 
+### M7 · Hardening
+- `restore.sh` (also written by `install.sh`): restores a backup, moving the current data aside.
+- Smoke journeys: title → intro → tutorial → jump → probe → hail → trade → save → reload; the Vosk
+  tribute arc; a combat draw-call budget check. Backup → restore round-trip test.
+- README: restore, Uptime Kuma monitors, translator, M6 features. Demo and release steps in
+  `docs/demo-m4-m7.md`.
+
+### M6 · Win/lose, onboarding and audio
+- WAKE's intro captions on a new game (skippable); the tutorial gains engine-room and hailing steps.
+- Codex (K): races, systems, what you were told, and the mechanics manual.
+- Procedural audio: combat, fold, UI, alarm, and a generated leitmotif per race; volume settings.
+- Ending summary with a rating, an epilogue for each people and the run's numbers.
+- F, K and V outside a campaign (arena, flight test) say so instead of doing nothing.
+
+### M5 · Translator and diplomacy
+- **V** hails a race; ambushes and patrols hail first (answer or fight). Translator screen: portrait with
+  mood and tell, transcript, chips, free text, trade panel with balance bar, relation and patience.
+- Live aliens via Ollama, validated by the engine (`validate.ts`): trades, counter-offers, treaties,
+  tribute, safe passage, knowledge into the codex, hostility. Injection-proof by construction.
+- Scripted fallback when Ollama is off or down (*Signal degraded*); `LLM_MODE=mock` for tests.
+- Claims ship cargo crates; first probes write Survey Logs; races stock components, fold mass, permits
+  and passage. The Vosk can be met by treaty, tribute or force.
+- Conversation memory; JSONL call log in `/data/logs` (14 days); output post-filter by content rating.
+- Advisors ask the model when the script has no answer (read-only).
+- `npm run eval:llm`: the live benchmark with pass bars → `docs/llm-eval.md`.
+- Saves move to version 2 (migrated automatically; a backup of the old file is kept).
+
+### M4 · Engine room
+- **F** opens the engine room: pick or drag parts between system slots and the hold; a live
+  preview shows range, fold mass per parsec, speed, turn, Lance/turret damage per second and shields.
+- Components now drive the ship: Thrusters → speed and turn; Lance → damage and recharge; Turret →
+  rate of fire and WAKE's tracking; shields → capacity and recharge; Fold Drive → fuel and range.
+- Refits are free at the Waystation, 0.01 years per swap elsewhere.
+
 ### Playtest batch 1 (R24)
 - **Tutorial**: a new game starts WAKE's first-flight checklist (9 steps, each done when you do it;
   skippable; Esc → Replay tutorial). Remembered per profile.

@@ -1,4 +1,5 @@
 import {
+  endingSummary,
   type CampaignState,
   type ContentBundle,
   type Readiness,
@@ -56,7 +57,8 @@ export function systemBody(s: CampaignState, c: ContentBundle, r: Readiness): st
       parts.push(`<div class="sw-kicker">Occupant</div><p><b>${esc(race.name)}</b>: ${esc(race.summary)}</p>
         <div class="sw-rel"><span>Relation: <b>${relationLabel(rel, c)}</b> (${rel})</span><div class="sw-meter"><i style="left:${(rel + 100) / 2}%"></i></div></div>
         ${!permit ? `<p class="sw-warn">Placing a beacon here without their permission is a hostile act.</p>` : ''}
-        <div class="sw-row"><button class="sw-btn" disabled title="The translator arrives in M5">Hail (V): translator offline until M5</button>
+        ${s.treaties.includes(race.id) ? '<p class="sw-ok">Treaty signed.</p>' : ''}
+        <div class="sw-row"><button class="sw-btn sw-btn--primary" data-act="hail" data-id="${race.id}">Hail (V)</button>
         ${sys.baseEncounter && !isBroken(s, race.id) ? '<button class="sw-btn sw-btn--danger" data-act="attack">Attack their base</button>' : ''}</div>`);
     }
   }
@@ -136,14 +138,24 @@ export function salvageBody(s: CampaignState, c: ContentBundle): string {
 }
 
 export function endingBody(s: CampaignState, c: ContentBundle): string {
-  const won = s.outcome === 'won';
-  const destroyed = Object.entries(s.stats.destroyed)
-    .map(([r, n]) => `${n} ${byId(c.races, r).name}`)
-    .join(', ');
-  return `<p>${won ? 'The Long Caravan is on its way to its new home.' : 'The Caravan Clock ran out before the colony was ready.'}</p>
-    <dl class="sw-dl"><dt>Time left</dt><dd>${s.clock.toFixed(2)} years</dd><dt>Jumps</dt><dd>${s.stats.jumps} (${s.stats.parsecs.toFixed(1)} pc)</dd>
-    <dt>Claims</dt><dd>${s.claims.length} held, ${s.stats.claimsLost} lost</dd><dt>Fights</dt><dd>${s.stats.fights}${destroyed ? ` · destroyed ${destroyed}` : ''}</dd>
-    <dt>Treaties</dt><dd>${s.treaties.length || 'none'}</dd></dl>
-    <p class="sw-meta">The full ending summary arrives in M6.</p>
-    <button class="sw-btn sw-btn--primary" data-act="title">Back to title</button>`;
+  const e = endingSummary(s, c);
+  const stars = e.won
+    ? `<p class="end-stars" aria-label="${e.stars} of 5">${'★'.repeat(e.stars)}${'☆'.repeat(5 - e.stars)}</p>`
+    : '';
+  const label: Record<string, string> = {
+    treaty: 'treaty',
+    tribute: 'paid tribute',
+    broken: 'broken by force',
+    hostile: 'hostile',
+    wary: 'wary',
+    friendly: 'friendly',
+    unmet: 'never met',
+  };
+  return `<div class="end"><h3 class="end-title">${esc(e.title)}</h3>${stars}
+    ${e.epilogue.map((p) => `<p>${esc(p)}</p>`).join('')}
+    <dl class="sw-dl">${e.facts.map((f) => `<dt>${esc(f.label)}</dt><dd>${esc(f.value)}</dd>`).join('')}</dl>
+    <table class="sw-table"><tr><th>People</th><th>Ending</th><th>Relation</th></tr>${e.races
+      .map((r) => `<tr><td>${esc(r.name)}</td><td>${label[r.outcome]}</td><td>${r.relation}</td></tr>`)
+      .join('')}</table>
+    <div class="sw-row"><button class="sw-btn sw-btn--primary" data-act="title">Back to title</button></div></div>`;
 }

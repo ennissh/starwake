@@ -1,3 +1,4 @@
+import { audio } from '../audio/audio.js';
 /**
  * Fold-jump transition (playtest batch 1, #5): star streaks rush outward while the next system
  * loads, a white flash, then an arrival card ("Arrived: <system>") that fades on its own. Purely
@@ -33,6 +34,7 @@ export class FoldFx {
     this.el.classList.remove('sw-fold--out');
     this.el.classList.add('sw-fold--in');
     this.t0 = performance.now();
+    audio.fold();
     if (!this.reduced) this.raf = requestAnimationFrame(this.draw);
     return new Promise((r) => setTimeout(r, this.reduced ? 250 : 900));
   }

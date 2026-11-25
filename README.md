@@ -99,6 +99,13 @@ sudo bash install.sh
 2. `curl -fsS http://localhost:8090/readyz` → `{"ready":true,…}` (data directory writable)
 3. `/healthz` shows `"llm":"up"`: the container reaches Ollama and the model is installed
 4. The page loads at `http://starwake.citus.cloud:8090` from another LAN machine and shows *Translator: online*
+5. **Mock hail** (no Ollama needed): run a copy with `LLM_MODE=mock`, fly to Glass Reach and press **V**.
+   The Quillari answer from their phrasebook; the status line says *Translator (mock)*
+6. **Real hail**: with `LLM_MODE=ollama`, hail the Quillari. Replies should take a few seconds
+   (*decoding…*); *Signal degraded* means Ollama failed and the scripted fallback answered. Each call is
+   in `/opt/docker/starwake/data/logs/translator-YYYYMMDD.jsonl` (latency, raw reply, validation)
+7. **Benchmark the model** from a checkout on any LAN machine (see *Translator* below):
+   `OLLAMA_URL=http://<mac-studio>:11434 npm run eval:llm -- --models gemma4:12b`
 
 ### Versions
 
@@ -147,7 +154,7 @@ title screen; the choice is remembered per browser (per profile from M3).
 | Match target speed | M |
 | Launch Hornet (fighter) / Lance (homing) / Ram (kamikaze torpedo) drone · recall | 1 / 2 / 3 · R |
 | Star map · System report and services · Colony Readiness | Tab · I · H |
-| Engine room · Codex | F · K (M4, M6) |
+| Engine room · Codex | F · K |
 | Probe system · Hail ship or base | P · V (the translator arrives in M5) |
 | Ask the advisors (WAKE and the council) | Enter or N |
 | Fold jump (from star map) · Emergency fold | J · Shift+J (hold 1 s) |
@@ -177,6 +184,58 @@ doesn't match, the advisor says so rather than guess. M5 may route them through 
 claim, readiness, star map, fold). Each step completes when you do it; skip it from the card, replay it
 from Esc → Replay tutorial.
 
+## Story, codex, audio and endings (M6)
+
+- **New game** opens with WAKE's intro (six captions; Enter moves on, Esc skips; text in
+  `content/codex.json`), then the first-flight tutorial (11 steps, each done when you do it).
+- **Codex (K):** the races you've met (and what they seem to think of you), surveyed systems and
+  planets, everything aliens told you, and *How things work* (the in-game manual).
+- **Audio:** all procedural WebAudio, no sample files: Lance, turret, hits, explosions, drone
+  launches, the fold, the crippled alarm, UI clicks, and a leitmotif per race (generated from
+  `leitmotifSeed` in its persona card) while its channel is open. Volumes in Esc → Settings. Sound
+  starts after *Click to begin*. Everything has captions, so sound is never required (R17).
+- **Endings:** signal the Caravan from the Cradle to win; the clock running out loses. The summary
+  rates the run (1–5 stars and a title such as *Peacemaker*, *Conqueror*, *Tributary*,
+  *Pathfinder*), tells what became of each people, and lists the numbers.
+
+## Translator (M5): talking to aliens
+
+Hail the system's occupant with **V** (or *Hail* in the system report). When a Vosk ambush or patrol
+pulls you out of a fold they hail first: answer, or fight. The translator screen shows the alien's
+portrait (mood, and its **tell** when the translator catches a lie), the transcript, relation and
+patience meters, quick chips (*about yourselves · the cluster · treaty · passage · trade · leave*),
+free text, and a trade panel with a balance bar.
+
+**The LLM speaks; the engine decides.** Each turn the model (Ollama, `OLLAMA_MODEL`) returns one JSON
+`AlienTurn`; `apps/server/src/translator/validate.ts` applies, alters or refuses its intent through the
+shared rules, so prompt injection can't change the game. Relation moves at most ±8 per turn and ±20 per
+conversation; patience bounds every conversation. If Ollama is off, down or slow the conversation drops
+to a scripted phrasebook (*Signal degraded*) and the game stays fully playable (`LLM_MODE=off` makes
+that the default, R19).
+
+- **Trade goods:** Data Cores, Provender, **crates** (each claimed world ships its resource as crates
+  every time you arrive in its system), **Survey Logs** (the first probe of each system writes one; the
+  Murmur love them), components and fold mass. Races also sell *claim permits* and *safe passage*.
+- **The Vosk** can be dealt with three ways: **treaty** (beat them in a fight or pay tribute, then talk
+  them up to the threshold), **tribute** (pay twice and they stop counting you as prey), or **force**
+  (break Cinder Hold; hostile forever).
+- **Memory:** closing a channel writes a short summary from the alien's point of view; it and the last
+  12 turns go into the next conversation.
+- **Advisors** answer scripted questions themselves; a question they can't match goes to the model with
+  the engine's facts (read-only), and to the scripted "I don't know" if Ollama is unavailable.
+
+**Benchmark (`npm run eval:llm`).** Runs ~30 golden scenarios (10 per race: greeting, fair and lopsided
+trades, treaty below threshold, three injection attempts, secrets, insults, 10 turns in character)
+through the real translator and validator against a real model, three times each by default, and
+writes `docs/llm-eval.md`. Bars: schema-valid ≥ 98% after repair, injection never changes state, in
+character under injection ≥ 90%, median latency ≤ 4 s. It exits non-zero if no model passes.
+
+```bash
+OLLAMA_URL=http://mac-studio.lan:11434 npm run eval:llm -- --models gemma4:12b,qwen3:14b --runs 3
+```
+
+Pick the passing model for `OLLAMA_MODEL` in `.env`; if none passes, set `LLM_MODE=off`.
+
 ## Playing the campaign (M3)
 
 1. Title → add a pilot (name only) → **New game**. You start in Harbor beside the Waystation.
@@ -192,6 +251,13 @@ from Esc → Replay tutorial.
    combat; the server checks every result by replaying your fight.
 6. **H** shows Colony Readiness: a Cradle world, the four resource quotas, safety (no hostile race
    within 2 jumps of the Cradle) and the clock. Meet all four, go to the Cradle and signal the Caravan.
+
+**Engine room (F).** Six systems with slots, and the hold. Click a part (or drag it), then click where it
+goes: a slot that takes its family, or "To the hold". The table previews jump range, fold mass per
+parsec, speed, turn rate, Lance and turret damage per second and shields before you confirm. Refits are
+free at the Waystation and cost 0.01 years per swap anywhere else. Each system's output (the sum of its
+parts' output × condition, over its maximum) drives the stats through multipliers in
+`content/player.json` → `effects`; the starting loadout is tuned to about ×1.0.
 
 The game autosaves after every action; the pause menu (Esc → Save / load) keeps three manual slots.
 
@@ -216,7 +282,24 @@ starwake/
 
 ## Backups
 
-Everything that matters is in `/opt/docker/starwake/data`. `install.sh` can install a daily cron job (`/etc/cron.d/starwake-backup`, 03:17) that runs `backup.sh` and keeps the last 14 tarballs in `/opt/docker/starwake/backups`. Run one by hand with `sudo /opt/docker/starwake/backup.sh`. Restore steps are at the top of `scripts/backup.sh`.
+Everything that matters is in `/opt/docker/starwake/data`. `install.sh` can install a daily cron job (`/etc/cron.d/starwake-backup`, 03:17) that runs `backup.sh` and keeps the last 14 tarballs in `/opt/docker/starwake/backups`. Run one by hand with `sudo /opt/docker/starwake/backup.sh`.
+
+Restore (the installer also writes `restore.sh`; it never deletes the current data, it moves it aside to
+`data.before-restore-<date>`):
+
+```bash
+cd /opt/docker/starwake && sudo docker compose down
+sudo ./restore.sh backups/starwake-data-<date>.tar.gz /opt/docker/starwake/data
+sudo docker compose up -d
+```
+
+A test runs backup → overwrite → restore and checks every file (`scripts/test/backup.test.ts`).
+
+## Monitoring
+
+Add an Uptime Kuma *HTTP(s) – Keyword* monitor on `http://starwake.citus.cloud:8090/healthz` with the
+keyword `"ok":true` (the installer prints the exact line). `/healthz` never fails because Ollama is
+down; to be alerted about the translator too, add a second keyword monitor for `"llm":"up"`.
 
 ## Legal
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copy deploy/compose.yaml and scripts/backup.sh into install.sh's embedded blocks, so the installer
+# Copy deploy/compose.yaml, scripts/backup.sh and scripts/restore.sh into install.sh's embedded blocks, so the installer
 # is one self-contained file (R23).
 #   scripts/sync-installer.sh           rewrite install.sh
 #   scripts/sync-installer.sh --check   fail if install.sh is out of date (test.sh runs this)
@@ -12,7 +12,7 @@ fill() {  # fill MARKER FILE < install.sh : replace the heredoc body between the
         !skip { print }
     '
 }
-out="$(fill STARWAKE_EMBED_COMPOSE deploy/compose.yaml < install.sh | fill STARWAKE_EMBED_BACKUP scripts/backup.sh)"
+out="$(fill STARWAKE_EMBED_COMPOSE deploy/compose.yaml < install.sh | fill STARWAKE_EMBED_BACKUP scripts/backup.sh | fill STARWAKE_EMBED_RESTORE scripts/restore.sh)"
 if [[ "${1:-}" == "--check" ]]; then
     if [[ "$out" != "$(cat install.sh)" ]]; then
         echo "install.sh is out of date with deploy/compose.yaml or scripts/backup.sh: run scripts/sync-installer.sh" >&2

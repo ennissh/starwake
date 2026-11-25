@@ -76,5 +76,13 @@
       "isotopes": 2
     },
     "safetyHops": 2
+  },
+  "diplomacy": {
+    "foldMassValue": 1.5,
+    "cratesPerYield": 1,
+    "relationPerTurnMax": 8,
+    "relationPerConversationMax": 20,
+    "tellChance": 0.75,
+    "memoryTurns": 12
   }
 }

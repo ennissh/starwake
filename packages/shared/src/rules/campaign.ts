@@ -9,9 +9,10 @@ import {
 } from '../schemas/campaign.js';
 import type { EncounterResult, InstalledComponent } from '../sim/combat/types.js';
 import { RuleError } from './errors.js';
+import { type RefitMove, applyMoves } from './refit.js';
 import { laneBetween, parsecsBetween, system } from './graph.js';
 import { readiness } from './readiness.js';
-import { applyRelationDelta, brokenFlag, hostileActDelta, isActiveThreat } from './relations.js';
+import { applyRelationDelta, attacksYou, brokenFlag, hostileActDelta } from './relations.js';
 import { addItem, holdFree, itemQty, jumpCost, removeItem } from './ship.js';
 
 /**
@@ -62,6 +63,8 @@ export function newGame(c: ContentBundle, seed: string): CampaignState {
     visits: { [start]: { count: 1, probedOn: null, fights: 0 } },
     known: [],
     conversationMemory: {},
+    raceStock: {},
+    conversation: null,
     pendingEncounter: null,
     salvageOffer: [],
     outcome: 'ongoing',
@@ -101,6 +104,7 @@ function spendTime(s: CampaignState, years: number, events: CampaignEvent[]): Ca
 function guard(s: CampaignState, allowPending = false): void {
   if (s.outcome !== 'ongoing') throw new RuleError('GAME_OVER', 'This campaign is over.');
   if (!allowPending && s.pendingEncounter) throw new RuleError('IN_ENCOUNTER', 'Finish the fight first.');
+  if (s.conversation) throw new RuleError('IN_CONVERSATION', 'Close the channel first.');
 }
 
 function encounterFor(
@@ -123,6 +127,7 @@ function encounterFor(
       fromSystemId: from,
       reason,
       raceId,
+      parley: reason !== 'attack',
     },
     stats: { ...state.stats, fights: state.stats.fights + 1 },
     visits: { ...state.visits, [state.systemId]: { ...visits, fights: visits.fights + 1 } },
@@ -152,6 +157,14 @@ export function applyAction(s: CampaignState, a: CampaignAction, c: ContentBundl
       return attackBase(s, c);
     case 'signalCaravan':
       return signalCaravan(s, c);
+    case 'refit':
+      return refit(s, a.moves, c);
+    case 'fight': {
+      const pe = s.pendingEncounter;
+      if (!pe) throw new RuleError('NO_ENCOUNTER', 'There is no fight pending.');
+      if (s.conversation) throw new RuleError('IN_CONVERSATION', 'Close the channel first.');
+      return { state: { ...s, pendingEncounter: { ...pe, parley: false } }, events: [] };
+    }
   }
 }
 
@@ -190,7 +203,7 @@ export function jump(s0: CampaignState, to: string, c: ContentBundle): Step {
   // Hostile patrols raid beacons while you're away (R13).
   for (const cl of [...s.claims]) {
     const sys = system(c, cl.systemId);
-    const raider = sys.patrols.find((p) => isActiveThreat(s, p.raceId, c));
+    const raider = sys.patrols.find((p) => attacksYou(s, p.raceId, c));
     if (!raider) continue;
     const r = useRng(s, (rng) => rng.chance(c.rules.beaconRaidChance));
     s = r.state;
@@ -206,8 +219,10 @@ export function jump(s0: CampaignState, to: string, c: ContentBundle): Step {
     }
   }
 
+  s = collectCrates(s, to, c, events);
+
   // Ambush on the lane, else a patrol on arrival.
-  if (lane.ambush && isActiveThreat(s, lane.ambush.raceId, c)) {
+  if (lane.ambush && attacksYou(s, lane.ambush.raceId, c)) {
     const r = useRng(s, (rng) => rng.chance(lane.ambush!.chance));
     s = r.state;
     if (r.value) {
@@ -223,7 +238,7 @@ export function jump(s0: CampaignState, to: string, c: ContentBundle): Step {
     }
   }
   for (const p of system(c, to).patrols) {
-    if (!isActiveThreat(s, p.raceId, c)) continue;
+    if (!attacksYou(s, p.raceId, c)) continue;
     const r = useRng(s, (rng) => rng.chance(p.chance));
     s = r.state;
     if (r.value) {
@@ -236,14 +251,54 @@ export function jump(s0: CampaignState, to: string, c: ContentBundle): Step {
   return { state: s, events };
 }
 
+/** Claimed worlds in this system ship their resource as crates (M5); the hold caps it. */
+function collectCrates(
+  s0: CampaignState,
+  systemId: string,
+  c: ContentBundle,
+  events: CampaignEvent[],
+): CampaignState {
+  const per = c.rules.diplomacy.cratesPerYield;
+  if (!per) return s0;
+  const sys = system(c, systemId);
+  let hold = s0.hold;
+  const got = new Map<string, number>();
+  for (const cl of s0.claims.filter((x) => x.systemId === systemId)) {
+    const planet = sys.planets.find((p) => p.id === cl.planetId);
+    for (const r of planet?.resources ?? []) {
+      const item = c.items.find((i) => i.resource === r.kind);
+      if (!item) continue;
+      const a = addItem(hold, item.id, r.yield * per, c);
+      hold = a.hold;
+      if (a.added) got.set(item.id, (got.get(item.id) ?? 0) + a.added);
+    }
+  }
+  if (!got.size) return s0;
+  const items = [...got].map(([itemId, qty]) => ({ itemId, qty }));
+  events.push({ t: 'crates', items });
+  return log(
+    { ...s0, hold },
+    `Your claims shipped ${items.map((x) => `${x.qty} ${byId(c.items, x.itemId).name}`).join(', ')}.`,
+  );
+}
+
 export function probe(s0: CampaignState, c: ContentBundle): Step {
   guard(s0);
   const v = s0.visits[s0.systemId] ?? { count: 1, probedOn: null, fights: 0 };
   if (v.probedOn === v.count)
     throw new RuleError('PROBE_USED', 'One surveyor probe per visit: it has already reported.');
   const sys = system(c, s0.systemId);
+  const events: CampaignEvent[] = [{ t: 'probed', systemId: sys.id }];
+  // A first survey gives WAKE a story to tell: a Survey Log (some races prize them).
+  let hold = s0.hold;
+  if (!s0.known.includes(sys.id) && c.items.some((i) => i.id === 'survey-log')) {
+    const a = addItem(hold, 'survey-log', 1, c);
+    hold = a.hold;
+    if (a.added) events.push({ t: 'surveyLog' });
+  }
   let s: CampaignState = {
     ...s0,
+    hold,
     visits: { ...s0.visits, [s0.systemId]: { ...v, probedOn: v.count } },
     known: s0.known.includes(sys.id) ? s0.known : [...s0.known, sys.id],
     codex: [
@@ -259,7 +314,7 @@ export function probe(s0: CampaignState, c: ContentBundle): Step {
     s,
     `Probe report from ${sys.name}: ${sys.planets.length} planet${sys.planets.length === 1 ? '' : 's'}${sys.occupant ? `, ${byId(c.races, sys.occupant).name} present` : ''}.`,
   );
-  return { state: s, events: [{ t: 'probed', systemId: sys.id }] };
+  return { state: s, events };
 }
 
 export function claim(s0: CampaignState, planetId: string, c: ContentBundle): Step {
@@ -279,6 +334,9 @@ export function claim(s0: CampaignState, planetId: string, c: ContentBundle): St
     beacons: s0.beacons - 1,
     claims: [...s0.claims, { systemId: sys.id, planetId }],
   };
+  // The new claim ships its first crates at once (only this claim: others shipped on arrival).
+  s = collectCrates({ ...s, claims: [{ systemId: sys.id, planetId }] }, sys.id, c, events);
+  s = { ...s, claims: [...s0.claims, { systemId: sys.id, planetId }] };
   s = log(s, `Claim beacon placed on ${planet.name}.`);
   // Claiming in someone else's system without permission is a hostile act (PLAN §1.7).
   if (sys.occupant && !s.flags.includes(`permit:${sys.occupant}`) && !s.treaties.includes(sys.occupant)) {
@@ -349,6 +407,22 @@ export function buy(s0: CampaignState, componentId: string, c: ContentBundle): S
   return { state: s, events: [{ t: 'bought', componentId }] };
 }
 
+/** Engine room (M4): apply the moves; free at the Waystation, else swap time per move. */
+export function refit(s0: CampaignState, moves: RefitMove[], c: ContentBundle): Step {
+  guard(s0);
+  const l = applyMoves({ installed: s0.installed, hold: s0.hold }, moves, c);
+  const atStation = system(c, s0.systemId).station === 'waystation';
+  const years = atStation ? 0 : round(moves.length * c.rules.clock.swapYears);
+  const events: CampaignEvent[] = [{ t: 'refitted', swaps: moves.length, years }];
+  let s: CampaignState = { ...s0, installed: l.installed, hold: l.hold };
+  s = log(
+    s,
+    `Refit: ${moves.length} swap${moves.length === 1 ? '' : 's'}${years ? ` (${years} yr)` : ' at the Waystation'}.`,
+  );
+  s = spendTime(s, years, events);
+  return { state: s, events };
+}
+
 export function takeSalvage(s0: CampaignState, ids: string[], c: ContentBundle): Step {
   guard(s0);
   const offer = [...s0.salvageOffer];
@@ -386,7 +460,12 @@ export function attackBase(s0: CampaignState, c: ContentBundle): Step {
   if (s0.flags.includes(brokenFlag(sys.occupant)))
     throw new RuleError('ALREADY_BROKEN', 'The base is already a wreck.');
   const events: CampaignEvent[] = [];
-  let s = s0;
+  let s = s0.treaties.includes(sys.occupant)
+    ? log(
+        { ...s0, treaties: s0.treaties.filter((t) => t !== sys.occupant) },
+        `You broke your treaty with the ${byId(c.races, sys.occupant).name}.`,
+      )
+    : s0;
   // Firing first is a hostile act, recorded by the engine, not the translator (PLAN §1.5).
   const r = applyRelationDelta(
     s,
@@ -452,6 +531,8 @@ export function applyEncounterResult(s0: CampaignState, result: EncounterResult,
   s = { ...s, stats: { ...s.stats, destroyed } };
 
   if (result.outcome === 'victory') {
+    const vf = byId(c.races, pe.raceId).diplomacy.victoryFlag;
+    if (vf && !s.flags.includes(vf)) s = { ...s, flags: [...s.flags, vf] };
     const fights = s.visits[pe.systemId]?.fights ?? 1;
     const keep = Math.ceil(
       result.salvage.length * Math.pow(c.rules.salvage.diminishPerFight, Math.max(0, fights - 1)),

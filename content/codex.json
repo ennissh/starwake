@@ -1,0 +1,62 @@
+{
+  "intro": [
+    "Pilot. You are awake. Good. I am WAKE, the mind of this ship.",
+    "Behind us, the Long Caravan drifts in cryosleep: forty thousand sleepers, and life support for ten more years.",
+    "Ahead lies the Shoal, a cluster no human has charted. We are its pathfinder.",
+    "Find a world the sleepers can breathe on. Claim what the colony needs. Make its neighbours safe, by word or by force.",
+    "Others live here. My translator will carry your words to them, and theirs to you. Listen for lies.",
+    "We begin at the Harbor Waystation. Every fold costs time. Let us not waste it."
+  ],
+  "mechanics": [
+    {
+      "id": "caravan-clock",
+      "title": "The Caravan Clock",
+      "text": "The Long Caravan's life support has a fixed number of years left. Folding costs time per parsec, a Waystation refit costs a quarter year, repairs and refits away from the Waystation cost a little. Fights cost no time. At zero, the campaign is lost."
+    },
+    {
+      "id": "readiness",
+      "title": "Colony Readiness",
+      "text": "Four things win the game: claim one habitable Cradle world, meet the four resource quotas with your claims, make sure no hostile race lives or patrols within two lanes of the Cradle, and still have time on the clock. Then signal the Caravan from the Cradle system."
+    },
+    {
+      "id": "probes-claims",
+      "title": "Probes and claim beacons",
+      "text": "One surveyor probe per visit reports a system's worlds. You can only claim in a probed system. Claiming in an occupied system without a permit or treaty angers its owners. Hostile patrols may destroy beacons while you are away. Claimed worlds ship crates of their resource each time you arrive."
+    },
+    {
+      "id": "fold-mass",
+      "title": "Fold mass and range",
+      "text": "Each jump burns fold mass per parsec; a weak Fold Drive burns more. The Nav Cores set the longest jump you can make. The Waystation refills the tanks; some races sell fold mass; breaking an enemy base fills them too."
+    },
+    {
+      "id": "engine-room",
+      "title": "The engine room",
+      "text": "Six systems take components in slots. A system's output is the sum of its parts' output, scaled by their condition. Thrusters drive speed and turning, the Lance its damage and recharge, the Turret its rate of fire, the shields their capacity, the Fold Drive fuel use and range."
+    },
+    {
+      "id": "armour",
+      "title": "Armour and penetration",
+      "text": "A hit only does damage if the weapon's penetration is at least the target's armour. Fighters have none, frigates 1, bases and capital ships 2, subsystems 1. The Spinal Lance and the Ram drone penetrate 3; the Turret and Hornets 1; Lance drones 2."
+    },
+    {
+      "id": "emitters",
+      "title": "Shield emitters",
+      "text": "While any of a base's shield emitters lives, the base blocks the Spinal Lance. Target them with the subsystem key and break them with the Turret or drones, then the Lance can do its work."
+    },
+    {
+      "id": "crippled",
+      "title": "Crippled, never destroyed",
+      "text": "At zero hull the Starwake is crippled. An emergency fold escapes to the last system but loses some installed components. The lifeboat brings you home to the Waystation with a basic refit and an empty hold, at a cost of a year and a half."
+    },
+    {
+      "id": "translator",
+      "title": "The translator",
+      "text": "WAKE translates alien speech live. What aliens say is theirs; what happens is the game's: trades, treaties, tribute and passage only happen when the rules allow. Each race has a tell that shows when the translator catches them lying. Patience is limited: talk to purpose."
+    },
+    {
+      "id": "trade",
+      "title": "Trade and the balance bar",
+      "text": "Each race values goods its own way and pays more for what it wants. The balance bar shows how an offer looks to them; the warmer they feel towards you, the more slack they give. Their stock is limited, and what you sell them they can sell back."
+    }
+  ]
+}

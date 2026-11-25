@@ -1,3 +1,4 @@
+import { audio } from '../audio/audio.js';
 import { THEMES, type Health, type ThemeId } from '@starwake/shared';
 import { currentTheme, onThemeChange, setTheme } from '../themes/theme.js';
 import type { ProfileSummary, SaveMeta } from '../net/api.js';
@@ -132,6 +133,7 @@ export class TitleScreen {
     if (!t) return;
     const act = t.dataset.act;
     if (act === 'begin') {
+      audio.unlock(); // the gesture browsers need before any sound
       this.gated = false;
       this.render();
     } else if (act === 'new') {

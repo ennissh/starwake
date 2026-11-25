@@ -21,7 +21,7 @@ the Caravan Clock runs out. Aliens are played live by a local LLM (Ollama) throu
 - **Version:** the release line is in [`VERSION`](VERSION) (`X.Y.Z`). Every build is `X.Y.Z-<N>`, where `N` is the
   number of commits since `VERSION` last changed (`scripts/version.sh`; no state to keep). Images get `:<X.Y.Z>-<N>`
   and `:latest`. A release `X.Y.Z` is a tested build re-tagged by digest; a `stable` channel arrives with it (R7).
-- **Status:** pre-development. The first deliverable is the **MVP** (`0.1.0`): one cluster (the
+- **Status:** MVP feature-complete (M0–M7 built); release 0.1.0 pending Shawn's playtest, `eval:llm` and publish. The first deliverable is the **MVP** (`0.1.0`): one cluster (the
   Shoal), six systems, three races (Quillari, Vosk, Murmur), the full loop playable start to finish.
 - **Clean room.** Starwake is inspired by the *mechanics* of MicroProse's Lightspeed (1990) and
   Hyperspeed (1991). It uses none of their names, art, music, text, data or code (PLAN.md §0.1).
@@ -232,10 +232,10 @@ M0 — Skeleton, deploy pipeline, /healthz, install.sh                    [x] bu
 M1 — Flight and cameras, HUD, key help, rebinding, pause               [x] built; 60 fps check pending (Shawn)
 M2 — Combat, drones, subsystems, crippled state, salvage, arena        [x] built; human playtest pending
 M3 — Campaign: Shoal content, star map, jumps, probe, claims, saves    [x] built; clock-length playtest pending
-M4 — Engine room: slots, condition, stat preview, wired effects        [ ]
-M5 — Translator + diplomacy (largest; seven gates)                     [ ]
-M6 — Win/lose, intro + tutorial, codex, audio                          [ ]
-M7 — Hardening, Playwright smoke, release 0.1.0                        [ ]
+M4 — Engine room: slots, condition, stat preview, wired effects        [x] built
+M5 — Translator + diplomacy (largest; seven gates)                     [x] built; eval:llm on the real model pending (Shawn)
+M6 — Win/lose, intro + tutorial, codex, audio                          [x] built; first-time playtest pending (Shawn)
+M7 — Hardening, Playwright smoke, release 0.1.0                        [x] built; publish 0.1.0 + dwarf acceptance pending (Shawn)
 ```
 
 ---
@@ -258,7 +258,8 @@ R19 fallback ships if no model passes · R20 Farglow design system, light/dark +
 R22 Caravan Clock: jumps 0.15 yr/pc, Waystation refit 0.25 yr, 10-year clock (headless playthrough: 3.14 yr for a perfect win) ·
 R23 (2026-11-24) images publish from a manual-only GitHub Actions workflow; `install.sh` is a single self-contained file ·
 R24 (2026-11-24) playtest batch 1: tutorial, advisors (WAKE + council, scripted), mouse steering off by default (L),
-Lance assist + face target (G), full-res VGA palette theme, fold transition.
+Lance assist + face target (G), full-res VGA palette theme, fold transition. ·
+R25 (2026-11-25) advisors ask the LLM only on a scripted miss; claims ship cargo crates, first probes write Survey Logs.
 
 Still open: the final model after `eval:llm` (M5); the exact Ollama URL (asked by `install.sh`).
 

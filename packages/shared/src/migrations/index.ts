@@ -7,7 +7,14 @@ import { CAMPAIGN_VERSION, type CampaignState, CampaignStateSchema } from '../sc
  */
 type Raw = Record<string, unknown>;
 const STEPS: Record<number, (s: Raw) => Raw> = {
-  // 1: (s) => ({ ...s, version: 2, newField: default })   ← the shape of a future step
+  // 1 → 2 (M5): race stock, open conversation, ambush parley.
+  1: (s) => ({
+    ...s,
+    version: 2,
+    raceStock: {},
+    conversation: null,
+    pendingEncounter: s.pendingEncounter ? { ...(s.pendingEncounter as Raw), parley: false } : null,
+  }),
 };
 
 export class SaveVersionError extends Error {}

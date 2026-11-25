@@ -172,6 +172,9 @@ export class PauseMenu {
     return `<div class="sw-menu">
       <label class="sw-field">Mouse sensitivity <input type="range" min="0.25" max="4" step="0.05" value="${s.mouseSensitivity}" data-set="sens" aria-label="Mouse sensitivity"/></label>
       <label class="sw-field">Mouse steers the ship <input type="checkbox" ${s.mouseSteering ? 'checked' : ''} data-set="steer"/></label>
+      <label class="sw-field">Master volume <input type="range" min="0" max="1" step="0.05" value="${s.volume.master}" data-set="vol-master" aria-label="Master volume"/></label>
+      <label class="sw-field">Effects volume <input type="range" min="0" max="1" step="0.05" value="${s.volume.sfx}" data-set="vol-sfx" aria-label="Effects volume"/></label>
+      <label class="sw-field">Music volume <input type="range" min="0" max="1" step="0.05" value="${s.volume.music}" data-set="vol-music" aria-label="Music volume"/></label>
       <label class="sw-field">Invert mouse pitch <input type="checkbox" ${s.invertY ? 'checked' : ''} data-set="invert"/></label>
       <div class="sw-field">Theme <div class="sw-row">${THEMES.map(
         (t) =>
@@ -252,6 +255,8 @@ export class PauseMenu {
     if (t.dataset.set === 'sens') this.settings.mouseSensitivity = Number(t.value);
     else if (t.dataset.set === 'invert') this.settings.invertY = t.checked;
     else if (t.dataset.set === 'steer') this.settings.mouseSteering = t.checked;
+    else if (t.dataset.set?.startsWith('vol-'))
+      this.settings.volume = { ...this.settings.volume, [t.dataset.set.slice(4)]: Number(t.value) };
     else return;
     this.persist();
   };

@@ -8,6 +8,7 @@ import {
   type EncounterOptions,
   type EncounterResult,
   CampaignActionSchema,
+  PlayerMoveSchema,
   RuleError,
   applyAction,
   applyEncounterResult,
@@ -25,6 +26,7 @@ import {
 } from '@starwake/shared';
 import { PROFILE_ID, SLOTS, type Slot, type Store } from '../store.js';
 import { httpError } from './util.js';
+import type { Translator } from '../translator/translator.js';
 
 /** A save file: metadata for the slot list plus the campaign state. */
 export interface SaveFile {
@@ -71,7 +73,12 @@ function view(id: string, f: SaveFile, c: ContentBundle) {
   };
 }
 
-export function campaignRoutes(app: FastifyInstance, store: Store, content: ContentBundle): void {
+export function campaignRoutes(
+  app: FastifyInstance,
+  store: Store,
+  content: ContentBundle,
+  translator: Translator,
+): void {
   const meta = (profile: string, slot: Slot, state: CampaignState): SaveFile['meta'] => ({
     profile,
     slot,
@@ -192,9 +199,79 @@ export function campaignRoutes(app: FastifyInstance, store: Store, content: Cont
       ? await locked(body.saveId, async () => (await load(body.saveId!)).state)
       : null;
     const a = ask(content, state, body.advisor, body.question);
+    // A miss may go to the model (read-only, engine facts only); else the scripted "don't know".
+    if (!a.topicId && body.question.trim()) {
+      const said = await translator.advise(state, a.advisorId, body.question);
+      if (said) return { ...a, text: said, topicId: 'llm' };
+    }
     // The question is player text: never logged at INFO (CLAUDE.md §7).
     req.log.debug({ advisor: a.advisorId, topic: a.topicId }, 'advisor answered');
     return a;
+  });
+
+  // ---- translator (M5, PLAN §2.3, §6) ----------------------------------------------------------------
+  const rule = <T>(f: () => Promise<T>) =>
+    f().catch((err) => {
+      if (err instanceof RuleError) throw httpError(409, err.code, err.message);
+      throw err;
+    });
+  const OpenBody = z.object({ raceId: z.string().regex(/^[a-z][a-z0-9-]{0,31}$/) });
+  const SayBody = z.object({ move: PlayerMoveSchema });
+
+  app.post<{ Params: { saveId: string } }>('/api/translator/:saveId/open', async (req) => {
+    const { raceId } = OpenBody.parse(req.body);
+    const id = req.params.saveId;
+    return locked(id, () =>
+      rule(async () => {
+        const f = await load(id);
+        const r = await translator.open(f.state, raceId);
+        const saved = await write(id, r.state);
+        req.log.info({ save: id, race: raceId, degraded: r.degraded, applied: r.applied }, 'channel opened');
+        return {
+          ...view(id, saved, content),
+          events: r.events,
+          reply: r.shown,
+          degraded: r.degraded,
+          ended: false,
+        };
+      }),
+    );
+  });
+
+  app.post<{ Params: { saveId: string } }>('/api/translator/:saveId/say', async (req) => {
+    const { move } = SayBody.parse(req.body);
+    const id = req.params.saveId;
+    return locked(id, () =>
+      rule(async () => {
+        const f = await load(id);
+        const r = await translator.say(f.state, move);
+        const saved = await write(id, r.state);
+        // The move type only: what the player typed never goes to stdout at INFO.
+        req.log.info(
+          { save: id, move: move.type, applied: r.applied, degraded: r.degraded, ended: r.ended },
+          'translator turn',
+        );
+        return {
+          ...view(id, saved, content),
+          events: r.events,
+          reply: r.shown,
+          degraded: r.degraded,
+          ended: r.ended,
+        };
+      }),
+    );
+  });
+
+  app.post<{ Params: { saveId: string } }>('/api/translator/:saveId/close', async (req) => {
+    const id = req.params.saveId;
+    return locked(id, () =>
+      rule(async () => {
+        const f = await load(id);
+        const r = await translator.close(f.state);
+        const saved = await write(id, r.state);
+        return { ...view(id, saved, content), events: r.events };
+      }),
+    );
   });
 
   // ---- encounters (PLAN §2.2) -------------------------------------------------------------------------

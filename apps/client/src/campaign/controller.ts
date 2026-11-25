@@ -6,6 +6,7 @@ import {
   type ContentBundle,
   type EncounterResult,
   byId,
+  hailable,
   isBroken,
   itemQty,
   laneBetween,
@@ -17,11 +18,22 @@ import type { Renderer } from '../render.js';
 import type { Input } from '../input/input.js';
 import { AdvisorPanel } from '../ui/advisors.js';
 import { Tutorial } from './tutorial.js';
+import { EngineRoom } from './engineRoom.js';
+import { type CodexTab, codexBody } from './codex.js';
+import { TranslatorPanel } from '../translator/panel.js';
 import { FoldFx } from '../ui/foldFx.js';
+import { audio } from '../audio/audio.js';
 import { Modal } from '../ui/modal.js';
 import { esc } from '../ui/help.js';
 import { crippledBody, resultBody, resultTitle } from '../ui/combatScreens.js';
-import { ApiFailure, type SaveView, act, postEncounterResult, startEncounter } from '../net/api.js';
+import {
+  ApiFailure,
+  type SaveView,
+  act,
+  getHealth,
+  postEncounterResult,
+  startEncounter,
+} from '../net/api.js';
 import { systemBackdrop } from './backdrop.js';
 import { type MapView, mapBody } from './starMap.js';
 import { endingBody, readinessBody, salvageBody, systemBody } from './panels.js';
@@ -51,6 +63,9 @@ export class Campaign {
   scene!: SpaceScene;
   readonly modal: Modal;
   readonly advisors: AdvisorPanel;
+  readonly engine: EngineRoom;
+  readonly translator: TranslatorPanel;
+  private llm = 'unknown';
   private bar: HTMLDivElement;
   private map: MapView = { yaw: 0.5, pitch: 0.45, selected: null };
   private busy = false;
@@ -66,6 +81,27 @@ export class Campaign {
   ) {
     this.view = view;
     this.modal = new Modal(host.ui);
+    this.engine = new EngineRoom(this.modal, {
+      content: () => this.c,
+      state: () => this.view.state,
+      confirm: (moves) => this.do({ type: 'refit', moves }).then((ok) => (this.engine.refresh(), ok)),
+      close: () => this.closePanel(),
+    });
+    this.translator = new TranslatorPanel(this.modal, {
+      content: () => this.c,
+      saveId: () => this.saveId,
+      state: () => this.view.state,
+      update: (v) => {
+        this.view = v;
+        this.narrate(v.events);
+        this.renderBar();
+      },
+      ended: () => this.translatorEnded(),
+      llmMode: () => this.llm,
+    });
+    void getHealth()
+      .then((h) => (this.llm = h.llm))
+      .catch(() => undefined);
     this.advisors = new AdvisorPanel(this.modal, {
       content: () => this.c,
       saveId: () => this.saveId,
@@ -146,19 +182,64 @@ export class Campaign {
   private async enterInner(): Promise<void> {
     if (this.disposed) return;
     const s = this.view.state;
-    if (s.pendingEncounter) return this.startFight();
+    const pe = s.pendingEncounter;
+    if (pe && !pe.parley && !s.conversation) return this.startFight();
     this.fighting = false;
     const sys = system(this.c, s.systemId);
     this.scene = new SpaceScene(this.host.renderer, this.host.ui, this.host.input, this.c, {
       mode: 'flight',
       seed: `${s.seed}:${s.systemId}`,
+      installed: s.installed,
       backdrop: systemBackdrop(sys, this.c, { baseDestroyed: !!sys.occupant && isBroken(s, sys.occupant) }),
     });
     this.host.setScene(this.scene);
     this.scene.hud.setHint('Enter ask advisors · Tab map · I system · H colony · P probe · F1 keys');
     this.renderBar();
     if (s.outcome !== 'ongoing') this.showEnding();
+    else if (s.conversation) {
+      this.host.panelOpened();
+      this.translator.resume();
+    } else if (pe?.parley) this.showParley();
     else if (s.salvageOffer.length) this.showSalvage();
+  }
+
+  /** They hailed first (ambush or patrol): answer, or fight. */
+  private showParley(): void {
+    const pe = this.view.state.pendingEncounter!;
+    const race = byId(this.c.races, pe.raceId);
+    this.host.panelOpened();
+    this.modal.show(
+      pe.reason === 'ambush' ? `${esc(race.name)} ambush!` : `${esc(race.name)} patrol`,
+      `<p>${pe.reason === 'ambush' ? `${esc(race.name)} ships have pulled the Starwake out of the fold.` : `A ${esc(race.name)} patrol moves to intercept.`} They are hailing you.</p>
+      <div class="sw-row"><button class="sw-btn sw-btn--primary" data-act="answer">Answer the hail</button><button class="sw-btn sw-btn--danger" data-act="fight">Fight</button></div>`,
+      {
+        answer: () => this.openTranslator(pe.raceId),
+        fight: () =>
+          void this.do({ type: 'fight' }).then((ok) => {
+            if (!ok) return;
+            this.modal.close();
+            void this.enter();
+          }),
+      },
+      { kind: 'parley' },
+    );
+  }
+
+  openTranslator(raceId: string): void {
+    this.host.panelOpened();
+    void this.translator.open(raceId);
+  }
+
+  private translatorEnded(): void {
+    this.modal.close();
+    const s = this.view.state;
+    if (s.pendingEncounter && !s.pendingEncounter.parley) {
+      // No deal: the fight goes ahead.
+      void this.enter();
+      return;
+    }
+    this.host.panelClosed();
+    this.renderBar();
   }
 
   private async startFight(): Promise<void> {
@@ -248,6 +329,21 @@ export class Campaign {
       case 'colony':
         this.toggle('readiness', () => this.showReadiness());
         return true;
+      case 'hail': {
+        const who = hailable(this.view.state, this.c);
+        if (!who.length) return (this.scene.hud.toast('No one to hail here'), true);
+        this.openTranslator(who[0]!);
+        return true;
+      }
+      case 'codex':
+        this.toggle('codex', () => this.showCodex('races'));
+        return true;
+      case 'engineRoom':
+        this.toggle('engine', () => {
+          this.host.panelOpened();
+          this.engine.open();
+        });
+        return true;
       case 'probe':
         void this.do({ type: 'probe' }).then((ok) => ok && this.showSystem());
         return true;
@@ -269,6 +365,18 @@ export class Campaign {
   }
 
   private panelKey(e: KeyboardEvent): boolean {
+    // The translator has a text box: Esc leaves the conversation, every other key is typing.
+    if (this.translator.isOpen) {
+      if (e.code !== 'Escape') return false;
+      e.preventDefault();
+      void this.translator.leave();
+      return true;
+    }
+    if (this.modal.isOpen && this.modal.kind === 'parley') {
+      if (e.code !== 'Escape') return false;
+      e.preventDefault();
+      return true; // a choice is required
+    }
     // The advisors panel has a text box: only Esc is ours there.
     if (this.advisors.isOpen) {
       if (e.code !== 'Escape') return false;
@@ -276,18 +384,30 @@ export class Campaign {
       this.closePanel();
       return true;
     }
-    if (this.modal.isOpen && ['map', 'system', 'readiness'].includes(this.modal.kind ?? '')) {
+    if (
+      this.modal.isOpen &&
+      ['map', 'system', 'readiness', 'engine', 'codex'].includes(this.modal.kind ?? '')
+    ) {
       const bind = this.host.input.keyMap;
       // Tab is the default map key, but inside other panels it must move keyboard focus.
       const tabNav = e.code === 'Tab' && this.modal.kind !== 'map';
       const is = (a: Action) => !tabNav && bind[a].includes(e.code);
-      if (is('starMap') || is('systemReport') || is('colony') || e.code === 'Escape') {
+      if (
+        is('starMap') ||
+        is('systemReport') ||
+        is('colony') ||
+        is('engineRoom') ||
+        is('codex') ||
+        e.code === 'Escape'
+      ) {
         e.preventDefault();
         const kind = this.modal.kind;
         this.closePanel();
         if (is('starMap') && kind !== 'map') this.handle('starMap');
         else if (is('systemReport') && kind !== 'system') this.handle('systemReport');
         else if (is('colony') && kind !== 'readiness') this.handle('colony');
+        else if (is('engineRoom') && kind !== 'engine') this.handle('engineRoom');
+        else if (is('codex') && kind !== 'codex') this.handle('codex');
         return true;
       }
       if (is('jump') && this.modal.kind === 'map' && this.map.selected) {
@@ -374,11 +494,19 @@ export class Campaign {
       drop: (el) =>
         void this.do({ type: 'dropHold', index: Number(el.dataset.id) }).then(() => this.refresh()),
       attack: () => void this.attack(),
+      hail: (el) => this.openTranslator(el.dataset.id!),
       signal: () =>
         void this.do({ type: 'signalCaravan' }).then(
           () => this.view.state.outcome !== 'ongoing' && this.showEnding(),
         ),
     });
+  }
+
+  showCodex(tab: CodexTab): void {
+    this.panel('Codex', 'codex', codexBody(this.view.state, this.c, tab), {
+      tab: (el) => this.showCodex(el.dataset.id as CodexTab),
+    });
+    this.modal.el.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus();
   }
 
   showReadiness(): void {
@@ -520,6 +648,18 @@ export class Campaign {
         msg = `${byId(c.races, e.raceId).name}: relation ${e.delta > 0 ? '+' : ''}${e.delta}`;
       else if (e.t === 'docked') msg = 'Refit complete';
       else if (e.t === 'probed') msg = 'Probe report received (I)';
+      else if (e.t === 'treaty') msg = `Treaty signed with the ${byId(c.races, e.raceId).name}`;
+      else if (e.t === 'passage') msg = `Safe passage through ${byId(c.races, e.raceId).name} space`;
+      else if (e.t === 'knowledge') msg = 'New codex entry (K)';
+      else if (e.t === 'tribute') msg = 'Tribute paid';
+      else if (e.t === 'fightAvoided') msg = 'They let you go';
+      else if (e.t === 'traded') msg = 'Trade complete';
+      else if (e.t === 'surveyLog') msg = 'WAKE wrote a Survey Log (some races prize them)';
+      else if (e.t === 'crates')
+        msg = `Claims shipped ${e.items.map((x) => `${x.qty} ${byId(c.items, x.itemId).name}`).join(', ')}`;
+      else if (e.t === 'refitted')
+        msg = e.years ? `Refit: ${e.swaps} swaps, −${e.years} years` : 'Refit done';
+      if (e.t === 'treaty' || e.t === 'knowledge' || e.t === 'fightAvoided') audio.chime();
       if (msg) this.scene.hud.toast(msg, 2600);
     }
   }

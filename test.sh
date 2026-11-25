@@ -25,6 +25,7 @@ step() { printf '\n\033[1;36m== %s\033[0m\n' "$*"; }
 step "clean-room check";  scripts/check-cleanroom.sh
 step "secret check";      scripts/check-secrets.sh
 step "installer check";   scripts/sync-installer.sh --check
+step "filter lists";      node scripts/gen-filters.mjs --check
 if command -v shellcheck >/dev/null; then
     step "shellcheck";    shellcheck -S warning install.sh build.sh test.sh scripts/*.sh
 fi

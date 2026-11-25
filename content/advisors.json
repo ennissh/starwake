@@ -35,8 +35,8 @@
       "suggestions": [
         "How do I refuel?",
         "How do I repair?",
-        "What can I trade?",
-        "How do I get more beacons?"
+        "How do I upgrade the ship?",
+        "What can I trade?"
       ]
     },
     {
@@ -161,7 +161,7 @@
         "cargo",
         "shop"
       ],
-      "weak": ["hold", "component", "components"],
+      "weak": ["hold"],
       "dynamic": "trade"
     },
     {
@@ -169,6 +169,24 @@
       "advisor": "quartermaster",
       "keywords": ["more beacons", "beacons", "restock", "out of beacons"],
       "dynamic": "beacons"
+    },
+    {
+      "id": "engine-room",
+      "advisor": "quartermaster",
+      "keywords": [
+        "engine room",
+        "refit",
+        "upgrade",
+        "upgrades",
+        "install",
+        "swap",
+        "slot",
+        "slots",
+        "nav core",
+        "better parts"
+      ],
+      "weak": ["component", "components", "parts"],
+      "answer": "Press {key:engineRoom} for the engine room. Pick a part (or drag it) and drop it in a slot that takes its family; the table shows range, fold mass per parsec, speed, Lance and turret damage and shields before you confirm. Refits are free at the Waystation and cost a little clock time anywhere else. A better Nav Core adds jump range; an empty Fold Drive slot makes every jump dearer."
     },
     {
       "id": "lance",
