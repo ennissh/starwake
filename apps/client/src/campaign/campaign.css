@@ -261,3 +261,98 @@
   background: transparent;
   border-color: var(--hud-dim);
 }
+
+/* Engine room (M4) */
+.er {
+  display: grid;
+  gap: 10px;
+}
+.er-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+.er-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .er-side {
+    grid-template-columns: 1fr;
+  }
+}
+.er-sys {
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-sunken);
+  padding: 6px 8px;
+  display: grid;
+  gap: 4px;
+}
+.er-sys__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.er-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.er-slot {
+  font: inherit;
+  font-size: 0.92em;
+  min-height: 36px;
+  min-width: 92px;
+  padding: 2px 8px;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  color: var(--ink);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.er-slot[data-empty='1'] {
+  border-style: dashed;
+  color: var(--ink-muted);
+  background: transparent;
+}
+.er-item {
+  cursor: default;
+  color: var(--ink-muted);
+}
+.er-cond {
+  display: block;
+  height: 3px;
+  background: var(--border-subtle);
+}
+.er-cond i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+.er--picked {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.er--ok {
+  border-color: var(--positive);
+}
+.er--no {
+  color: var(--ink-muted);
+  background: transparent;
+  border-style: dotted;
+}
+.er-up {
+  color: var(--positive);
+}
+.er-down {
+  color: var(--danger);
+}
+.er-preview td:nth-child(n + 2) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

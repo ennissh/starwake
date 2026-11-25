@@ -17,6 +17,7 @@ import type { Renderer } from '../render.js';
 import type { Input } from '../input/input.js';
 import { AdvisorPanel } from '../ui/advisors.js';
 import { Tutorial } from './tutorial.js';
+import { EngineRoom } from './engineRoom.js';
 import { FoldFx } from '../ui/foldFx.js';
 import { Modal } from '../ui/modal.js';
 import { esc } from '../ui/help.js';
@@ -51,6 +52,7 @@ export class Campaign {
   scene!: SpaceScene;
   readonly modal: Modal;
   readonly advisors: AdvisorPanel;
+  readonly engine: EngineRoom;
   private bar: HTMLDivElement;
   private map: MapView = { yaw: 0.5, pitch: 0.45, selected: null };
   private busy = false;
@@ -66,6 +68,12 @@ export class Campaign {
   ) {
     this.view = view;
     this.modal = new Modal(host.ui);
+    this.engine = new EngineRoom(this.modal, {
+      content: () => this.c,
+      state: () => this.view.state,
+      confirm: (moves) => this.do({ type: 'refit', moves }).then((ok) => (this.engine.refresh(), ok)),
+      close: () => this.closePanel(),
+    });
     this.advisors = new AdvisorPanel(this.modal, {
       content: () => this.c,
       saveId: () => this.saveId,
@@ -152,6 +160,7 @@ export class Campaign {
     this.scene = new SpaceScene(this.host.renderer, this.host.ui, this.host.input, this.c, {
       mode: 'flight',
       seed: `${s.seed}:${s.systemId}`,
+      installed: s.installed,
       backdrop: systemBackdrop(sys, this.c, { baseDestroyed: !!sys.occupant && isBroken(s, sys.occupant) }),
     });
     this.host.setScene(this.scene);
@@ -248,6 +257,12 @@ export class Campaign {
       case 'colony':
         this.toggle('readiness', () => this.showReadiness());
         return true;
+      case 'engineRoom':
+        this.toggle('engine', () => {
+          this.host.panelOpened();
+          this.engine.open();
+        });
+        return true;
       case 'probe':
         void this.do({ type: 'probe' }).then((ok) => ok && this.showSystem());
         return true;
@@ -276,18 +291,19 @@ export class Campaign {
       this.closePanel();
       return true;
     }
-    if (this.modal.isOpen && ['map', 'system', 'readiness'].includes(this.modal.kind ?? '')) {
+    if (this.modal.isOpen && ['map', 'system', 'readiness', 'engine'].includes(this.modal.kind ?? '')) {
       const bind = this.host.input.keyMap;
       // Tab is the default map key, but inside other panels it must move keyboard focus.
       const tabNav = e.code === 'Tab' && this.modal.kind !== 'map';
       const is = (a: Action) => !tabNav && bind[a].includes(e.code);
-      if (is('starMap') || is('systemReport') || is('colony') || e.code === 'Escape') {
+      if (is('starMap') || is('systemReport') || is('colony') || is('engineRoom') || e.code === 'Escape') {
         e.preventDefault();
         const kind = this.modal.kind;
         this.closePanel();
         if (is('starMap') && kind !== 'map') this.handle('starMap');
         else if (is('systemReport') && kind !== 'system') this.handle('systemReport');
         else if (is('colony') && kind !== 'readiness') this.handle('colony');
+        else if (is('engineRoom') && kind !== 'engine') this.handle('engineRoom');
         return true;
       }
       if (is('jump') && this.modal.kind === 'map' && this.map.selected) {

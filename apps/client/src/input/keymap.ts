@@ -65,13 +65,7 @@ export const ACTIONS = {
   cycleCamera: { label: 'Cycle camera', group: 'Views', defaults: ['KeyC'] },
   starMap: { label: 'Star map', group: 'Ship', defaults: ['Tab'] },
   systemReport: { label: 'System report and services', group: 'Ship', defaults: ['KeyI'] },
-  engineRoom: {
-    label: 'Engine room',
-    group: 'Ship',
-    defaults: ['KeyF'],
-    comingIn: 'M4',
-    notYet: 'The engine room is not built yet (next update). Docking at the Waystation refits the ship.',
-  },
+  engineRoom: { label: 'Engine room (refit components)', group: 'Ship', defaults: ['KeyF'] },
   colony: { label: 'Colony readiness', group: 'Ship', defaults: ['KeyH'] },
   codex: {
     label: 'Codex',

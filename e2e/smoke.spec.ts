@@ -148,6 +148,7 @@ type CampSnap = {
   tutorial?: string | null;
   verification: string | null;
   state: unknown;
+  ship?: { range: number; fuelPerParsec: number };
 };
 const camp = (page: Page) =>
   page.evaluate(() =>
@@ -183,6 +184,25 @@ test('campaign: pilot → new game → probe → claim → map → jump → save
   await expect(page.getByRole('dialog')).toContainText('Anvil');
   await page.getByRole('button', { name: 'Place claim beacon' }).click();
   await expect(page.getByRole('dialog')).toContainText('Beacon placed');
+  await page.keyboard.press('Escape');
+  await expect.poll(async () => (await camp(page))?.panel).toBeNull();
+
+  // M4 engine room: pull a Fold Drive part into the hold (jumps get dearer), then put it back.
+  const fpp = async () => (await camp(page))!.ship!.fuelPerParsec;
+  const fpp0 = await fpp();
+  await page.keyboard.press('KeyF');
+  const er = page.getByRole('dialog', { name: 'Engine room' });
+  await expect(er).toBeVisible();
+  await er.getByRole('button', { name: /^Fold Drive slot 1: Coil/ }).click();
+  await er.getByRole('button', { name: 'To the hold' }).click();
+  await expect(er.locator('.er-preview')).toContainText('Fold mass per pc');
+  await er.getByRole('button', { name: /Confirm refit \(1 swap, free at the Waystation\)/ }).click();
+  await expect.poll(fpp).toBeGreaterThan(fpp0);
+  await er.getByRole('button', { name: /^Hold: Coil Mk I/ }).click();
+  await er.getByRole('button', { name: 'Fold Drive slot 1: empty' }).click();
+  await er.getByRole('button', { name: /Confirm refit/ }).click();
+  await expect.poll(fpp).toBeCloseTo(fpp0, 6);
+  expect((await camp(page))!.clock).toBe(10);
   await page.keyboard.press('Escape');
   await expect.poll(async () => (await camp(page))?.panel).toBeNull();
 

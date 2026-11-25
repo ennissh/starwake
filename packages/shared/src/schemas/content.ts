@@ -267,12 +267,26 @@ export const EncounterDefSchema = z.object({
 export type EncounterDef = z.infer<typeof EncounterDefSchema>;
 
 // ---------------------------------------------------------------------------------- player ship
+const EffectSchema = z.object({ at0: z.number().positive(), at1: z.number().positive() });
+export type Effect = z.infer<typeof EffectSchema>;
+
 export const PlayerShipSchema = z.object({
   name: z.string().min(1),
   /** Flight stats with Thrusters at 100% output (M4 scales them by output). */
   flight: FlightStatsSchema,
-  /** Fraction of flight stats kept at 0% Thruster output, so a stripped ship can still crawl. */
-  flightFloor: z.number().min(0).max(1),
+  /**
+   * Component effects (M4): each multiplier is at0 + (at1 − at0) × system output, where output is
+   * 0 (empty) to 1 (a full Mk III set). Tuned so the starting loadout lands near 1.0.
+   */
+  effects: z.object({
+    thrusters: EffectSchema,
+    lanceDamage: EffectSchema,
+    lanceRecharge: EffectSchema,
+    turretRate: EffectSchema,
+    turretTracking: EffectSchema,
+    shieldCapacity: EffectSchema,
+    shieldRecharge: EffectSchema,
+  }),
   hp: pos,
   /** WAKE's aim error (degrees) when it crews the turret; manual aim has none. */
   wakeTurretSpread: nonneg,

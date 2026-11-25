@@ -9,7 +9,36 @@
     "angAccel": 0.32,
     "driftDamping": 0
   },
-  "flightFloor": 0.3,
+  "effects": {
+    "thrusters": {
+      "at0": 0.55,
+      "at1": 1.675
+    },
+    "lanceDamage": {
+      "at0": 0.4,
+      "at1": 1.6
+    },
+    "lanceRecharge": {
+      "at0": 0.5,
+      "at1": 1.5
+    },
+    "turretRate": {
+      "at0": 0.5,
+      "at1": 1.5
+    },
+    "turretTracking": {
+      "at0": 0.4,
+      "at1": 1.6
+    },
+    "shieldCapacity": {
+      "at0": 0.3,
+      "at1": 1.6
+    },
+    "shieldRecharge": {
+      "at0": 0.5,
+      "at1": 1.5
+    }
+  },
   "hp": 600,
   "wakeTurretSpread": 1.2,
   "hitSpheres": [

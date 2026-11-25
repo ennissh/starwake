@@ -97,6 +97,24 @@ export const CampaignActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('dropHold'), index: z.number().int().min(0) }),
   z.object({ type: z.literal('attackBase') }),
   z.object({ type: z.literal('signalCaravan') }),
+  z.object({
+    type: z.literal('refit'),
+    moves: z
+      .array(
+        z.object({
+          a: z.union([
+            z.object({ system: SystemId, slot: z.number().int().min(0) }),
+            z.object({ hold: z.number().int().min(0) }),
+          ]),
+          b: z.union([
+            z.object({ system: SystemId, slot: z.number().int().min(0) }),
+            z.object({ hold: z.number().int().min(0) }),
+          ]),
+        }),
+      )
+      .min(1)
+      .max(40),
+  }),
 ]);
 export type CampaignAction = z.infer<typeof CampaignActionSchema>;
 
@@ -109,6 +127,7 @@ export type CampaignEvent =
   | { t: 'docked' }
   | { t: 'repaired' }
   | { t: 'bought'; componentId: string }
+  | { t: 'refitted'; swaps: number; years: number }
   | { t: 'relation'; raceId: string; delta: number; reason: string }
   | { t: 'salvageTaken'; count: number }
   | { t: 'won' }

@@ -147,7 +147,7 @@ title screen; the choice is remembered per browser (per profile from M3).
 | Match target speed | M |
 | Launch Hornet (fighter) / Lance (homing) / Ram (kamikaze torpedo) drone · recall | 1 / 2 / 3 · R |
 | Star map · System report and services · Colony Readiness | Tab · I · H |
-| Engine room · Codex | F · K (M4, M6) |
+| Engine room · Codex | F · K (M6) |
 | Probe system · Hail ship or base | P · V (the translator arrives in M5) |
 | Ask the advisors (WAKE and the council) | Enter or N |
 | Fold jump (from star map) · Emergency fold | J · Shift+J (hold 1 s) |
@@ -192,6 +192,13 @@ from Esc → Replay tutorial.
    combat; the server checks every result by replaying your fight.
 6. **H** shows Colony Readiness: a Cradle world, the four resource quotas, safety (no hostile race
    within 2 jumps of the Cradle) and the clock. Meet all four, go to the Cradle and signal the Caravan.
+
+**Engine room (F).** Six systems with slots, and the hold. Click a part (or drag it), then click where it
+goes: a slot that takes its family, or "To the hold". The table previews jump range, fold mass per
+parsec, speed, turn rate, Lance and turret damage per second and shields before you confirm. Refits are
+free at the Waystation and cost 0.01 years per swap anywhere else. Each system's output (the sum of its
+parts' output × condition, over its maximum) drives the stats through multipliers in
+`content/player.json` → `effects`; the starting loadout is tuned to about ×1.0.
 
 The game autosaves after every action; the pause menu (Esc → Save / load) keeps three manual slots.
 

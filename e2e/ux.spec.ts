@@ -143,6 +143,14 @@ for (const vp of VIEWPORTS) {
       f.push(...(await auditFocus(page, '19b-advisors')));
       await page.keyboard.press('Escape');
       await flying(page);
+      await page.keyboard.press('KeyF');
+      const er = page.getByRole('dialog', { name: 'Engine room' });
+      await er.getByRole('button', { name: /^Fold Drive slot 1:/ }).click();
+      await expect(er.getByRole('button', { name: 'To the hold' })).toBeVisible();
+      f.push(...(await audit(page, '19c-engine-room')));
+      f.push(...(await auditFocus(page, '19c-engine-room')));
+      await page.keyboard.press('Escape');
+      await flying(page);
       await page.keyboard.press('Escape');
       await page.getByRole('tab', { name: 'Save / load' }).click();
       await expect(page.getByRole('dialog')).toContainText('Autosave');

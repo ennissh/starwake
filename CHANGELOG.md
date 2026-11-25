@@ -2,6 +2,13 @@
 
 ## 0.1.0 (in progress)
 
+### M4 · Engine room
+- **F** opens the engine room: pick or drag parts between system slots and the hold; a live
+  preview shows range, fold mass per parsec, speed, turn, Lance/turret damage per second and shields.
+- Components now drive the ship: Thrusters → speed and turn; Lance → damage and recharge; Turret →
+  rate of fire and WAKE's tracking; shields → capacity and recharge; Fold Drive → fuel and range.
+- Refits are free at the Waystation, 0.01 years per swap elsewhere.
+
 ### Playtest batch 1 (R24)
 - **Tutorial**: a new game starts WAKE's first-flight checklist (9 steps, each done when you do it;
   skippable; Esc → Replay tutorial). Remembered per profile.

@@ -659,6 +659,7 @@ Build in order. Stop for review after each one.
 - Save → reload restores the exact state (deep-equal test).
 
 ### M4 · Engine room
+**Status (2026-11-25): built.** `shipStats()` (shared) is the one formula for the sim, the campaign and the preview; multipliers are content (`player.json` → `effects`, linear in system output, starting loadout ≈ ×1.0 so M2 balance holds). `refit` action = ordered swap moves (slot ↔ slot/hold), checked for family, slot, hold space; free at the Waystation, 0.01 yr per swap elsewhere. Component wear during a fight applies from the next fight. Tests: stat formulas, both acceptance items, refit rules, Playwright refit through the UI.
 - Slot UI, the compatibility matrix, condition, live stat preview, swap-time cost.
 - Component effects wired into flight, combat and jump range.
 

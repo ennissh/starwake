@@ -9,6 +9,7 @@ import {
 } from '../schemas/campaign.js';
 import type { EncounterResult, InstalledComponent } from '../sim/combat/types.js';
 import { RuleError } from './errors.js';
+import { type RefitMove, applyMoves } from './refit.js';
 import { laneBetween, parsecsBetween, system } from './graph.js';
 import { readiness } from './readiness.js';
 import { applyRelationDelta, brokenFlag, hostileActDelta, isActiveThreat } from './relations.js';
@@ -152,6 +153,8 @@ export function applyAction(s: CampaignState, a: CampaignAction, c: ContentBundl
       return attackBase(s, c);
     case 'signalCaravan':
       return signalCaravan(s, c);
+    case 'refit':
+      return refit(s, a.moves, c);
   }
 }
 
@@ -347,6 +350,22 @@ export function buy(s0: CampaignState, componentId: string, c: ContentBundle): S
     `Bought ${comp.name} for ${offer.price} Data Core${offer.price === 1 ? '' : 's'}.`,
   );
   return { state: s, events: [{ t: 'bought', componentId }] };
+}
+
+/** Engine room (M4): apply the moves; free at the Waystation, else swap time per move. */
+export function refit(s0: CampaignState, moves: RefitMove[], c: ContentBundle): Step {
+  guard(s0);
+  const l = applyMoves({ installed: s0.installed, hold: s0.hold }, moves, c);
+  const atStation = system(c, s0.systemId).station === 'waystation';
+  const years = atStation ? 0 : round(moves.length * c.rules.clock.swapYears);
+  const events: CampaignEvent[] = [{ t: 'refitted', swaps: moves.length, years }];
+  let s: CampaignState = { ...s0, installed: l.installed, hold: l.hold };
+  s = log(
+    s,
+    `Refit: ${moves.length} swap${moves.length === 1 ? '' : 's'}${years ? ` (${years} yr)` : ' at the Waystation'}.`,
+  );
+  s = spendTime(s, years, events);
+  return { state: s, events };
 }
 
 export function takeSalvage(s0: CampaignState, ids: string[], c: ContentBundle): Step {

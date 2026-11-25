@@ -71,6 +71,8 @@ export interface SceneOptions {
     frames: number;
     hullFraction: number;
   };
+  /** Campaign flight: the ship as refitted (speed and turn follow the Thrusters). */
+  installed?: InstalledComponent[];
   onCrippled?: () => void;
   onEnd?: (r: EncounterResult, log: CommandLog) => void;
 }
@@ -138,6 +140,7 @@ export class SpaceScene {
           roster: def?.roster ?? { hulls: [], reserve: [] },
           distance: def?.distance ?? 3000,
           endWhenClear: o.mode === 'fight',
+          ...(o.installed ? { installed: o.installed } : {}),
         });
 
     const b = o.backdrop;
@@ -390,7 +393,7 @@ export class SpaceScene {
           : CAMERA_LABEL[this.rig.mode],
       assist: p.f.assist,
       speed: len(p.f.vel),
-      maxSpeed: this.content.player.flight.maxSpeed,
+      maxSpeed: this.sim.ship.flight.maxSpeed,
       throttle: p.f.throttle,
       stick: this.input.stick,
       showStick: this.input.mouseFlies,
@@ -557,7 +560,6 @@ export class SpaceScene {
     if (this.o.mode !== 'fight') return null;
     const sim = this.sim;
     const sp = this.content.player;
-    const lance = byId(this.content.weapons, sp.lance.weapon);
     const t = sim.get(this.targetId);
     let target: TargetHud | null = null;
     if (t) {
@@ -604,9 +606,9 @@ export class SpaceScene {
     }
     return {
       hull: sim.player.hp / sim.player.maxHp,
-      fore: sim.shields.fore / sp.shields.fore,
-      aft: sim.shields.aft / sp.shields.aft,
-      lance: sim.lanceCharge / lance.cooldown,
+      fore: sim.shields.fore / Math.max(1, sim.ship.shields.fore),
+      aft: sim.shields.aft / Math.max(1, sim.ship.shields.aft),
+      lance: sim.lanceCharge / sim.ship.lance.cooldown,
       turret: this.rig.mode === 'turret' ? 'Manual' : 'WAKE',
       frames: sim.frames,
       active: sim.drones().length,

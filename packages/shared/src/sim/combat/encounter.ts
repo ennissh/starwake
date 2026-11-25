@@ -27,6 +27,7 @@ import { type AiWorld, think } from './ai.js';
 import { angleBetween, jitter, leadPoint, segmentSphere, toWorld } from './geometry.js';
 import { type HitBlock, hitBlockedBy } from './rules.js';
 import { steerToward } from './steer.js';
+import { type ShipStats, shipStats } from '../../rules/stats.js';
 import type {
   Bolt,
   CombatEvent,
@@ -107,6 +108,8 @@ export class Encounter {
   crippled = false;
   outcome: Outcome = 'ongoing';
   installed: InstalledComponent[];
+  /** The Starwake's stats from its components at the start of the fight (M4). */
+  readonly ship: ShipStats;
   lost: InstalledComponent[] = [];
   salvage: string[] = [];
   destroyed: { id: string; hullId: string }[] = [];
@@ -123,16 +126,18 @@ export class Encounter {
     this.rng = new Rng(`encounter:${o.seed}`);
     this.weapons = new Map(o.content.weapons.map((w) => [w.id, w]));
     const p = o.content.player;
-    this.shields = { fore: p.shields.fore, aft: p.shields.aft };
-    this.lanceCharge = this.weapon(p.lance.weapon).cooldown;
     this.frames = o.frames ?? p.droneBay.frames;
     this.installed = (o.installed ?? defaultInstalled(o.content)).map((x) => ({ ...x }));
+    // Fixed for the fight: wear taken during it shows up in the next one.
+    this.ship = shipStats(this.installed, o.content);
+    this.shields = { fore: this.ship.shields.fore, aft: this.ship.shields.aft };
+    this.lanceCharge = this.ship.lance.cooldown;
     this.reserve = [...o.roster.reserve];
     this.endWhenClear = o.endWhenClear ?? true;
 
     const player: Ent = this.blankEnt(PLAYER_ID, 'starwake', 'player', p.name);
     player.f = o.playerFlight ?? initialFlight();
-    player.stats = p.flight;
+    player.stats = this.ship.flight;
     player.maxHp = p.hp;
     player.hp = p.hp * (o.hullFraction ?? 1);
     player.radius = 160;
@@ -350,16 +355,17 @@ export class Encounter {
       const s = steerToward(p.f, this.aimPoint(faceAt, cmd.subsystemId), 0);
       flight = { ...s.input, throttleRate: cmd.flight.throttleRate, throttleSet: cmd.flight.throttleSet };
     }
-    p.f = stepFlight(p.f, flight, sp.flight, dt);
+    p.f = stepFlight(p.f, flight, this.ship.flight, dt);
 
     // Shields recharge after a quiet spell.
     if (this.t - this.lastPlayerHit > sp.shields.rechargeDelayS) {
-      this.shields.fore = Math.min(sp.shields.fore, this.shields.fore + sp.shields.rechargePerS * dt);
-      this.shields.aft = Math.min(sp.shields.aft, this.shields.aft + sp.shields.rechargePerS * dt);
+      const sh = this.ship.shields;
+      this.shields.fore = Math.min(sh.fore, this.shields.fore + sh.rechargePerS * dt);
+      this.shields.aft = Math.min(sh.aft, this.shields.aft + sh.rechargePerS * dt);
     }
 
     // Spinal Lance: a beam along the keel, on a recharge.
-    const lance = this.weapon(sp.lance.weapon);
+    const lance = { ...this.weapon(sp.lance.weapon), ...this.ship.lance };
     this.lanceCharge = Math.min(lance.cooldown, this.lanceCharge + dt);
     if (cmd.fireLance && this.lanceCharge >= lance.cooldown) {
       this.lanceCharge = 0;
@@ -398,12 +404,12 @@ export class Encounter {
         );
         if (tgt) {
           dir = normalize(sub(leadPoint(from, v3(), tgt.f.pos, tgt.f.vel, turret.speed), from));
-          spread = sp.wakeTurretSpread;
+          spread = this.ship.turret.wakeSpread;
         }
       }
       if (dir) {
         this.fireBolt(turret, 'player', p.id, from, dir, spread);
-        this.turretCd = turret.cooldown;
+        this.turretCd = this.ship.turret.cooldown;
       }
     }
 
