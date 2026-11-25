@@ -21,7 +21,13 @@ export function isBroken(s: CampaignState, raceId: string): boolean {
 
 /** A race that will still attack and threaten the colony. */
 export function isActiveThreat(s: CampaignState, raceId: string, c: ContentBundle): boolean {
-  return !isBroken(s, raceId) && relationLabel(s.relations[raceId] ?? 0, c) === 'hostile';
+  if (isBroken(s, raceId) || s.treaties.includes(raceId)) return false;
+  return relationLabel(s.relations[raceId] ?? 0, c) === 'hostile';
+}
+
+/** Will their patrols and ambushes come for you? Not with safe passage (M5). */
+export function attacksYou(s: CampaignState, raceId: string, c: ContentBundle): boolean {
+  return isActiveThreat(s, raceId, c) && !s.flags.includes(`passage:${raceId}`);
 }
 
 /** Apply a relation change, clamped to -100..100. Returns the new state and an event. */

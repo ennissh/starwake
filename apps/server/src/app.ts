@@ -5,8 +5,12 @@ import Fastify, { LogController, type FastifyInstance } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import type { ApiError } from '@starwake/shared';
 import type { Config } from './config.js';
-import { createLlmProbe, type LlmProbe } from './llm/ollama.js';
+import { createLlmProbe, type LlmProbe } from './translator/probe.js';
 import { healthRoutes } from './routes/health.js';
+import { type ChatClient, createChatClient } from './translator/ollama.js';
+import { createFilter } from './translator/filter.js';
+import { createTranslatorLog } from './translator/log.js';
+import { createTranslator } from './translator/translator.js';
 import { defaultContentDir, loadContent } from './content.js';
 import { Store } from './store.js';
 import { profileRoutes } from './routes/profiles.js';
@@ -17,6 +21,8 @@ import type { ContentBundle } from '@starwake/shared';
 
 export interface AppDeps {
   llm?: LlmProbe;
+  /** The Ollama chat client (tests pass a fake edge). */
+  chat?: ChatClient;
   content?: ContentBundle;
 }
 
@@ -72,7 +78,15 @@ export async function buildApp(cfg: Config, deps: AppDeps = {}): Promise<Fastify
 
   const store = new Store(cfg.DATA_DIR);
   profileRoutes(app, store);
-  campaignRoutes(app, store, content);
+  const translator = createTranslator({
+    cfg,
+    content,
+    chat: deps.chat ?? createChatClient(cfg),
+    filter: createFilter(content.filters, cfg.CONTENT_RATING),
+    log: createTranslatorLog(cfg.DATA_DIR),
+    logger: app.log,
+  });
+  campaignRoutes(app, store, content, translator);
 
   app.get('/api/content', async (_req, reply) => {
     reply.header('cache-control', 'no-cache');

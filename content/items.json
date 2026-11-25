@@ -12,5 +12,44 @@
     "description": "Sealed crystalline memory. Prized by collectors of knowledge; the Waystation takes them as currency.",
     "stack": 5,
     "baseValue": 25
+  },
+  {
+    "id": "ice-crate",
+    "name": "Ice Crate",
+    "description": "Volatiles cut from a claimed ice world: water, ammonia, air.",
+    "stack": 5,
+    "baseValue": 6,
+    "resource": "ice"
+  },
+  {
+    "id": "biomass-crate",
+    "name": "Biomass Crate",
+    "description": "Living culture and seed stock from a claimed world.",
+    "stack": 5,
+    "baseValue": 8,
+    "resource": "biomass"
+  },
+  {
+    "id": "ore-crate",
+    "name": "Ore Crate",
+    "description": "Refined metal from a claimed world's surface plant.",
+    "stack": 5,
+    "baseValue": 7,
+    "resource": "ore"
+  },
+  {
+    "id": "isotope-crate",
+    "name": "Isotope Crate",
+    "description": "Shielded canisters of fissile isotopes. Handle with respect.",
+    "stack": 5,
+    "baseValue": 12,
+    "resource": "isotopes"
+  },
+  {
+    "id": "survey-log",
+    "name": "Survey Log",
+    "description": "WAKE's account of a newly probed system: its light, its worlds, its silence. Some listeners prize such stories.",
+    "stack": 10,
+    "baseValue": 4
   }
 ]

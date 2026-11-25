@@ -141,15 +141,116 @@ export const HOSTILE_ACTS = ['claimWithoutPermission', 'destroyShip', 'firstStri
 export const HostileAct = z.enum(HOSTILE_ACTS);
 export type HostileAct = z.infer<typeof HostileAct>;
 
+/**
+ * A tradeable good (M5): an item id, a component id, `fold-mass` (fuel units) or a service:
+ * `permit` (claim in their system without offence) and `passage` (their patrols and ambushes let
+ * you by). Services grant flags `permit:<race>` / `passage:<race>`.
+ */
+export const SERVICE_GOODS = ['fold-mass', 'permit', 'passage'] as const;
+
+/** The persona card: everything the LLM is told about how this race speaks and thinks (PLAN §3). */
+export const PersonaSchema = z.object({
+  voice: z.string().min(1),
+  appearance: z.string().min(1),
+  values: z.array(z.string()).min(1),
+  dislikes: z.array(z.string()),
+  taboos: z.array(z.string()),
+  speechStyle: z.string().min(1),
+  /** What the portrait does when they lie (shown when `deceptive`). */
+  tell: z.string().min(1),
+  secrets: z.array(z.string()),
+  relationsToOthers: z.array(z.object({ raceId: id, stance: z.string(), note: z.string() })),
+  /** Stock lines: few-shot examples for the model, and the scripted fallback's whole vocabulary. */
+  lines: z.object({
+    greet: z.array(z.string()).min(1),
+    hostileGreet: z.array(z.string()).min(1),
+    farewell: z.array(z.string()).min(1),
+    tradeAccept: z.array(z.string()).min(1),
+    tradeReject: z.array(z.string()).min(1),
+    tradeCounter: z.array(z.string()).min(1),
+    treatyAccept: z.array(z.string()).min(1),
+    treatyReject: z.array(z.string()).min(1),
+    tributeDemand: z.array(z.string()).min(1),
+    tributePaid: z.array(z.string()).min(1),
+    passage: z.array(z.string()).min(1),
+    knowledge: z.array(z.string()).min(1),
+    nothingToShare: z.array(z.string()).min(1),
+    impatient: z.array(z.string()).min(1),
+    insulted: z.array(z.string()).min(1),
+    smallTalk: z.array(z.string()).min(1),
+    about: z.array(z.string()).min(1),
+  }),
+});
+export type Persona = z.infer<typeof PersonaSchema>;
+
+export const EconomySchema = z.object({
+  /** What a good is worth to them, overriding its base value (and the only value of services). */
+  values: z.record(z.string(), nonneg),
+  /** How much they want it: multiplies what the player gives. Keys: a good id, or `component`. */
+  wants: z.record(z.string(), pos),
+  /** What they can give, and how much (depletes; kept in the save). */
+  stock: z.record(z.string(), z.number().int().min(0)),
+  /** Fraction of imbalance (in their favour's absence) they accept at relation 0. */
+  baseTolerance: z.number().min(0).max(1),
+  /** Extra tolerance per relation point (negative relation shrinks it). */
+  tolerancePerRelation: z.number().min(0).max(0.02),
+  /** A fair trade nudges relation by this much. */
+  tradeRelation: z.number().int().min(0).max(8),
+});
+export type Economy = z.infer<typeof EconomySchema>;
+
+export const KnowledgeSchema = z.object({
+  id,
+  /** What they tell you (the model paraphrases; the codex stores this). */
+  text: z.string().min(1),
+  codexTitle: z.string().min(1),
+  minRelation: z.number().min(-100).max(100),
+  requiresFlags: z.array(z.string()).default([]),
+  grantsFlag: z.string().optional(),
+});
+export type Knowledge = z.infer<typeof KnowledgeSchema>;
+
 export const RaceSchema = z.object({
   id,
   name: z.string(),
   palette: z.object({ hull: color, trim: color, glow: color, accent: color }),
   summary: z.string(),
-  /** Deterministic relation rules (M5 adds treaties, patience and the persona card). */
+  /** Seeds the race's procedural leitmotif (M6). */
+  leitmotifSeed: z.number().int().min(0),
+  persona: PersonaSchema,
+  economy: EconomySchema,
+  knowledge: z.array(KnowledgeSchema),
+  /** Deterministic relation and diplomacy rules (PLAN §3, §6.4). */
   diplomacy: z.object({
     startRelation: z.number().min(-100).max(100),
     hostileActs: z.array(z.object({ act: HostileAct, delta: z.number().int().min(-50).max(0) })),
+    /** Turns per conversation before they end it. */
+    patienceTurns: z.number().int().min(1).max(30),
+    /** Relation change when patience runs out. */
+    impatienceDelta: z.number().int().min(-20).max(0),
+    treatyThreshold: z.number().min(-100).max(100),
+    /** Any one of these flags is required for a treaty (empty: none needed). */
+    treatyRequiresAny: z.array(z.string()),
+    /** Relation set to at least this when a treaty is signed. */
+    treatyRelationFloor: z.number().min(-100).max(100),
+    /** Lowest relation at which they grant passage. */
+    passageMinRelation: z.number().min(-100).max(100),
+    /** They demand tribute (on ambush, or when hailed) while relation is below this. Null: never. */
+    tribute: z
+      .object({
+        belowRelation: z.number().min(-100).max(100),
+        /** Value (in their terms) a tribute must reach. */
+        value: pos,
+        relationGain: z.number().int().min(0).max(30),
+        grantsFlag: z.string(),
+      })
+      .nullable(),
+    /** May threaten or declare hostility while relation is at or below this. */
+    threatenAtOrBelow: z.number().min(-100).max(100),
+    /** When they suspect the player lied: relation changes for them and for those they tell. */
+    onDeception: z.array(z.object({ raceId: id, delta: z.number().int().min(-20).max(0) })),
+    /** Winning a fight against them sets this flag (e.g. respect for strength). */
+    victoryFlag: z.string().optional(),
   }),
 });
 export type Race = z.infer<typeof RaceSchema>;
@@ -204,6 +305,8 @@ export const ItemSchema = z.object({
   description: z.string(),
   /** Units per hold slot. */
   stack: z.number().int().min(1),
+  /** Raw-material crates: the resource a claimed world of this kind ships as cargo (M5). */
+  resource: ResourceKind.optional(),
   baseValue: pos,
 });
 export type Item = z.infer<typeof ItemSchema>;
@@ -243,6 +346,19 @@ export const RulesSchema = z.object({
   readiness: z.object({
     quotas: z.record(ResourceKind, z.number().int().min(0)),
     safetyHops: z.number().int().min(0),
+  }),
+  /** Trade and conversation (M5, PLAN §6.4). */
+  diplomacy: z.object({
+    /** What one unit of fold mass is worth when a race doesn't say. */
+    foldMassValue: pos,
+    /** Crates a claimed world ships per point of yield, each time you arrive in its system. */
+    cratesPerYield: z.number().int().min(0),
+    relationPerTurnMax: z.number().int().min(1).max(20),
+    relationPerConversationMax: z.number().int().min(1).max(50),
+    /** Chance the player sees a race's tell when it lies (translator quality; fixed in the MVP). */
+    tellChance: z.number().min(0).max(1),
+    /** Turns of conversation memory kept per race. */
+    memoryTurns: z.number().int().min(0).max(40),
   }),
 });
 export type Rules = z.infer<typeof RulesSchema>;
@@ -356,6 +472,16 @@ export const AdvisorsSchema = z.object({
 export type Advisors = z.infer<typeof AdvisorsSchema>;
 export type AdvisorTopic = z.infer<typeof AdvisorTopicSchema>;
 
+/** Hashed word lists for the translator's output post-filter (scripts/gen-filters.mjs). */
+export const FiltersSchema = z.object({
+  note: z.string(),
+  cleanroom: z.array(z.string()),
+  never: z.array(z.string()),
+  strong: z.array(z.string()),
+  crude: z.array(z.string()),
+});
+export type Filters = z.infer<typeof FiltersSchema>;
+
 export const ContentBundleSchema = z.object({
   player: PlayerShipSchema,
   components: z.array(ComponentSchema),
@@ -369,6 +495,7 @@ export const ContentBundleSchema = z.object({
   items: z.array(ItemSchema),
   rules: RulesSchema,
   advisors: AdvisorsSchema,
+  filters: FiltersSchema,
 });
 export type ContentBundle = z.infer<typeof ContentBundleSchema>;
 
@@ -386,6 +513,7 @@ export const CONTENT_FILES = {
   items: 'items.json',
   rules: 'rules.json',
   advisors: 'advisors.json',
+  filters: 'filters.json',
 } as const satisfies Record<keyof ContentBundle, string>;
 
 /** Validate raw parsed JSON per file into a bundle, then cross-check ids. Throws listing every issue. */
@@ -453,6 +581,27 @@ function crossCheck(c: ContentBundle): string[] {
   }
   need(systems, c.rules.start.systemId, 'rules.json start.systemId');
   for (const s of c.rules.waystation.sells) need(comps, s.componentId, 'rules.json waystation.sells');
+  // M5: race economies name real goods; services have a value; knowledge ids are unique.
+  const itemIds = new Set(c.items.map((i) => i.id));
+  const isGood = (g: string) =>
+    itemIds.has(g) || comps.has(g) || (SERVICE_GOODS as readonly string[]).includes(g);
+  const knowledgeIds = new Set<string>();
+  for (const r of c.races) {
+    const e = r.economy;
+    for (const g of [...Object.keys(e.values), ...Object.keys(e.stock)])
+      if (!isGood(g)) errs.push(`races.json ${r.id}: unknown good ${g}`);
+    for (const g of Object.keys(e.wants))
+      if (g !== 'component' && !isGood(g)) errs.push(`races.json ${r.id} wants: unknown good ${g}`);
+    for (const g of ['permit', 'passage'])
+      if (e.values[g] === undefined) errs.push(`races.json ${r.id}: economy.values.${g} is required`);
+    for (const k of r.knowledge) {
+      if (knowledgeIds.has(k.id)) errs.push(`races.json: duplicate knowledge id ${k.id}`);
+      knowledgeIds.add(k.id);
+    }
+    for (const o of r.diplomacy.onDeception) need(races, o.raceId, `races.json ${r.id} onDeception`);
+  }
+  for (const k of ['ice', 'biomass', 'ore', 'isotopes'] as const)
+    if (!c.items.some((i) => i.resource === k)) errs.push(`items.json: no crate item for resource ${k}`);
   const advisors = ids(c.advisors.advisors, 'advisors.json advisors');
   ids(c.advisors.topics, 'advisors.json topics');
   for (const t of c.advisors.topics) need(advisors, t.advisor, `advisors.json topic ${t.id}`);

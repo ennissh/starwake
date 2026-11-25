@@ -17,3 +17,7 @@ export * from './migrations/index.js';
 export * from './rules/advisor.js';
 export * from './rules/stats.js';
 export * from './rules/refit.js';
+export * from './rules/trade.js';
+export * from './rules/diplomacy.js';
+export * from './schemas/translator.js';
+export * from './rules/scripted.js';

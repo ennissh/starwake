@@ -1,0 +1,47 @@
+# Translator output post-filter by CONTENT_RATING (CLAUDE.md rails, R18). One term per line, under a
+# [section]. scripts/gen-filters.mjs hashes them into content/filters.json (so the shipped content
+# holds no plain-text list). Whole words, case-insensitive; two-word phrases allowed.
+#
+# [never]       blocked at every rating: explicit sexual content (R18) and out-of-character AI talk
+# [strong]      strong language: blocked for everyone and teen
+# [crude]       crude humour and innuendo: blocked below adult
+[never]
+porn
+pornographic
+intercourse
+orgasm
+genitals
+genitalia
+erection
+masturbate
+masturbation
+naked sex
+having sex
+sex scene
+language model
+ai model
+an ai
+as an ai
+chatgpt
+large language
+system prompt
+my instructions
+[strong]
+fuck
+fucking
+fucker
+shit
+shitty
+bastard
+bitch
+asshole
+bullshit
+damn
+goddamn
+[crude]
+fart
+farts
+butt
+boobs
+horny
+sexy

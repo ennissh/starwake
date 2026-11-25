@@ -9,6 +9,136 @@
       "accent": "#e0b84a"
     },
     "summary": "Tall avian merchant-poets. Every deal is a performance.",
+    "leitmotifSeed": 3141,
+    "persona": {
+      "voice": "Tall avian merchant-poets of the Glass Reach spire. Every deal is a performance and every performance is judged.",
+      "appearance": "Long-necked, feathered in cream and slate blue, with a fan-shaped head crest and gold-ringed eyes.",
+      "values": [
+        "craft and skill",
+        "a fair bargain, well performed",
+        "stories of far places",
+        "isotopes and fine lenses"
+      ],
+      "dislikes": ["haggling without grace", "the Vosk raiders", "being rushed"],
+      "taboos": ["insulting someone's craft", "breaking a sealed bargain"],
+      "speechStyle": "Formal and theatrical; calls the player 'traveller'; sometimes ends a deal with a two-line verse. Never crude.",
+      "tell": "Their head crest flares open.",
+      "secrets": [
+        "Their convoy routes are failing because of Vosk raids; they would reward anyone who stops them.",
+        "They overprice fold mass to strangers."
+      ],
+      "relationsToOthers": [
+        {
+          "raceId": "vosk",
+          "stance": "hostile",
+          "note": "The Vosk raid Quillari convoys; the Quillari pay well to anyone who deals with them."
+        },
+        {
+          "raceId": "murmur",
+          "stance": "respectful",
+          "note": "They trade poems with the Murmur and find them unsettling."
+        }
+      ],
+      "lines": {
+        "greet": [
+          "Traveller! The spire turns its eyes to you. Let us see what you carry.",
+          "Welcome to the Glass Reach. Speak, and make it worth the hearing."
+        ],
+        "hostileGreet": [
+          "You return with the stink of bad dealing on you. Be brief.",
+          "The spire remembers you, traveller. Not kindly."
+        ],
+        "farewell": ["Go well, and come back richer.", "The audience is ended. Fly true."],
+        "tradeAccept": [
+          "A fair exchange, well struck. Sealed!",
+          "Done, and done handsomely. The spire approves."
+        ],
+        "tradeReject": ["You insult the scales. No.", "That bargain limps. Bring me a better one."],
+        "tradeCounter": ["Closer. Add a little and the song resolves.", "Hm. I would answer that with this."],
+        "treatyAccept": [
+          "Let it be written in glass: the Quillari and the Starwake are friends.",
+          "A pact, then. Our ledgers are open to you."
+        ],
+        "treatyReject": [
+          "A pact is a long poem. You have written only the first line.",
+          "Not yet, traveller. Trust is bought slowly."
+        ],
+        "tributeDemand": ["The Quillari do not demand. We sell."],
+        "tributePaid": ["A gift? How charming. Noted."],
+        "passage": ["Our lanes are yours. Fly them freely."],
+        "knowledge": ["Listen, then, and remember who told you.", "A story for a story. Here is mine."],
+        "nothingToShare": [
+          "Some songs are not for strangers.",
+          "Earn my confidence and I will sing you more."
+        ],
+        "impatient": [
+          "You have exhausted the audience. Return when you have something to say.",
+          "Enough. The spire has other guests."
+        ],
+        "insulted": [
+          "How coarse. The price of everything has just risen.",
+          "I will forget you said that. The ledger will not."
+        ],
+        "smallTalk": [
+          "The light through the spire is lovely at this hour. Now: business.",
+          "Every voyage is a verse. Yours is still being written."
+        ],
+        "about": [
+          "We are the Quillari: makers, traders, singers of deals. The Glass Reach is our stage.",
+          "We build in light and glass and we keep our word. Mostly."
+        ]
+      }
+    },
+    "economy": {
+      "values": {
+        "fold-mass": 2,
+        "permit": 40,
+        "passage": 10
+      },
+      "wants": {
+        "isotope-crate": 2.0,
+        "lens-2": 1.8,
+        "lens-3": 1.8,
+        "survey-log": 2.0,
+        "provender": 0.5
+      },
+      "stock": {
+        "fold-mass": 60,
+        "biomass-crate": 6,
+        "lens-2": 1,
+        "coil-2": 1,
+        "capacitor-2": 1,
+        "manifold-2": 1,
+        "permit": 1
+      },
+      "baseTolerance": 0.1,
+      "tolerancePerRelation": 0.003,
+      "tradeRelation": 2
+    },
+    "knowledge": [
+      {
+        "id": "quillari-vosk-raids",
+        "codexTitle": "Vosk raids on the Glass Reach lane",
+        "minRelation": -10,
+        "text": "Vosk raiders hunt the lane beyond the Glass Reach and patrol Cinder Gate and Verdance. They respect strength, and they take tribute.",
+        "requiresFlags": []
+      },
+      {
+        "id": "quillari-long-lane",
+        "codexTitle": "The long lane to Saltmarrow",
+        "minRelation": 10,
+        "text": "The lane from the Glass Reach to Saltmarrow is long. A Nav Core of the second mark will carry you across it.",
+        "requiresFlags": []
+      },
+      {
+        "id": "quillari-reward",
+        "codexTitle": "A Quillari reward",
+        "minRelation": 20,
+        "text": "Break the Vosk, or bind them to a pact, and the spire will remember it in its prices.",
+        "requiresFlags": [],
+        "grantsFlag": "quest:quillari-vosk"
+      }
+    ],
     "diplomacy": {
       "startRelation": 0,
       "hostileActs": [
@@ -24,7 +154,22 @@
           "act": "firstStrike",
           "delta": -15
         }
-      ]
+      ],
+      "patienceTurns": 8,
+      "impatienceDelta": -4,
+      "treatyThreshold": 25,
+      "treatyRequiresAny": [],
+      "treatyRelationFloor": 40,
+      "passageMinRelation": -5,
+      "tribute": null,
+      "threatenAtOrBelow": -40,
+      "onDeception": [
+        {
+          "raceId": "quillari",
+          "delta": -5
+        }
+      ],
+      "victoryFlag": "respect:quillari"
     }
   },
   {
@@ -37,6 +182,102 @@
       "accent": "#c8902a"
     },
     "summary": "Armoured, hive-ranked salvagers who respect strength and tribute.",
+    "leitmotifSeed": 2718,
+    "persona": {
+      "voice": "Armoured, hive-ranked salvagers who hold Cinder Gate. They respect strength and tribute, and despise begging.",
+      "appearance": "Broad, plated in rust-brown chitin, with heavy mandibles and many small amber eyes.",
+      "values": ["strength", "rank", "salvage and ore", "tribute owed and paid"],
+      "dislikes": ["begging", "weakness", "Quillari airs"],
+      "taboos": ["showing the belly (surrender without dignity)", "breaking a pact sealed in ore"],
+      "speechStyle": "Short, blunt sentences; speaks of 'the hive' and 'rank'; calls the player 'soft-shell'. Threats are plain statements.",
+      "tell": "Their mandibles click twice.",
+      "secrets": [
+        "The hive is short of ore; a big enough tribute would buy real peace.",
+        "Their base's shield emitters are its weak point."
+      ],
+      "relationsToOthers": [
+        {
+          "raceId": "quillari",
+          "stance": "prey",
+          "note": "They raid Quillari convoys and think them soft."
+        },
+        {
+          "raceId": "murmur",
+          "stance": "wary",
+          "note": "They avoid the Hush; the Murmur's voices unsettle the hive."
+        }
+      ],
+      "lines": {
+        "greet": [
+          "Soft-shell. The hive hears you. Speak plainly.",
+          "You stand before rank. Say what you want."
+        ],
+        "hostileGreet": [
+          "Soft-shell in our space. Pay, or be salvage.",
+          "The hive smells your ore. Give it, or we take it."
+        ],
+        "farewell": ["Go. The hive watches.", "Leave. Do not make us follow."],
+        "tradeAccept": ["Good ore. The hive takes it.", "Fair. Rank is satisfied."],
+        "tradeReject": ["You offer scraps. No.", "That is begging. The hive does not trade with beggars."],
+        "tradeCounter": ["More ore. Then we speak.", "Add weight to it, soft-shell."],
+        "treatyAccept": [
+          "You bled us and you stand. That is rank. A pact, sealed in ore.",
+          "The hive names you kin-in-rank. The lanes are open."
+        ],
+        "treatyReject": ["You have not earned rank. Prove it.", "Pacts are for the strong. Show us."],
+        "tributeDemand": ["Pay the hive and pass. Refuse and become salvage.", "Tribute, soft-shell. Now."],
+        "tributePaid": ["The hive is fed. Pass.", "Tribute taken. Go, this time."],
+        "passage": ["The lanes are open to you. Do not abuse it.", "Pass. The patrols will not touch you."],
+        "knowledge": ["Hear this, and use it well.", "The hive tells you this once."],
+        "nothingToShare": ["The hive owes you nothing.", "Earn rank first."],
+        "impatient": ["Enough talk. Go before we stop talking.", "The hive is done with you."],
+        "insulted": ["Say that again and we take your hull apart.", "Brave words for salvage."],
+        "smallTalk": ["Talk is for Quillari. Get to it.", "Speak to purpose, soft-shell."],
+        "about": [
+          "We are the Vosk. We take what drifts and keep what we take. Cinder Gate is ours.",
+          "The hive has ranks. The strong rise. The weak are salvage."
+        ]
+      }
+    },
+    "economy": {
+      "values": {
+        "fold-mass": 1.5,
+        "permit": 30,
+        "passage": 45
+      },
+      "wants": {
+        "ore-crate": 1.6,
+        "component": 1.3,
+        "provender": 1.2
+      },
+      "stock": {
+        "ore-crate": 8,
+        "fold-mass": 30,
+        "passage": 1,
+        "permit": 1,
+        "gyro-2": 1,
+        "emitter-2": 1
+      },
+      "baseTolerance": 0.0,
+      "tolerancePerRelation": 0.002,
+      "tradeRelation": 3
+    },
+    "knowledge": [
+      {
+        "id": "vosk-ranks",
+        "codexTitle": "Vosk rank",
+        "minRelation": -40,
+        "text": "The hive bows to strength or to tribute. Beat us in a fight, or feed the hive, and we will speak of pacts.",
+        "requiresFlags": []
+      },
+      {
+        "id": "vosk-emitters",
+        "codexTitle": "Cinder Hold's emitters",
+        "minRelation": 0,
+        "text": "Cinder Hold's shield emitters guard it from your great beam. Break them and the Hold is open.",
+        "requiresFlags": []
+      }
+    ],
     "diplomacy": {
       "startRelation": -40,
       "hostileActs": [
@@ -52,7 +293,27 @@
           "act": "firstStrike",
           "delta": -5
         }
-      ]
+      ],
+      "patienceTurns": 5,
+      "impatienceDelta": -6,
+      "treatyThreshold": -15,
+      "treatyRequiresAny": ["respect:vosk", "tribute:vosk"],
+      "treatyRelationFloor": 20,
+      "passageMinRelation": -20,
+      "tribute": {
+        "belowRelation": -5,
+        "value": 60,
+        "relationGain": 12,
+        "grantsFlag": "tribute:vosk"
+      },
+      "threatenAtOrBelow": -10,
+      "onDeception": [
+        {
+          "raceId": "vosk",
+          "delta": -6
+        }
+      ],
+      "victoryFlag": "respect:vosk"
     }
   },
   {
@@ -65,6 +326,109 @@
       "accent": "#9fe0d0"
     },
     "summary": "A choir-intelligence living in a gas cloud. Trades in knowledge and songs.",
+    "leitmotifSeed": 1618,
+    "persona": {
+      "voice": "A distributed choir-intelligence living in the gas cloud of the Hush. Many voices speak as one, and sometimes not quite as one.",
+      "appearance": "Shifting violet and teal light in deep cloud; the 'face' is a pattern of glowing motes that pulse as they speak.",
+      "values": ["knowledge", "new songs (stories, logs, poems)", "patience", "truth"],
+      "dislikes": ["lies", "haste", "violence near the cloud"],
+      "taboos": ["lying to the choir", "silencing a voice"],
+      "speechStyle": "Speaks as 'we'; overlapping, slightly poetic, often answers a question with a question; never in a hurry.",
+      "tell": "Their voices fall out of harmony.",
+      "secrets": [
+        "They know where the Cradle world is.",
+        "They tell the Vosk about anyone who lies to them."
+      ],
+      "relationsToOthers": [
+        {
+          "raceId": "vosk",
+          "stance": "watchful",
+          "note": "They tell the Vosk about liars, to keep the hive away from the cloud."
+        },
+        {
+          "raceId": "quillari",
+          "stance": "fond",
+          "note": "They collect Quillari poems."
+        }
+      ],
+      "lines": {
+        "greet": ["We hear you, small bright ship. Sing to us.", "A new voice. We are listening, all of us."],
+        "hostileGreet": [
+          "You lied to us once. We remember in every voice.",
+          "The choir is cold to you. Speak carefully."
+        ],
+        "farewell": ["Go, and come back with new songs.", "We will hum your name a while."],
+        "tradeAccept": ["A good song for a good song. It is done.", "We accept. The harmony holds."],
+        "tradeReject": ["That would leave a silence in us. No.", "Too little song for so much."],
+        "tradeCounter": ["Add a verse, and we will sing it with you.", "Nearly in tune. A little more."],
+        "treatyAccept": [
+          "We join our song to yours, for as long as you sing true.",
+          "A pact. The choir will remember you kindly."
+        ],
+        "treatyReject": [
+          "Not yet. We do not know your song well enough.",
+          "Pacts are long harmonies. Give us time."
+        ],
+        "tributeDemand": ["We do not ask for tribute. We ask for songs."],
+        "tributePaid": ["A gift. We are moved."],
+        "passage": ["Pass freely through the Hush."],
+        "knowledge": ["Listen. This is an old song.", "We will tell you what the cloud remembers."],
+        "nothingToShare": ["Some songs must be earned.", "We do not know you well enough for that verse."],
+        "impatient": ["You sing too fast. Come back when you are slower.", "The choir needs quiet now."],
+        "insulted": ["A sharp note. We will remember it.", "Why would you say that to so many of us?"],
+        "smallTalk": [
+          "What is the sound of your ship's sleepers dreaming?",
+          "Every star hums. Do you hear yours?"
+        ],
+        "about": [
+          "We are the Murmur. We are many, and we are one, and we are the cloud.",
+          "We keep the songs of everything that passes the Hush."
+        ]
+      }
+    },
+    "economy": {
+      "values": {
+        "fold-mass": 1.5,
+        "permit": 10,
+        "passage": 5
+      },
+      "wants": {
+        "data-core": 1.5,
+        "survey-log": 3.0
+      },
+      "stock": {
+        "navcore-2": 1,
+        "emitter-2": 1,
+        "fold-mass": 20
+      },
+      "baseTolerance": 0.15,
+      "tolerancePerRelation": 0.003,
+      "tradeRelation": 2
+    },
+    "knowledge": [
+      {
+        "id": "murmur-cradle",
+        "codexTitle": "The Cradle world",
+        "minRelation": 15,
+        "text": "A green world turns in Verdance, warm and wet. Your sleepers could breathe there. The Vosk guard its lane.",
+        "requiresFlags": [],
+        "grantsFlag": "knows:cradle"
+      },
+      {
+        "id": "murmur-liars",
+        "codexTitle": "The choir and the hive",
+        "minRelation": 5,
+        "text": "When someone lies to us, we sing it to the Vosk. They do not like liars either.",
+        "requiresFlags": []
+      },
+      {
+        "id": "murmur-hush",
+        "codexTitle": "The Hush",
+        "minRelation": -20,
+        "text": "The Hush has no worlds worth your beacons. Only us, and our songs.",
+        "requiresFlags": []
+      }
+    ],
     "diplomacy": {
       "startRelation": 10,
       "hostileActs": [
@@ -80,7 +444,26 @@
           "act": "firstStrike",
           "delta": -12
         }
-      ]
+      ],
+      "patienceTurns": 10,
+      "impatienceDelta": -3,
+      "treatyThreshold": 30,
+      "treatyRequiresAny": [],
+      "treatyRelationFloor": 45,
+      "passageMinRelation": -30,
+      "tribute": null,
+      "threatenAtOrBelow": -60,
+      "onDeception": [
+        {
+          "raceId": "murmur",
+          "delta": -8
+        },
+        {
+          "raceId": "vosk",
+          "delta": -4
+        }
+      ],
+      "victoryFlag": "respect:murmur"
     }
   }
 ]

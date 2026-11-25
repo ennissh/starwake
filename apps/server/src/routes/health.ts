@@ -2,7 +2,7 @@ import { access, constants, mkdir } from 'node:fs/promises';
 import type { FastifyInstance } from 'fastify';
 import type { Health, Ready } from '@starwake/shared';
 import type { Config } from '../config.js';
-import type { LlmProbe } from '../llm/ollama.js';
+import type { LlmProbe } from '../translator/probe.js';
 
 export function healthRoutes(
   app: FastifyInstance,
