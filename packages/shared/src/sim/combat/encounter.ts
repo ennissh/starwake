@@ -343,7 +343,14 @@ export class Encounter {
     const sp = this.c.player;
     const riding = cmd.drone && this.get(cmd.drone.id)?.alive;
     if (cmd.toggleAssist) p.f = { ...p.f, assist: !p.f.assist };
-    p.f = stepFlight(p.f, riding ? { ...NO_INPUT } : cmd.flight, sp.flight, dt);
+    let flight = riding ? { ...NO_INPUT } : cmd.flight;
+    const faceAt = cmd.faceTarget && !riding ? this.liveTarget(cmd.targetId) : null;
+    if (faceAt) {
+      // Face target: the autopilot takes pitch and yaw; throttle stays the pilot's.
+      const s = steerToward(p.f, this.aimPoint(faceAt, cmd.subsystemId), 0);
+      flight = { ...s.input, throttleRate: cmd.flight.throttleRate, throttleSet: cmd.flight.throttleSet };
+    }
+    p.f = stepFlight(p.f, flight, sp.flight, dt);
 
     // Shields recharge after a quiet spell.
     if (this.t - this.lastPlayerHit > sp.shields.rechargeDelayS) {
@@ -357,7 +364,7 @@ export class Encounter {
     if (cmd.fireLance && this.lanceCharge >= lance.cooldown) {
       this.lanceCharge = 0;
       const from = toWorld(p.f.pos, p.f.rot, sp.lance.muzzle);
-      const dir = forwardOf(p.f.rot);
+      const dir = this.lanceDir(cmd.targetId, cmd.subsystemId);
       const to = add(from, scale(dir, lance.range));
       const hit = this.raycast(from, to, 'hostile');
       let blocked: HitBlock = null;
@@ -795,6 +802,38 @@ export class Encounter {
 
   // ---- helpers ----------------------------------------------------------------------------------
   /** Where to aim at an entity: its chosen live subsystem, else its centre. */
+  private liveTarget(id: string | null): Ent | null {
+    const t = this.get(id);
+    return t && t.alive && t.side === 'hostile' ? t : null;
+  }
+
+  /**
+   * How the Lance lines up with the target: degrees between the keel and the aim point, and whether
+   * that is inside the assist cone (the beam then bends onto it). Null without a live target.
+   */
+  lanceAlignment(targetId: string | null, subId: string | null): { deg: number; inCone: boolean } | null {
+    const t = this.liveTarget(targetId);
+    if (!t) return null;
+    const p = this.player;
+    const from = toWorld(p.f.pos, p.f.rot, this.c.player.lance.muzzle);
+    const want = normalize(sub(this.aimPoint(t, subId), from));
+    const fwd = forwardOf(p.f.rot);
+    const cos = Math.max(-1, Math.min(1, fwd.x * want.x + fwd.y * want.y + fwd.z * want.z));
+    const deg = (Math.acos(cos) * 180) / Math.PI;
+    const range = this.weapon(this.c.player.lance.weapon).range;
+    const inRange = len(sub(this.aimPoint(t, subId), from)) <= range;
+    return { deg, inCone: inRange && deg <= this.c.player.lance.assistConeDeg };
+  }
+
+  /** The beam's direction: along the keel, or onto the target when inside the assist cone. */
+  private lanceDir(targetId: string | null, subId: string | null): Vec3 {
+    const a = this.lanceAlignment(targetId, subId);
+    const p = this.player;
+    if (!a?.inCone) return forwardOf(p.f.rot);
+    const from = toWorld(p.f.pos, p.f.rot, this.c.player.lance.muzzle);
+    return normalize(sub(this.aimPoint(this.liveTarget(targetId)!, subId), from));
+  }
+
   aimPoint(e: Ent, subId: string | null): Vec3 {
     const s = subId ? e.subs.find((x) => x.id === subId && x.alive) : undefined;
     return s ? toWorld(e.f.pos, e.f.rot, s.offset) : e.f.pos;

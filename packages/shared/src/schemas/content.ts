@@ -279,7 +279,12 @@ export const PlayerShipSchema = z.object({
   /** Hit spheres along the spine, ship-local units (forward is -z). */
   hitSpheres: z.array(z.object({ offset: vec, radius: pos })).min(1),
   shields: z.object({ fore: nonneg, aft: nonneg, rechargePerS: nonneg, rechargeDelayS: nonneg }),
-  lance: z.object({ weapon: id, muzzle: vec }),
+  lance: z.object({
+    weapon: id,
+    muzzle: vec,
+    /** The beam bends onto the target when the nose is within this many degrees of it. */
+    assistConeDeg: z.number().min(0).max(30),
+  }),
   turret: z.object({ weapon: id, mount: vec }),
   droneBay: z.object({ frames: z.number().int().min(0), maxActive: z.number().int().min(1), mount: vec }),
   /** Condition points (0–100) lost by a random installed component per point of hull damage. */
@@ -293,6 +298,50 @@ export const PlayerShipSchema = z.object({
 export type PlayerShip = z.infer<typeof PlayerShipSchema>;
 
 // ---------------------------------------------------------------------------------- bundle
+/** Advisors (playtest batch 1, #3): WAKE and the bridge council answer the player's questions. */
+export const ADVISOR_DYNAMICS = [
+  'nextSteps',
+  'readiness',
+  'clock',
+  'route',
+  'claims',
+  'fuel',
+  'repair',
+  'trade',
+  'beacons',
+  'threats',
+] as const;
+export type AdvisorDynamic = (typeof ADVISOR_DYNAMICS)[number];
+const AdvisorSchema = z.object({
+  id,
+  name: z.string().min(1),
+  role: z.string().min(1),
+  greeting: z.string().min(1),
+  /** Said when no topic matches: a miss beats a wrong answer. */
+  miss: z.string().min(1),
+  suggestions: z.array(z.string().min(1)).min(1).max(6),
+});
+const AdvisorTopicSchema = z
+  .object({
+    id,
+    advisor: id,
+    /** Lower-case words or phrases; a match scores its word count. */
+    keywords: z.array(z.string().min(1)).min(1),
+    /** Generic words that only tip a tie (half weight). */
+    weak: z.array(z.string().min(1)).optional(),
+    /** Fixed answer; `{key:<action>}` is replaced by the player's binding on the client. */
+    answer: z.string().min(1).optional(),
+    /** Or an answer built from the campaign state. */
+    dynamic: z.enum(ADVISOR_DYNAMICS).optional(),
+  })
+  .refine((t) => !!t.answer !== !!t.dynamic, 'a topic has exactly one of answer or dynamic');
+export const AdvisorsSchema = z.object({
+  advisors: z.array(AdvisorSchema).min(1),
+  topics: z.array(AdvisorTopicSchema).min(1),
+});
+export type Advisors = z.infer<typeof AdvisorsSchema>;
+export type AdvisorTopic = z.infer<typeof AdvisorTopicSchema>;
+
 export const ContentBundleSchema = z.object({
   player: PlayerShipSchema,
   components: z.array(ComponentSchema),
@@ -305,6 +354,7 @@ export const ContentBundleSchema = z.object({
   lanes: z.array(LaneSchema),
   items: z.array(ItemSchema),
   rules: RulesSchema,
+  advisors: AdvisorsSchema,
 });
 export type ContentBundle = z.infer<typeof ContentBundleSchema>;
 
@@ -321,6 +371,7 @@ export const CONTENT_FILES = {
   lanes: 'lanes.json',
   items: 'items.json',
   rules: 'rules.json',
+  advisors: 'advisors.json',
 } as const satisfies Record<keyof ContentBundle, string>;
 
 /** Validate raw parsed JSON per file into a bundle, then cross-check ids. Throws listing every issue. */
@@ -388,6 +439,12 @@ function crossCheck(c: ContentBundle): string[] {
   }
   need(systems, c.rules.start.systemId, 'rules.json start.systemId');
   for (const s of c.rules.waystation.sells) need(comps, s.componentId, 'rules.json waystation.sells');
+  const advisors = ids(c.advisors.advisors, 'advisors.json advisors');
+  ids(c.advisors.topics, 'advisors.json topics');
+  for (const t of c.advisors.topics) need(advisors, t.advisor, `advisors.json topic ${t.id}`);
+  for (const a of c.advisors.advisors)
+    if (!c.advisors.topics.some((t) => t.advisor === a.id)) errs.push(`advisors.json: ${a.id} has no topics`);
+  if (!advisors.has('wake')) errs.push('advisors.json: WAKE (id "wake") is required');
   if (!c.systems.some((s) => s.planets.some((p) => p.habitable)))
     errs.push('systems.json: no habitable planet (no Cradle possible)');
   for (const h of c.hulls) {

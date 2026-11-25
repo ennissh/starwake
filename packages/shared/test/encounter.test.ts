@@ -235,3 +235,65 @@ describe('encounter: salvage and reserves', () => {
     expect(e.outcome).toBe('victory');
   });
 });
+
+describe('encounter: Lance aim assist and face target (playtest batch 1)', () => {
+  const target = (e: Encounter) => e.hostiles().find((h) => h.kind !== 'drone') ?? e.hostiles()[0]!;
+
+  it('face target turns the nose onto the target and keeps it there', () => {
+    const e = make('arena-patrol', 3);
+    const t = target(e);
+    const start = e.lanceAlignment(t.id, null)!;
+    let a = start;
+    for (let i = 0; i < 60 * 6; i++) {
+      e.step({ ...IDLE_COMMAND, targetId: t.id, faceTarget: true });
+      a = e.lanceAlignment(t.id, null) ?? a;
+      if (!t.alive) break;
+    }
+    expect(a.deg).toBeLessThan(Math.max(start.deg, 10));
+    expect(a.deg).toBeLessThan(5);
+  });
+
+  it('without face target the same commands leave the nose where it was', () => {
+    const e = make('arena-patrol', 3);
+    const t = target(e);
+    const before = e.player.f.rot;
+    for (let i = 0; i < 60; i++) e.step({ ...IDLE_COMMAND, targetId: t.id });
+    expect(e.player.f.rot).toEqual(before);
+  });
+
+  it('the beam bends onto a target inside the cone, and not one outside it', () => {
+    const cone = c.player.lance.assistConeDeg;
+    const fire = (e: Encounter, id: string) => {
+      const ev = e.step({ ...IDLE_COMMAND, targetId: id, fireLance: true });
+      return ev.find((x) => x.t === 'lance') as Extract<CombatEvent, { t: 'lance' }> | undefined;
+    };
+    // Inside: face the target, then fire.
+    const a = make('arena-patrol', 4);
+    const ta = target(a);
+    for (let i = 0; i < 60 * 8 && (a.lanceAlignment(ta.id, null)?.deg ?? 180) >= cone * 0.6; i++)
+      a.step({ ...IDLE_COMMAND, targetId: ta.id, faceTarget: true });
+    const al = a.lanceAlignment(ta.id, null)!;
+    expect(al.deg).toBeLessThan(cone);
+    // Charge the Lance with the nose held on target.
+    for (let i = 0; i < 60 * 10; i++) a.step({ ...IDLE_COMMAND, targetId: ta.id, faceTarget: true });
+    expect(a.lanceAlignment(ta.id, null)?.inCone).toBe(true);
+    expect(fire(a, ta.id)!.hitId).toBe(ta.id);
+    // Outside: a target behind the nose is never hit by assist.
+    const b = make('arena-patrol', 4);
+    const tb = target(b);
+    const alb = b.lanceAlignment(tb.id, null)!;
+    expect(alb.deg).toBeGreaterThan(cone);
+    for (let i = 0; i < 60 * 10; i++) b.step({ ...IDLE_COMMAND, targetId: tb.id });
+    expect(b.lanceAlignment(tb.id, null)!.deg).toBeGreaterThan(cone);
+    expect(fire(b, tb.id)!.hitId).not.toBe(tb.id);
+  });
+
+  it('face target replays identically (it is part of the command log)', () => {
+    const cmd = (e: Encounter): PlayerCommand => ({ ...sensiblePilot(e), faceTarget: true });
+    const a = make('arena-patrol', 9);
+    const b = make('arena-patrol', 9);
+    run(a, cmd, 20);
+    run(b, cmd, 20);
+    expect(a.player.f).toEqual(b.player.f);
+  });
+});

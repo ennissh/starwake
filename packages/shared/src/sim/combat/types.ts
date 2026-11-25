@@ -96,6 +96,8 @@ export interface PlayerCommand {
   emergencyFold: boolean;
   /** Toggle flight assist (drift mode) this tick. */
   toggleAssist?: boolean | undefined;
+  /** Held: the ship turns to put its nose on the target (the selected subsystem if any). */
+  faceTarget?: boolean | undefined;
 }
 
 export type CombatEvent =

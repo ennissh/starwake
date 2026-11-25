@@ -11,7 +11,9 @@ const preinstalled = '/opt/pw-browsers/chromium';
 
 export default defineConfig({
   testDir: 'e2e',
-  timeout: 30_000,
+  // Generous per-test limit: CI runners (2 cores, software WebGL) are several times slower than a
+  // desktop. A hang still fails; a slow-but-working run no longer does.
+  timeout: 90_000,
   retries: 0,
   reporter: [['list']],
   use: {

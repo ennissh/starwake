@@ -68,7 +68,7 @@ export class Hologram {
   render(renderer: THREE.WebGLRenderer, rect: { x: number; y: number; size: number }): void {
     if (!this.active) return;
     const size = renderer.getSize(new THREE.Vector2());
-    // The VGA theme renders at 320×200 and stretches it: scale x and y separately.
+    // CSS pixels → drawing-buffer pixels (x and y kept separate in case the buffer is ever scaled).
     const kx = size.x / window.innerWidth;
     const ky = size.y / window.innerHeight;
     const x = Math.round(rect.x * kx);

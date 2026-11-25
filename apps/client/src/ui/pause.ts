@@ -27,6 +27,10 @@ export interface PauseHandlers {
   resume(): void;
   quit(): void;
   settingsChanged(s: Settings): void;
+  /** Replay the first-flight tutorial (campaign only; absent elsewhere). */
+  tutorial?: () => void;
+  /** Open the advisors. */
+  advisors?: () => void;
 }
 
 /** Pause menu (Esc): resume, controls (rebinding), settings, key help, quit to title. */
@@ -52,6 +56,9 @@ export class PauseMenu {
     this.el.addEventListener('click', this.onClick);
     this.el.addEventListener('input', this.onInput);
   }
+
+  /** Set while a campaign is running (enables campaign-only items). */
+  inCampaign = false;
 
   setProfile(profile: string, settings: Settings): void {
     this.profile = profile;
@@ -100,6 +107,8 @@ export class PauseMenu {
     if (this.tab === 'main') {
       body = `<div class="sw-menu">
         <button class="sw-btn" data-act="resume">Resume</button>
+        ${this.h.advisors ? '<button class="sw-btn" data-act="advisors">Ask the advisors</button>' : ''}
+        ${this.h.tutorial && this.inCampaign ? '<button class="sw-btn" data-act="tutorial">Replay tutorial</button>' : ''}
         <button class="sw-btn" data-tab="controls">Controls</button>
         <button class="sw-btn" data-tab="settings">Settings</button>
         <button class="sw-btn" data-act="quit">Quit to title</button></div>`;
@@ -162,6 +171,7 @@ export class PauseMenu {
     const s = this.settings;
     return `<div class="sw-menu">
       <label class="sw-field">Mouse sensitivity <input type="range" min="0.25" max="4" step="0.05" value="${s.mouseSensitivity}" data-set="sens" aria-label="Mouse sensitivity"/></label>
+      <label class="sw-field">Mouse steers the ship <input type="checkbox" ${s.mouseSteering ? 'checked' : ''} data-set="steer"/></label>
       <label class="sw-field">Invert mouse pitch <input type="checkbox" ${s.invertY ? 'checked' : ''} data-set="invert"/></label>
       <div class="sw-field">Theme <div class="sw-row">${THEMES.map(
         (t) =>
@@ -200,6 +210,8 @@ export class PauseMenu {
       if (this.tab === 'saves') void this.refreshSaves();
     } else if (t.dataset.act === 'resume') this.h.resume();
     else if (t.dataset.act === 'quit') this.h.quit();
+    else if (t.dataset.act === 'tutorial') this.h.tutorial?.();
+    else if (t.dataset.act === 'advisors') this.h.advisors?.();
     else if (t.dataset.act === 'reset-keys') {
       this.settings.bindings = defaultKeyMap();
       this.note = 'All keys reset to defaults.';
@@ -239,6 +251,7 @@ export class PauseMenu {
     const t = e.target as HTMLInputElement;
     if (t.dataset.set === 'sens') this.settings.mouseSensitivity = Number(t.value);
     else if (t.dataset.set === 'invert') this.settings.invertY = t.checked;
+    else if (t.dataset.set === 'steer') this.settings.mouseSteering = t.checked;
     else return;
     this.persist();
   };

@@ -230,3 +230,34 @@
 .map-hit {
   fill: transparent;
 }
+
+/* First-flight tutorial card (WAKE). Sits under the campaign bar; only its button takes the mouse. */
+.sw-tutor {
+  position: absolute;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, calc(100vw - 32px));
+  padding: 8px 12px;
+  color: var(--hud-ink);
+  z-index: 5;
+  pointer-events: none;
+}
+.sw-tutor p {
+  margin: 4px 0 0;
+}
+.sw-tutor__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--hud-accent);
+}
+.sw-tutor__head .sw-btn {
+  margin-left: auto;
+  pointer-events: auto;
+}
+.sw-tutor .sw-kbd {
+  color: var(--hud-ink);
+  background: transparent;
+  border-color: var(--hud-dim);
+}

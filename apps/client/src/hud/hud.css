@@ -242,6 +242,31 @@
 [data-theme='vga'] .chud__warn {
   font-size: 16px;
 }
+.chud__keys {
+  max-width: 230px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--hud-dim);
+  color: var(--hud-ink);
+  font-size: 11px;
+  line-height: 16px;
+}
+.chud__align {
+  color: var(--hud-warn);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.chud__align:empty {
+  display: none;
+}
+.chud__align.chud--on {
+  color: var(--hud-ok);
+  font-weight: 600;
+}
+[data-theme='vga'] .chud__keys,
+[data-theme='vga'] .chud__align {
+  font-size: 16px;
+}
 .chud--dead {
   opacity: 0.4;
   text-decoration: line-through;

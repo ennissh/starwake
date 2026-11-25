@@ -6,6 +6,7 @@ import { type Backdrop, SpaceScene } from './space/spaceScene.js';
 import { TitleScene } from './title/titleScene.js';
 import { TitleScreen } from './ui/title.js';
 import { PauseMenu } from './ui/pause.js';
+import { AdvisorPanel } from './ui/advisors.js';
 import { Modal } from './ui/modal.js';
 import { arenaPicker, crippledBody, resultBody, resultTitle } from './ui/combatScreens.js';
 import { PerfOverlay } from './debug/perf.js';
@@ -65,6 +66,8 @@ export class Game {
   private pause: PauseMenu;
   private perf: PerfOverlay;
   private modal: Modal;
+  /** Advisors outside a campaign (flight test, arena); the campaign has its own. */
+  private advisors: AdvisorPanel;
   private scene: SpaceScene | null = null;
   private campaign: Campaign | null = null;
   private content: ContentBundle | null = null;
@@ -99,16 +102,34 @@ export class Game {
       resume: () => this.resume(),
       quit: () => this.quitToTitle(),
       settingsChanged: (s) => this.settingsChanged(s),
+      tutorial: () => {
+        this.pause.close();
+        this.paused = false;
+        this.campaign?.startTutorial();
+        this.backToFlying();
+      },
+      advisors: () => {
+        this.pause.close();
+        this.paused = false;
+        this.input.enabled = true;
+        this.handleAction('advisors');
+      },
     });
     this.perf = new PerfOverlay(ui);
     this.modal = new Modal(ui);
+    this.advisors = new AdvisorPanel(this.modal, {
+      content: () => this.content!,
+      saveId: () => null,
+      keyMap: () => this.input.keyMap,
+      onClose: () => this.closeAdvisors(),
+    });
 
     window.addEventListener('resize', () => this.renderer.resize());
     onThemeChange(() => this.renderer.resize());
     document.addEventListener('pointerlockchange', this.onPointerLockChange);
     window.addEventListener('keydown', this.onKeyDown, true);
     canvas.addEventListener('click', () => {
-      if (this.screen === 'flight' && !this.paused && !this.anyModal()) void this.input.lockPointer();
+      if (this.screen === 'flight' && !this.paused && !this.anyModal()) this.syncPointer();
     });
 
     getHealth().then(
@@ -174,6 +195,7 @@ export class Game {
     this.settings = s;
     this.input.setKeyMap(s.bindings);
     this.input.stickOpts = { ...this.input.stickOpts, sensitivity: s.mouseSensitivity, invertY: s.invertY };
+    this.input.mouseSteering = s.mouseSteering;
   }
 
   private settingsChanged(s: Settings): void {
@@ -185,6 +207,7 @@ export class Game {
   private async newGame(): Promise<void> {
     if (!this.profile) return;
     await this.startCampaign(await newSave(this.profile, 'auto'));
+    if (!this.settings.tutorialDone) this.campaign?.startTutorial();
   }
 
   private async continueGame(): Promise<void> {
@@ -225,9 +248,15 @@ export class Game {
         panelOpened: () => this.releaseForModal(),
         panelClosed: () => this.backToFlying(),
         exitToTitle: () => this.quitToTitle(),
+        tutorialEnded: () => {
+          this.settings.tutorialDone = true;
+          if (this.profile) saveSettings(this.settings, this.profile);
+          this.settingsChanged(this.settings);
+        },
       },
       view,
     );
+    this.pause.inCampaign = true;
   }
 
   // ---- scenes ---------------------------------------------------------------------------------
@@ -240,7 +269,7 @@ export class Game {
     if (!this.anyModal()) {
       this.input.enabled = true;
       this.input.centreStick();
-      void this.input.lockPointer();
+      this.syncPointer();
     }
   }
 
@@ -270,10 +299,7 @@ export class Game {
         onEnd: (r) => this.showResult(r),
       }),
     );
-    const locked = this.input.pointerLocked;
-    this.scene?.hud.setHint(
-      locked ? 'F1 keys · Esc pause' : 'Click to capture the mouse · F1 keys · Esc pause',
-    );
+    this.scene?.hud.setHint('Arrows steer · W/S throttle · L mouse steering · F1 keys · Esc pause');
   }
 
   private anyModal(): boolean {
@@ -290,7 +316,37 @@ export class Game {
     if (this.screen !== 'flight' || this.anyModal()) return;
     this.paused = false;
     this.input.enabled = true;
-    void this.input.lockPointer();
+    this.syncPointer();
+  }
+
+  /** Lock the pointer when the current view wants the mouse, else leave a free cursor. */
+  private syncPointer(): void {
+    if (this.screen !== 'flight' || this.paused || this.anyModal()) return;
+    if (this.scene?.wantsPointer() ?? true) void this.input.lockPointer();
+    else this.input.unlockPointer();
+  }
+
+  private openAdvisors(): void {
+    if (this.screen !== 'flight' || this.anyModal() || !this.content) return;
+    this.releaseForModal();
+    this.advisors.open();
+  }
+
+  private closeAdvisors(): void {
+    this.modal.close();
+    this.backToFlying();
+  }
+
+  private toggleMouseSteering(): void {
+    this.settings.mouseSteering = !this.settings.mouseSteering;
+    if (this.profile) saveSettings(this.settings, this.profile);
+    this.settingsChanged(this.settings);
+    this.scene?.hud.toast(
+      this.settings.mouseSteering
+        ? 'Mouse steering ON (L to turn off)'
+        : 'Mouse steering OFF: arrow keys steer, the cursor is free',
+    );
+    this.syncPointer();
   }
 
   private showCrippled(): void {
@@ -339,6 +395,7 @@ export class Game {
     this.campaign?.dispose();
     this.campaign = null;
     this.pause.saveHooks = null;
+    this.pause.inCampaign = false;
     this.scene?.dispose();
     this.scene = null;
     this.screen = 'title';
@@ -356,7 +413,13 @@ export class Game {
   // ---- input ----------------------------------------------------------------------------------
   private onPointerLockChange = (): void => {
     // Esc in pointer lock is eaten by the browser (it releases the mouse): treat that as pause.
-    if (!this.input.pointerLocked && this.screen === 'flight' && !this.paused && !this.anyModal()) {
+    if (
+      !this.input.pointerLocked &&
+      this.input.lockWanted &&
+      this.screen === 'flight' &&
+      !this.paused &&
+      !this.anyModal()
+    ) {
       this.lastAutoPause = performance.now();
       this.openPause();
     }
@@ -366,6 +429,7 @@ export class Game {
     if (this.input.capturing) return; // the rebinding UI owns this key (Esc cancels the capture only)
     if (this.campaign?.handlePanelKey(e)) return;
     if (e.code !== 'Escape' || e.repeat) return;
+    if (this.advisors.isOpen) return this.closeAdvisors();
     if (performance.now() - this.lastAutoPause < 400) return; // same Esc that just released the lock
     if (this.pause.isOpen) {
       this.resume();
@@ -375,8 +439,11 @@ export class Game {
   private handleAction(a: Action): void {
     if (a === 'help') return this.openPause('help');
     if (a === 'perf') return this.perf.toggle();
+    if (a === 'mouseSteer') return this.toggleMouseSteering();
     if (this.campaign?.handle(a)) return;
+    if (a === 'advisors') return this.openAdvisors();
     this.scene?.handle(a);
+    if (a === 'cycleCamera') this.syncPointer();
   }
 
   private frame = (): void => {

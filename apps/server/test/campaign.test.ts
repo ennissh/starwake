@@ -207,3 +207,27 @@ describe('encounters', () => {
     expect(r.json().code).toBe('IMPLAUSIBLE_RESULT');
   });
 });
+
+describe('advisors', () => {
+  it('answers from the save, without changing it', async () => {
+    const { save } = await newPilot();
+    const before = (await app.inject({ method: 'GET', url: `/api/saves/${save.id}` })).json().state;
+    const r = await post('/api/advisor/ask', { saveId: save.id, advisor: 'wake', question: 'What now?' });
+    expect(r.statusCode).toBe(200);
+    expect(r.json()).toMatchObject({ advisorId: 'wake', topicId: 'next-steps' });
+    expect(r.json().text).toMatch(/Probe/);
+    const after = (await app.inject({ method: 'GET', url: `/api/saves/${save.id}` })).json().state;
+    expect(after).toEqual(before);
+  });
+
+  it('works without a save, and refuses bad input', async () => {
+    const r = await post('/api/advisor/ask', { advisor: 'tactical', question: 'how do I aim the lance' });
+    expect(r.json().topicId).toBe('lance');
+    expect((await post('/api/advisor/ask', { advisor: 'wake' })).statusCode).toBe(400);
+    expect((await post('/api/advisor/ask', { advisor: '../x', question: 'hi' })).statusCode).toBe(400);
+    expect(
+      (await post('/api/advisor/ask', { saveId: 'nobody.auto', advisor: 'wake', question: 'next' }))
+        .statusCode,
+    ).toBe(404);
+  });
+});

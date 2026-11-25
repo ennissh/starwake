@@ -56,7 +56,7 @@ export function systemBody(s: CampaignState, c: ContentBundle, r: Readiness): st
       parts.push(`<div class="sw-kicker">Occupant</div><p><b>${esc(race.name)}</b>: ${esc(race.summary)}</p>
         <div class="sw-rel"><span>Relation: <b>${relationLabel(rel, c)}</b> (${rel})</span><div class="sw-meter"><i style="left:${(rel + 100) / 2}%"></i></div></div>
         ${!permit ? `<p class="sw-warn">Placing a beacon here without their permission is a hostile act.</p>` : ''}
-        <div class="sw-row"><button class="sw-btn" disabled>Hail (V) <small>M5</small></button>
+        <div class="sw-row"><button class="sw-btn" disabled title="The translator arrives in M5">Hail (V): translator offline until M5</button>
         ${sys.baseEncounter && !isBroken(s, race.id) ? '<button class="sw-btn sw-btn--danger" data-act="attack">Attack their base</button>' : ''}</div>`);
     }
   }

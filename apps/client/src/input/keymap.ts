@@ -17,6 +17,8 @@ export interface ActionDef {
   held?: boolean;
   /** The milestone that makes it work, if not yet built (shown dimmed in help). */
   comingIn?: string;
+  /** What the player is told when they press a key that isn't built yet. */
+  notYet?: string;
 }
 
 export const ACTIONS = {
@@ -32,6 +34,7 @@ export const ACTIONS = {
   throttleStop: { label: 'Stop', group: 'Flight', defaults: ['KeyX'] },
   matchSpeed: { label: 'Match target speed', group: 'Flight', defaults: ['KeyM'] },
   flightAssist: { label: 'Flight assist on/off (drift)', group: 'Flight', defaults: ['KeyZ'] },
+  mouseSteer: { label: 'Mouse steering on/off', group: 'Flight', defaults: ['KeyL'] },
   fire: {
     label: 'Fire selected weapon',
     group: 'Combat',
@@ -41,24 +44,58 @@ export const ACTIONS = {
   targetNext: { label: 'Next target', group: 'Combat', defaults: ['KeyT'] },
   targetPrev: { label: 'Previous target', group: 'Combat', defaults: ['Shift+KeyT'] },
   targetSubsystem: { label: 'Target subsystem', group: 'Combat', defaults: ['KeyY'] },
-  droneHornet: { label: 'Launch Hornet drone', group: 'Combat', defaults: ['Digit1'] },
-  droneLance: { label: 'Launch Lance drone', group: 'Combat', defaults: ['Digit2'] },
-  droneRam: { label: 'Launch Ram drone', group: 'Combat', defaults: ['Digit3'] },
+  faceTarget: {
+    label: 'Face target (hold: turns the nose onto it)',
+    group: 'Combat',
+    defaults: ['KeyG'],
+    held: true,
+  },
+  droneHornet: {
+    label: 'Launch Hornet drone (fighter; ride it with C)',
+    group: 'Combat',
+    defaults: ['Digit1'],
+  },
+  droneLance: { label: 'Launch Lance drone (homing, needs a target)', group: 'Combat', defaults: ['Digit2'] },
+  droneRam: {
+    label: 'Launch Ram drone (kamikaze torpedo, needs a target)',
+    group: 'Combat',
+    defaults: ['Digit3'],
+  },
   recallDrones: { label: 'Recall drones', group: 'Combat', defaults: ['KeyR'] },
   cycleCamera: { label: 'Cycle camera', group: 'Views', defaults: ['KeyC'] },
   starMap: { label: 'Star map', group: 'Ship', defaults: ['Tab'] },
   systemReport: { label: 'System report and services', group: 'Ship', defaults: ['KeyI'] },
-  engineRoom: { label: 'Engine room', group: 'Ship', defaults: ['KeyF'], comingIn: 'M4' },
+  engineRoom: {
+    label: 'Engine room',
+    group: 'Ship',
+    defaults: ['KeyF'],
+    comingIn: 'M4',
+    notYet: 'The engine room is not built yet (next update). Docking at the Waystation refits the ship.',
+  },
   colony: { label: 'Colony readiness', group: 'Ship', defaults: ['KeyH'] },
-  codex: { label: 'Codex', group: 'Ship', defaults: ['KeyK'], comingIn: 'M6' },
+  codex: {
+    label: 'Codex',
+    group: 'Ship',
+    defaults: ['KeyK'],
+    comingIn: 'M6',
+    notYet: 'The codex is not built yet. Ask your advisors (Enter) instead.',
+  },
   probe: { label: 'Probe system', group: 'Ship', defaults: ['KeyP'] },
-  hail: { label: 'Hail ship or base', group: 'Ship', defaults: ['KeyV'], comingIn: 'M5' },
+  hail: {
+    label: 'Hail ship or base',
+    group: 'Ship',
+    defaults: ['KeyV'],
+    comingIn: 'M5',
+    notYet:
+      'The translator is not online yet: talking to aliens arrives in M5. Relations move with what you do (claims, fights, trade).',
+  },
   jump: { label: 'Fold jump (from star map)', group: 'Ship', defaults: ['KeyJ'] },
   emergencyFold: {
     label: 'Emergency fold (hold 1 s)',
     group: 'Ship',
     defaults: ['Shift+KeyJ'],
   },
+  advisors: { label: 'Ask WAKE and the council (advisors)', group: 'General', defaults: ['Enter', 'KeyN'] },
   help: { label: 'Key help', group: 'General', defaults: ['F1', 'Shift+Slash'] },
   perf: { label: 'Performance overlay', group: 'General', defaults: ['Backquote'] },
 } as const satisfies Record<string, ActionDef>;

@@ -8,6 +8,12 @@ describe('settings', () => {
     expect(s.invertY).toBe(true);
     expect(s.theme).toBeNull();
   });
+  it('mouse steering is off by default and only a real true turns it on', () => {
+    expect(defaultSettings().mouseSteering).toBe(false);
+    expect(sanitizeSettings({}).mouseSteering).toBe(false);
+    expect(sanitizeSettings({ mouseSteering: 'yes' }).mouseSteering).toBe(false);
+    expect(sanitizeSettings({ mouseSteering: true }).mouseSteering).toBe(true);
+  });
   it('round-trips through JSON', () => {
     const s = { ...defaultSettings(), theme: 'vga' as const, mouseSensitivity: 1.5 };
     expect(sanitizeSettings(JSON.parse(JSON.stringify(s)))).toEqual(s);

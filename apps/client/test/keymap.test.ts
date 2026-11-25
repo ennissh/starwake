@@ -100,7 +100,7 @@ describe('resolvePress', () => {
     expect(resolvePress(idx, 'Shift+KeyC')).toBe('cycleCamera');
   });
   it('unbound keys resolve to nothing', () => {
-    expect(resolvePress(idx, 'KeyL')).toBeUndefined();
+    expect(resolvePress(idx, 'KeyO')).toBeUndefined();
   });
 });
 
@@ -132,4 +132,16 @@ describe('labels', () => {
     ['Mouse0', 'Left mouse'],
     ['F1', 'F1'],
   ])('%s → %s', (b, l) => expect(keyLabel(b)).toBe(l));
+});
+
+describe('keymap: advisor placeholders', () => {
+  it('the shared advisor test knows every client action (keep advisorKeys.ts in sync)', async () => {
+    const { ACTION_KEY_PLACEHOLDER } = await import('../../../packages/shared/test/advisorKeys.js');
+    expect([...ACTION_KEY_PLACEHOLDER].sort()).toEqual([...ACTION_IDS].sort());
+  });
+  it('playtest keys: L mouse steering, G face target', () => {
+    const m = defaultKeyMap();
+    expect(m.mouseSteer).toContain('KeyL');
+    expect(m.faceTarget).toContain('KeyG');
+  });
 });

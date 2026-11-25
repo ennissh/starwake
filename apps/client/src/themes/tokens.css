@@ -47,6 +47,7 @@
   --hud-accent: #2fd3c4;
   --hud-warn: #f0915a;
   --hud-danger: #f27d74;
+  --hud-ok: #7ee2a0;
   --hud-panel: rgba(10, 16, 22, 0.55);
   --hud-font: var(--font-mono);
   --space-tint: #05070b;
@@ -113,6 +114,7 @@
   --hud-accent: #fcfc54;
   --hud-warn: #fca854;
   --hud-danger: #fc5454;
+  --hud-ok: #54fc54;
   --hud-panel: rgba(0, 0, 84, 0.8);
   --space-tint: #000000;
   color-scheme: dark;

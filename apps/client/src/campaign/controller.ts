@@ -15,6 +15,9 @@ import type { Action } from '../input/keymap.js';
 import { SpaceScene } from '../space/spaceScene.js';
 import type { Renderer } from '../render.js';
 import type { Input } from '../input/input.js';
+import { AdvisorPanel } from '../ui/advisors.js';
+import { Tutorial } from './tutorial.js';
+import { FoldFx } from '../ui/foldFx.js';
 import { Modal } from '../ui/modal.js';
 import { esc } from '../ui/help.js';
 import { crippledBody, resultBody, resultTitle } from '../ui/combatScreens.js';
@@ -35,6 +38,8 @@ export interface CampaignHost {
   /** All panels closed: back to flying. */
   panelClosed(): void;
   exitToTitle(): void;
+  /** The tutorial was finished or skipped (remember it for the profile). */
+  tutorialEnded(): void;
 }
 
 /**
@@ -45,11 +50,15 @@ export class Campaign {
   view: SaveView;
   scene!: SpaceScene;
   readonly modal: Modal;
+  readonly advisors: AdvisorPanel;
   private bar: HTMLDivElement;
   private map: MapView = { yaw: 0.5, pitch: 0.45, selected: null };
   private busy = false;
   private fighting = false;
   private lastVerification: string | null = null;
+  private tutorial: Tutorial | null = null;
+  /** A fold jump is in progress (request, transition, next scene). */
+  private folding = false;
 
   constructor(
     private readonly host: CampaignHost,
@@ -57,6 +66,12 @@ export class Campaign {
   ) {
     this.view = view;
     this.modal = new Modal(host.ui);
+    this.advisors = new AdvisorPanel(this.modal, {
+      content: () => this.c,
+      saveId: () => this.saveId,
+      keyMap: () => this.host.input.keyMap,
+      onClose: () => this.closePanel(),
+    });
     this.bar = document.createElement('div');
     this.bar.className = 'chbar';
     host.ui.appendChild(this.bar);
@@ -70,7 +85,33 @@ export class Campaign {
     return this.view.id;
   }
 
+  /** Start (or restart) the first-flight tutorial. */
+  startTutorial(): void {
+    this.tutorial?.dispose();
+    this.tutorial = new Tutorial(
+      this.host.ui,
+      {
+        state: () => this.view.state,
+        speed: () => this.scene?.speed() ?? 0,
+        steering: () =>
+          (['pitchUp', 'pitchDown', 'yawLeft', 'yawRight'] as const).some((a) => this.host.input.held(a)) ||
+          (this.host.input.mouseFlies && Math.hypot(this.host.input.stick.x, this.host.input.stick.y) > 0.2),
+        keyMap: () => this.host.input.keyMap,
+        panel: () => (this.modal.isOpen ? this.modal.kind : null),
+      },
+      () => {
+        this.tutorial = null;
+        this.host.tutorialEnded();
+      },
+    );
+  }
+
+  get tutorialStep(): string | null {
+    return this.tutorial?.step ?? null;
+  }
+
   dispose(): void {
+    this.tutorial?.dispose();
     this.disposed = true;
     this.modal.el.remove();
     this.bar.remove();
@@ -114,7 +155,7 @@ export class Campaign {
       backdrop: systemBackdrop(sys, this.c, { baseDestroyed: !!sys.occupant && isBroken(s, sys.occupant) }),
     });
     this.host.setScene(this.scene);
-    this.scene.hud.setHint('Tab map · I system · H colony · P probe · F1 keys');
+    this.scene.hud.setHint('Enter ask advisors · Tab map · I system · H colony · P probe · F1 keys');
     this.renderBar();
     if (s.outcome !== 'ongoing') this.showEnding();
     else if (s.salvageOffer.length) this.showSalvage();
@@ -185,6 +226,17 @@ export class Campaign {
   // ---- input ---------------------------------------------------------------------------------
   /** Campaign keys. Returns true when handled. */
   handle(a: Action): boolean {
+    this.tutorial?.onAction(a);
+    if (a === 'advisors') {
+      // Works mid-fight too: asking pauses the action.
+      if (this.advisors.isOpen) this.closePanel();
+      else {
+        if (this.modal.isOpen) return true; // finish the open choice first
+        this.host.panelOpened();
+        this.advisors.open();
+      }
+      return true;
+    }
     if (this.fighting) return false;
     switch (a) {
       case 'starMap':
@@ -217,6 +269,13 @@ export class Campaign {
   }
 
   private panelKey(e: KeyboardEvent): boolean {
+    // The advisors panel has a text box: only Esc is ours there.
+    if (this.advisors.isOpen) {
+      if (e.code !== 'Escape') return false;
+      e.preventDefault();
+      this.closePanel();
+      return true;
+    }
     if (this.modal.isOpen && ['map', 'system', 'readiness'].includes(this.modal.kind ?? '')) {
       const bind = this.host.input.keyMap;
       // Tab is the default map key, but inside other panels it must move keyboard focus.
@@ -401,12 +460,36 @@ export class Campaign {
   private async jumpTo(to: string): Promise<void> {
     if (!laneBetween(this.c, this.view.state.systemId, to))
       return void this.scene.hud.toast('No lane from here');
-    const ok = await this.do({ type: 'jump', to });
-    if (!ok) return;
     this.modal.close();
+    this.folding = true;
+    try {
+      await this.foldTo(to);
+    } finally {
+      this.folding = false;
+    }
+  }
+
+  private async foldTo(to: string): Promise<void> {
+    const fx = new FoldFx(this.host.ui);
+    const minTime = fx.start();
+    const ok = await this.do({ type: 'jump', to });
+    if (!ok) {
+      fx.cancel();
+      this.host.panelClosed();
+      return;
+    }
+    await minTime;
     this.host.panelClosed();
     await this.enter();
-    if (this.view.state.outcome === 'lost') this.showEnding();
+    const s = this.view.state;
+    const sys = system(this.c, s.systemId);
+    fx.finish(
+      sys.name,
+      s.pendingEncounter
+        ? 'Contact! Pulled out of the fold'
+        : `${s.clock.toFixed(2)} years left on the Caravan Clock`,
+    );
+    if (s.outcome === 'lost') this.showEnding();
   }
 
   private async attack(): Promise<void> {
@@ -463,6 +546,8 @@ export class Campaign {
       panel: this.modal.kind,
       pending: !!this.view.state.pendingEncounter,
       fighting: this.fighting,
+      folding: this.folding,
+      tutorial: this.tutorialStep,
       verification: this.lastVerification,
       state: this.view.state,
       ship: this.view.ship,

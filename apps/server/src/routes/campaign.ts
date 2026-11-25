@@ -11,9 +11,11 @@ import {
   RuleError,
   applyAction,
   applyEncounterResult,
+  ask,
   byId,
   fuelPerParsec,
   jumpRange,
+  MAX_QUESTION_LENGTH,
   migrate,
   newGame,
   plausible,
@@ -176,6 +178,23 @@ export function campaignRoutes(app: FastifyInstance, store: Store, content: Cont
       req.log.info({ save: id, action: action.type, events: step.events.map((e) => e.t) }, 'campaign action');
       return { ...view(id, saved, content), events: step.events };
     });
+  });
+
+  // ---- advisors (playtest batch 1, #3): read-only answers; scripted now, translator-backed in M5 --
+  const AskBody = z.object({
+    saveId: SaveId.optional(),
+    advisor: z.string().regex(/^[a-z][a-z0-9-]{0,31}$/),
+    question: z.string().max(MAX_QUESTION_LENGTH * 4),
+  });
+  app.post('/api/advisor/ask', async (req) => {
+    const body = AskBody.parse(req.body);
+    const state = body.saveId
+      ? await locked(body.saveId, async () => (await load(body.saveId!)).state)
+      : null;
+    const a = ask(content, state, body.advisor, body.question);
+    // The question is player text: never logged at INFO (CLAUDE.md §7).
+    req.log.debug({ advisor: a.advisorId, topic: a.topicId }, 'advisor answered');
+    return a;
   });
 
   // ---- encounters (PLAN §2.2) -------------------------------------------------------------------------

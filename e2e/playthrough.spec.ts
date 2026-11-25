@@ -30,6 +30,8 @@ type Snap = {
   systemId: string;
   panel: string | null;
   fighting: boolean;
+  folding: boolean;
+  tutorial?: string | null;
   verification: string | null;
   state: CampaignState;
   ship: { range: number; fuelPerParsec: number };
@@ -204,7 +206,7 @@ class Run {
     await expect
       .poll(async () => {
         const s = await this.snap();
-        return s.systemId !== from || s.fighting || s.state.outcome !== 'ongoing';
+        return (s.systemId !== from || s.fighting || s.state.outcome !== 'ongoing') && !s.folding;
       })
       .toBe(true);
     await this.record(`jump ${from} → ${to}`);

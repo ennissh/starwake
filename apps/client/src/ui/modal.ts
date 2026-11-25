@@ -8,6 +8,26 @@ export class Modal {
     this.el.className = 'sw-overlay';
     this.el.hidden = true;
     parent.appendChild(this.el);
+    // A modal dialog keeps keyboard focus inside itself (Tab and Shift+Tab wrap around).
+    this.el.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab' || this.el.hidden) return;
+      const items = [
+        ...this.el.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), select, textarea, [href], [tabindex]:not([tabindex="-1"])',
+        ),
+      ].filter((x) => x.offsetParent !== null || x === document.activeElement);
+      if (!items.length) return;
+      const first = items[0]!;
+      const last = items[items.length - 1]!;
+      const inside = this.el.contains(document.activeElement);
+      if (e.shiftKey && (!inside || document.activeElement === first)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (!inside || document.activeElement === last)) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
     this.el.addEventListener('click', (e) => {
       const t = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
       if (t?.dataset.act) this.handlers[t.dataset.act]?.(t);

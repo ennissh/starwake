@@ -24,7 +24,6 @@ export class TitleScene {
   update(dt: number): void {
     this.ship.group.rotation.y += dt * 0.12;
     this.space.update(this.camera);
-    this.space.setPixelScale(this.r.vga ? 0.5 : 1);
   }
 
   render(): void {
