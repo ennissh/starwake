@@ -546,3 +546,34 @@
     outline-offset: -3px;
   }
 }
+
+/* Codex (M6) */
+.cx {
+  display: grid;
+  gap: 10px;
+  max-height: min(60vh, 560px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.cx-entry {
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 8px;
+}
+.cx-entry h3 {
+  margin: 0 0 4px;
+  font-size: 1.05em;
+}
+.cx-entry p,
+.cx-entry ul {
+  margin: 2px 0;
+}
+.end-title {
+  margin: 0;
+  font-size: 1.5em;
+}
+.end-stars {
+  margin: 0;
+  font-size: 1.4em;
+  color: var(--accent);
+  letter-spacing: 0.15em;
+}

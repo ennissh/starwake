@@ -21,7 +21,7 @@ the Caravan Clock runs out. Aliens are played live by a local LLM (Ollama) throu
 - **Version:** the release line is in [`VERSION`](VERSION) (`X.Y.Z`). Every build is `X.Y.Z-<N>`, where `N` is the
   number of commits since `VERSION` last changed (`scripts/version.sh`; no state to keep). Images get `:<X.Y.Z>-<N>`
   and `:latest`. A release `X.Y.Z` is a tested build re-tagged by digest; a `stable` channel arrives with it (R7).
-- **Status:** pre-development. The first deliverable is the **MVP** (`0.1.0`): one cluster (the
+- **Status:** MVP feature-complete (M0–M7 built); release 0.1.0 pending Shawn's playtest, `eval:llm` and publish. The first deliverable is the **MVP** (`0.1.0`): one cluster (the
   Shoal), six systems, three races (Quillari, Vosk, Murmur), the full loop playable start to finish.
 - **Clean room.** Starwake is inspired by the *mechanics* of MicroProse's Lightspeed (1990) and
   Hyperspeed (1991). It uses none of their names, art, music, text, data or code (PLAN.md §0.1).
@@ -234,8 +234,8 @@ M2 — Combat, drones, subsystems, crippled state, salvage, arena        [x] bui
 M3 — Campaign: Shoal content, star map, jumps, probe, claims, saves    [x] built; clock-length playtest pending
 M4 — Engine room: slots, condition, stat preview, wired effects        [x] built
 M5 — Translator + diplomacy (largest; seven gates)                     [x] built; eval:llm on the real model pending (Shawn)
-M6 — Win/lose, intro + tutorial, codex, audio                          [ ]
-M7 — Hardening, Playwright smoke, release 0.1.0                        [ ]
+M6 — Win/lose, intro + tutorial, codex, audio                          [x] built; first-time playtest pending (Shawn)
+M7 — Hardening, Playwright smoke, release 0.1.0                        [x] built; publish 0.1.0 + dwarf acceptance pending (Shawn)
 ```
 
 ---

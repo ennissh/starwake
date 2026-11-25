@@ -154,7 +154,7 @@ title screen; the choice is remembered per browser (per profile from M3).
 | Match target speed | M |
 | Launch Hornet (fighter) / Lance (homing) / Ram (kamikaze torpedo) drone · recall | 1 / 2 / 3 · R |
 | Star map · System report and services · Colony Readiness | Tab · I · H |
-| Engine room · Codex | F · K (M6) |
+| Engine room · Codex | F · K |
 | Probe system · Hail ship or base | P · V (the translator arrives in M5) |
 | Ask the advisors (WAKE and the council) | Enter or N |
 | Fold jump (from star map) · Emergency fold | J · Shift+J (hold 1 s) |
@@ -183,6 +183,20 @@ doesn't match, the advisor says so rather than guess. M5 may route them through 
 **Tutorial.** A new game starts WAKE's first-flight checklist (throttle, steer, camera, advisors, probe,
 claim, readiness, star map, fold). Each step completes when you do it; skip it from the card, replay it
 from Esc → Replay tutorial.
+
+## Story, codex, audio and endings (M6)
+
+- **New game** opens with WAKE's intro (six captions; Enter moves on, Esc skips; text in
+  `content/codex.json`), then the first-flight tutorial (11 steps, each done when you do it).
+- **Codex (K):** the races you've met (and what they seem to think of you), surveyed systems and
+  planets, everything aliens told you, and *How things work* (the in-game manual).
+- **Audio:** all procedural WebAudio, no sample files: Lance, turret, hits, explosions, drone
+  launches, the fold, the crippled alarm, UI clicks, and a leitmotif per race (generated from
+  `leitmotifSeed` in its persona card) while its channel is open. Volumes in Esc → Settings. Sound
+  starts after *Click to begin*. Everything has captions, so sound is never required (R17).
+- **Endings:** signal the Caravan from the Cradle to win; the clock running out loses. The summary
+  rates the run (1–5 stars and a title such as *Peacemaker*, *Conqueror*, *Tributary*,
+  *Pathfinder*), tells what became of each people, and lists the numbers.
 
 ## Translator (M5): talking to aliens
 
@@ -268,7 +282,24 @@ starwake/
 
 ## Backups
 
-Everything that matters is in `/opt/docker/starwake/data`. `install.sh` can install a daily cron job (`/etc/cron.d/starwake-backup`, 03:17) that runs `backup.sh` and keeps the last 14 tarballs in `/opt/docker/starwake/backups`. Run one by hand with `sudo /opt/docker/starwake/backup.sh`. Restore steps are at the top of `scripts/backup.sh`.
+Everything that matters is in `/opt/docker/starwake/data`. `install.sh` can install a daily cron job (`/etc/cron.d/starwake-backup`, 03:17) that runs `backup.sh` and keeps the last 14 tarballs in `/opt/docker/starwake/backups`. Run one by hand with `sudo /opt/docker/starwake/backup.sh`.
+
+Restore (the installer also writes `restore.sh`; it never deletes the current data, it moves it aside to
+`data.before-restore-<date>`):
+
+```bash
+cd /opt/docker/starwake && sudo docker compose down
+sudo ./restore.sh backups/starwake-data-<date>.tar.gz /opt/docker/starwake/data
+sudo docker compose up -d
+```
+
+A test runs backup → overwrite → restore and checks every file (`scripts/test/backup.test.ts`).
+
+## Monitoring
+
+Add an Uptime Kuma *HTTP(s) – Keyword* monitor on `http://starwake.citus.cloud:8090/healthz` with the
+keyword `"ok":true` (the installer prints the exact line). `/healthz` never fails because Ollama is
+down; to be alerted about the translator too, add a second keyword monitor for `"llm":"up"`.
 
 ## Legal
 

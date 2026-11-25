@@ -7,6 +7,8 @@ import { TitleScene } from './title/titleScene.js';
 import { TitleScreen } from './ui/title.js';
 import { PauseMenu } from './ui/pause.js';
 import { AdvisorPanel } from './ui/advisors.js';
+import { playIntro } from './ui/intro.js';
+import { audio } from './audio/audio.js';
 import { Modal } from './ui/modal.js';
 import { arenaPicker, crippledBody, resultBody, resultTitle } from './ui/combatScreens.js';
 import { PerfOverlay } from './debug/perf.js';
@@ -127,6 +129,10 @@ export class Game {
     window.addEventListener('resize', () => this.renderer.resize());
     onThemeChange(() => this.renderer.resize());
     document.addEventListener('pointerlockchange', this.onPointerLockChange);
+    // A soft click for every button (procedural, no samples).
+    ui.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('.sw-btn,.sw-tab,.er-slot')) audio.ui();
+    });
     window.addEventListener('keydown', this.onKeyDown, true);
     canvas.addEventListener('click', () => {
       if (this.screen === 'flight' && !this.paused && !this.anyModal()) this.syncPointer();
@@ -196,6 +202,7 @@ export class Game {
     this.input.setKeyMap(s.bindings);
     this.input.stickOpts = { ...this.input.stickOpts, sensitivity: s.mouseSensitivity, invertY: s.invertY };
     this.input.mouseSteering = s.mouseSteering;
+    audio.setVolumes(s.volume);
   }
 
   private settingsChanged(s: Settings): void {
@@ -206,7 +213,12 @@ export class Game {
   // ---- campaign -------------------------------------------------------------------------------
   private async newGame(): Promise<void> {
     if (!this.profile) return;
-    await this.startCampaign(await newSave(this.profile, 'auto'));
+    const view = await newSave(this.profile, 'auto');
+    this.content ??= await getContent();
+    this.title.show(false);
+    // WAKE's intro plays over the title scene, then the campaign (and the tutorial) begin.
+    await playIntro(this.ui, this.content.codex.intro);
+    await this.startCampaign(view);
     if (!this.settings.tutorialDone) this.campaign?.startTutorial();
   }
 
@@ -460,7 +472,12 @@ export class Game {
       this.titleScene.render();
     }
     this.perf.frame(dt * 1000, this.renderer.gl);
+    const i = this.renderer.gl.info.render;
+    this.lastFrame = { calls: i.calls, triangles: i.triangles };
   };
+
+  /** Last frame's draw calls and triangles (perf budget, PLAN §2.4). */
+  private lastFrame = { calls: 0, triangles: 0 };
 
   private applyTestHooks(): void {
     if (!this.scene) return;
@@ -478,6 +495,7 @@ export class Game {
       bindings: () => this.settings.bindings,
       profile: () => this.profile,
       debugCripple: () => this.scene?.debugCripple() ?? false,
+      perf: () => ({ ...this.lastFrame }),
       /** Fights are flown by the scripted sensible pilot (the server still verifies them by replay). */
       autopilot: (on: boolean) => {
         this.autopilot = !!on;

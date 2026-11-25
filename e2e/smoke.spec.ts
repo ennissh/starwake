@@ -5,6 +5,7 @@ type Hook = {
   paused(): boolean;
   flight(): { camera: string; assist: boolean; throttle: number; speed: number; pos: { z: number } } | null;
   bindings(): Record<string, string[]>;
+  perf(): { calls: number; triangles: number };
 };
 const hook = <T>(page: Page, fn: (h: Hook) => T) =>
   page.evaluate(
@@ -124,6 +125,13 @@ test('practice arena: target, subsystem, drone, ride it, emergency fold → resu
   for (let i = 0; i < 3; i++) await page.keyboard.press('KeyC');
   await expect.poll(async () => (await snap()).camera).toBe('drone');
 
+  // M7 perf budget (PLAN §2.4): fewer than 250 draw calls in combat (the base fight, a drone out).
+  await page.keyboard.press('KeyC'); // back to the bridge
+  await page.waitForTimeout(300);
+  const calls = await hook(page, (h) => h.perf().calls);
+  expect(calls).toBeGreaterThan(0);
+  expect(calls).toBeLessThan(250);
+
   // Hold Shift+J for a second: emergency fold ends the fight.
   await page.keyboard.down('Shift');
   await page.keyboard.down('KeyJ');
@@ -163,6 +171,11 @@ test('campaign: pilot → new game → probe → claim → map → jump → save
   await page.getByLabel('New pilot name').fill(`Pilot ${Date.now() % 100000}`);
   await page.getByRole('button', { name: 'Add pilot' }).click();
   await page.getByRole('button', { name: 'New game' }).click();
+  // M6: WAKE's intro: Enter moves on, Esc skips.
+  await expect(page.getByRole('dialog', { name: 'Introduction' })).toContainText('WAKE · 1/');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog', { name: 'Introduction' })).toContainText('WAKE · 2/');
+  await page.keyboard.press('Escape');
   await expect.poll(async () => (await camp(page))?.systemId).toBe('harbor');
 
   // Playtest batch 1: WAKE's first-flight tutorial starts on a new game, and the advisors answer.
@@ -246,6 +259,7 @@ test('campaign fight: attack Cinder Hold, fold out; the server verifies the brow
   await page.getByLabel('New pilot name').fill(`Raider ${Date.now() % 100000}`);
   await page.getByRole('button', { name: 'Add pilot' }).click();
   await page.getByRole('button', { name: 'New game' }).click();
+  await page.getByRole('button', { name: 'Skip (Esc)' }).click();
   await expect.poll(async () => (await camp(page))?.systemId).toBe('harbor');
 
   const byName: Record<string, string> = { 'glass-reach': 'Glass Reach', 'cinder-gate': 'Cinder Gate' };
@@ -293,6 +307,7 @@ test('translator (mock): hail the Quillari, learn, trade, insult, leave; memory 
   await page.getByLabel('New pilot name').fill(`Envoy ${Date.now() % 100000}`);
   await page.getByRole('button', { name: 'Add pilot' }).click();
   await page.getByRole('button', { name: 'New game' }).click();
+  await page.getByRole('button', { name: 'Skip (Esc)' }).click();
   await expect.poll(async () => (await camp(page))?.systemId).toBe('harbor');
   await page.locator('[data-tutor="skip"]').click();
   // Probe and claim Anvil: it ships Ore Crates to trade with.
@@ -333,5 +348,61 @@ test('translator (mock): hail the Quillari, learn, trade, insult, leave; memory 
   expect(s.conversation).toBeNull();
   expect(s.conversationMemory.quillari!.summary).toMatch(/Quillari/);
   expect(s.relations.quillari).toBe(-1); // +2 for the fair trade, −3 for the insult
+
+  // M7 journey: … → hail → save → reload restores the exact state, conversation memory included.
+  await page.keyboard.press('Escape');
+  await page.getByRole('tab', { name: 'Save / load' }).click();
+  await page.locator('[data-save="1"]').click();
+  await expect(page.getByRole('dialog')).toContainText('Saved to slot 1');
+  const before = (await camp(page))!.state;
+  await page.reload();
+  await page.getByRole('button', { name: 'Click to begin' }).click();
+  await page.getByRole('button', { name: /Continue/ }).click();
+  await expect.poll(async () => (await camp(page))?.systemId).toBe('glass-reach');
+  expect((await camp(page))!.state).toEqual(before);
+  expect(errors).toEqual([]);
+});
+
+test('diplomacy (mock): the Vosk tribute arc through the UI', async ({ page }) => {
+  test.setTimeout(150_000);
+  const errors = watchErrors(page);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Click to begin' }).click();
+  await page.getByLabel('New pilot name').fill(`Tribute ${Date.now() % 100000}`);
+  await page.getByRole('button', { name: 'Add pilot' }).click();
+  await page.getByRole('button', { name: 'New game' }).click();
+  await page.getByRole('button', { name: 'Skip (Esc)' }).click();
+  await expect.poll(async () => (await camp(page))?.systemId).toBe('harbor');
+  await page.locator('[data-tutor="skip"]').click();
+  type S = { relations: Record<string, number>; flags: string[]; pendingEncounter: unknown };
+  const st = async () => (await camp(page))!.state as S;
+  const payOnce = async () => {
+    const tr = page.getByRole('dialog', { name: 'Translator · Vosk' });
+    await expect(tr).toBeVisible();
+    await tr.getByRole('button', { name: 'Pay tribute' }).click();
+    await expect(tr.getByRole('log')).toContainText('Tribute paid.');
+    await page.keyboard.press('Escape');
+    await expect(tr).toBeHidden();
+  };
+  for (const to of ['glass-reach', 'cinder-gate']) {
+    await page.keyboard.press('Tab');
+    await page.locator(`[data-act="select"][data-id="${to}"]`).dispatchEvent('click');
+    await page.keyboard.press('KeyJ');
+    await expect.poll(async () => (await camp(page))?.folding).toBe(false);
+    // A Vosk ambush or patrol hails first: answer and pay (that counts as tribute too).
+    if ((await camp(page))!.panel === 'parley') {
+      await page.getByRole('button', { name: 'Answer the hail' }).click();
+      await payOnce();
+      expect((await st()).pendingEncounter).toBeNull();
+    }
+  }
+  expect((await camp(page))!.systemId).toBe('cinder-gate');
+  for (let i = 0; i < 3 && (await st()).relations.vosk! <= -25; i++) {
+    await page.keyboard.press('KeyV');
+    await payOnce();
+  }
+  const s = await st();
+  expect(s.flags).toContain('tribute:vosk');
+  expect(s.relations.vosk).toBeGreaterThan(-25); // no longer hostile: no threat to a Cradle
   expect(errors).toEqual([]);
 });

@@ -2,6 +2,20 @@
 
 ## 0.1.0 (in progress)
 
+### M7 · Hardening
+- `restore.sh` (also written by `install.sh`): restores a backup, moving the current data aside.
+- Smoke journeys: title → intro → tutorial → jump → probe → hail → trade → save → reload; the Vosk
+  tribute arc; a combat draw-call budget check. Backup → restore round-trip test.
+- README: restore, Uptime Kuma monitors, translator, M6 features. Demo and release steps in
+  `docs/demo-m4-m7.md`.
+
+### M6 · Win/lose, onboarding and audio
+- WAKE's intro captions on a new game (skippable); the tutorial gains engine-room and hailing steps.
+- Codex (K): races, systems, what you were told, and the mechanics manual.
+- Procedural audio: combat, fold, UI, alarm, and a generated leitmotif per race; volume settings.
+- Ending summary with a rating, an epilogue for each people and the run's numbers.
+- F, K and V outside a campaign (arena, flight test) say so instead of doing nothing.
+
 ### M5 · Translator and diplomacy
 - **V** hails a race; ambushes and patrols hail first (answer or fight). Translator screen: portrait with
   mood and tell, transcript, chips, free text, trade panel with balance bar, relation and patience.

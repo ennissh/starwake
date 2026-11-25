@@ -682,6 +682,7 @@ Build in order. Stop for review after each one.
 - A full Vosk arc is completable three ways: treaty, tribute or force.
 
 ### M6 · Win/lose, onboarding and audio
+**Status (2026-11-25): built.** `endingSummary()` (shared, tested) rates the run and writes the epilogue; intro captions are content (`codex.json`); the tutorial covers flight, camera, advisors, probe, claim, readiness, engine room, map, fold and hailing (practice combat is the arena on the title screen plus the fight key strip and Tactical's answers, rather than a scripted drone range); Codex with mechanics entries in content; procedural SFX and seeded race leitmotifs (WebAudio, no files) with master/effects/music volumes. Both endings are reached by the headless playthrough. The 60–120 minute first-time playtest is Shawn's.
 - Readiness win and lose; ending summary.
 - Intro and tutorial voiced by WAKE (text captions).
 - Codex; procedural SFX and race leitmotifs; settings.
@@ -691,6 +692,7 @@ Build in order. Stop for review after each one.
 - Both endings are reachable.
 
 ### M7 · Hardening and release 0.1.0
+**Status (2026-11-25): built; publish and dwarf acceptance pending (Shawn).** Playwright smoke covers title → intro → tutorial → probe → claim → jump → hail (mock) → trade → save → reload (deep-equal), the engine room, a verified campaign fight, and the Vosk tribute arc through the UI; a perf check holds combat under 250 draw calls; `restore.sh` (embedded in `install.sh`) with a backup → restore round-trip test; Uptime Kuma keyword monitors documented; HTTPS stays off (R21). Release steps for Shawn are in `docs/demo-m4-m7.md` §5.
 - Playwright smoke covering title → tutorial → jump → probe → hail (mock) → save → reload.
 - Performance pass, backup script, Uptime Kuma monitor.
 - HTTPS decision implemented if chosen.

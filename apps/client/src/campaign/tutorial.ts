@@ -64,6 +64,11 @@ const STEPS: Step[] = [
     done: (t) => t.seen.has('colony') || t.v.panel() === 'readiness',
   },
   {
+    id: 'engine',
+    text: 'Press {key:engineRoom} for the engine room: six systems, each with slots for parts. Better parts mean more range, speed and firepower. Refits are free here at the Waystation.',
+    done: (t) => t.seen.has('engineRoom') || t.v.panel() === 'engine',
+  },
+  {
     id: 'map',
     text: 'Now open the star map with {key:starMap}. Fold lanes link the systems; each parsec costs time and fold mass.',
     done: (t) => t.seen.has('starMap') || t.v.panel() === 'map',
@@ -72,6 +77,11 @@ const STEPS: Step[] = [
     id: 'jump',
     text: 'Pick a system in range on the map and fold there ({key:jump}, or the Fold button). Probe it when you arrive.',
     done: (t) => t.v.state().stats.jumps > 0,
+  },
+  {
+    id: 'hail',
+    text: 'Others live in this cluster. Where someone is home, press {key:hail} to hail them: trade, ask what they know, or seek a treaty. Watch their face for lies. The Quillari of the Glass Reach are a good start.',
+    done: (t) => t.v.state().codex.some((x) => x.startsWith('race:')) || !!t.v.state().conversation,
   },
 ];
 

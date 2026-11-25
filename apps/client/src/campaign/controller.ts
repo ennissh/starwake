@@ -19,8 +19,10 @@ import type { Input } from '../input/input.js';
 import { AdvisorPanel } from '../ui/advisors.js';
 import { Tutorial } from './tutorial.js';
 import { EngineRoom } from './engineRoom.js';
+import { type CodexTab, codexBody } from './codex.js';
 import { TranslatorPanel } from '../translator/panel.js';
 import { FoldFx } from '../ui/foldFx.js';
+import { audio } from '../audio/audio.js';
 import { Modal } from '../ui/modal.js';
 import { esc } from '../ui/help.js';
 import { crippledBody, resultBody, resultTitle } from '../ui/combatScreens.js';
@@ -333,6 +335,9 @@ export class Campaign {
         this.openTranslator(who[0]!);
         return true;
       }
+      case 'codex':
+        this.toggle('codex', () => this.showCodex('races'));
+        return true;
       case 'engineRoom':
         this.toggle('engine', () => {
           this.host.panelOpened();
@@ -379,12 +384,22 @@ export class Campaign {
       this.closePanel();
       return true;
     }
-    if (this.modal.isOpen && ['map', 'system', 'readiness', 'engine'].includes(this.modal.kind ?? '')) {
+    if (
+      this.modal.isOpen &&
+      ['map', 'system', 'readiness', 'engine', 'codex'].includes(this.modal.kind ?? '')
+    ) {
       const bind = this.host.input.keyMap;
       // Tab is the default map key, but inside other panels it must move keyboard focus.
       const tabNav = e.code === 'Tab' && this.modal.kind !== 'map';
       const is = (a: Action) => !tabNav && bind[a].includes(e.code);
-      if (is('starMap') || is('systemReport') || is('colony') || is('engineRoom') || e.code === 'Escape') {
+      if (
+        is('starMap') ||
+        is('systemReport') ||
+        is('colony') ||
+        is('engineRoom') ||
+        is('codex') ||
+        e.code === 'Escape'
+      ) {
         e.preventDefault();
         const kind = this.modal.kind;
         this.closePanel();
@@ -392,6 +407,7 @@ export class Campaign {
         else if (is('systemReport') && kind !== 'system') this.handle('systemReport');
         else if (is('colony') && kind !== 'readiness') this.handle('colony');
         else if (is('engineRoom') && kind !== 'engine') this.handle('engineRoom');
+        else if (is('codex') && kind !== 'codex') this.handle('codex');
         return true;
       }
       if (is('jump') && this.modal.kind === 'map' && this.map.selected) {
@@ -484,6 +500,13 @@ export class Campaign {
           () => this.view.state.outcome !== 'ongoing' && this.showEnding(),
         ),
     });
+  }
+
+  showCodex(tab: CodexTab): void {
+    this.panel('Codex', 'codex', codexBody(this.view.state, this.c, tab), {
+      tab: (el) => this.showCodex(el.dataset.id as CodexTab),
+    });
+    this.modal.el.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus();
   }
 
   showReadiness(): void {
@@ -636,6 +659,7 @@ export class Campaign {
         msg = `Claims shipped ${e.items.map((x) => `${x.qty} ${byId(c.items, x.itemId).name}`).join(', ')}`;
       else if (e.t === 'refitted')
         msg = e.years ? `Refit: ${e.swaps} swaps, −${e.years} years` : 'Refit done';
+      if (e.t === 'treaty' || e.t === 'knowledge' || e.t === 'fightAvoided') audio.chime();
       if (msg) this.scene.hud.toast(msg, 2600);
     }
   }

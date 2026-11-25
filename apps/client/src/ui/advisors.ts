@@ -153,7 +153,7 @@ export class AdvisorPanel {
     return `<div class="sw-advisor">
       <div class="sw-row" role="group" aria-label="Who to ask">${tabs}</div>
       <p class="sw-meta">${esc(a.name)}: ${esc(a.role)}</p>
-      <div class="sw-advisor__log" role="log" aria-live="polite">${lines}${this.busy ? '<div class="sw-meta">…</div>' : ''}</div>
+      <div class="sw-advisor__log" role="log" aria-live="polite" tabindex="0" aria-label="Conversation">${lines}${this.busy ? '<div class="sw-meta">…</div>' : ''}</div>
       <div class="sw-row sw-advisor__chips">${chips}</div>
       <form class="sw-row" data-form="advisor"><input class="sw-input" name="q" maxlength="300" autocomplete="off" placeholder="Ask ${esc(a.name)} a question" aria-label="Your question"/><button class="sw-btn sw-btn--primary" type="submit">Ask</button></form>
     </div>`;

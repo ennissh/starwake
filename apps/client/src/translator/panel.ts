@@ -20,6 +20,7 @@ import {
   openChannel,
   sayToChannel,
 } from '../net/api.js';
+import { audio } from '../audio/audio.js';
 import { esc } from '../ui/help.js';
 import type { Modal } from '../ui/modal.js';
 import { type Mood, portraitSvg } from './portrait.js';
@@ -81,6 +82,7 @@ export class TranslatorPanel {
     this.error = '';
     this.busy = true;
     this.show();
+    audio.playMotif(this.race.leitmotifSeed);
     try {
       const v = await openChannel(this.o.saveId(), raceId);
       this.take(v);
@@ -97,6 +99,7 @@ export class TranslatorPanel {
     if (!conv) return;
     this.raceId = conv.raceId;
     this.degraded = conv.degraded;
+    audio.playMotif(this.race.leitmotifSeed);
     const last = [...conv.transcript].reverse().find((t) => t.who === 'alien');
     this.mood = (last?.mood as Mood) ?? 'neutral';
     this.show();
@@ -126,6 +129,7 @@ export class TranslatorPanel {
     }
     this.o.update(v);
     if (v.ended || !v.state.conversation) {
+      audio.stopMotif();
       this.o.ended();
       return;
     }
@@ -274,7 +278,7 @@ export class TranslatorPanel {
         <div>${status}</div>
       </div>
       <div class="tr-main">
-        <div class="tr-log" role="log" aria-live="polite">${lines || '<div class="sw-meta">The channel is open.</div>'}</div>
+        <div class="tr-log" role="log" aria-live="polite" tabindex="0" aria-label="Transcript">${lines || '<div class="sw-meta">The channel is open.</div>'}</div>
         ${this.error ? `<p class="sw-warn" role="alert">${esc(this.error)}</p>` : ''}
         ${demand ? `<div class="tr-demand"><b>They demand:</b> ${demand.map((g) => `${g.qty} ${esc(goodName(c, g.itemId, race))}`).join(', ')} <button class="sw-btn sw-btn--primary" data-act="chip" data-move="payTribute" ${this.busy ? 'disabled' : ''}>Pay tribute</button></div>` : ''}
         ${counter ? `<div class="tr-demand"><b>Their counter-offer:</b> you give ${counter.playerGives.map((g) => `${g.qty} ${esc(goodName(c, g.itemId, race))}`).join(', ') || 'nothing'}; they give ${counter.raceGives.map((g) => `${g.qty} ${esc(goodName(c, g.itemId, race))}`).join(', ')} <button class="sw-btn sw-btn--primary" data-act="chip" data-move="acceptCounter" ${this.busy ? 'disabled' : ''}>Accept counter</button></div>` : ''}

@@ -14,6 +14,8 @@ export interface Settings {
   mouseSteering: boolean;
   /** The first-flight tutorial was finished or skipped. */
   tutorialDone: boolean;
+  /** Audio volumes, 0..1 (M6). */
+  volume: { master: number; sfx: number; music: number };
   theme: ThemeId | null;
 }
 
@@ -27,6 +29,7 @@ export function defaultSettings(): Settings {
     invertY: false,
     mouseSteering: false,
     tutorialDone: false,
+    volume: { master: 0.8, sfx: 0.8, music: 0.5 },
     theme: null,
   };
 }
@@ -42,6 +45,18 @@ export function sanitizeSettings(raw: unknown): Settings {
     invertY: r.invertY === true,
     mouseSteering: r.mouseSteering === true,
     tutorialDone: r.tutorialDone === true,
+    volume: (() => {
+      const v = (r.volume ?? {}) as Record<string, unknown>;
+      const one = (x: unknown, dflt: number) => {
+        const n = Number(x);
+        return x !== undefined && x !== null && Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : dflt;
+      };
+      return {
+        master: one(v.master, d.volume.master),
+        sfx: one(v.sfx, d.volume.sfx),
+        music: one(v.music, d.volume.music),
+      };
+    })(),
     theme: isThemeId(r.theme) ? r.theme : null,
   };
 }

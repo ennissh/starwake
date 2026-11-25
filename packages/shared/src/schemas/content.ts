@@ -482,6 +482,13 @@ export const FiltersSchema = z.object({
 });
 export type Filters = z.infer<typeof FiltersSchema>;
 
+/** Codex mechanics entries (M6): always available, the in-game manual. */
+export const CodexSchema = z.object({
+  /** WAKE's opening captions on a new game (M6, PLAN §5.2). */
+  intro: z.array(z.string().min(1)).min(1).max(12),
+  mechanics: z.array(z.object({ id, title: z.string().min(1), text: z.string().min(1) })).min(1),
+});
+
 export const ContentBundleSchema = z.object({
   player: PlayerShipSchema,
   components: z.array(ComponentSchema),
@@ -496,6 +503,7 @@ export const ContentBundleSchema = z.object({
   rules: RulesSchema,
   advisors: AdvisorsSchema,
   filters: FiltersSchema,
+  codex: CodexSchema,
 });
 export type ContentBundle = z.infer<typeof ContentBundleSchema>;
 
@@ -514,6 +522,7 @@ export const CONTENT_FILES = {
   rules: 'rules.json',
   advisors: 'advisors.json',
   filters: 'filters.json',
+  codex: 'codex.json',
 } as const satisfies Record<keyof ContentBundle, string>;
 
 /** Validate raw parsed JSON per file into a bundle, then cross-check ids. Throws listing every issue. */

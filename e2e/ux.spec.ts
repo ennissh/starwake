@@ -116,6 +116,9 @@ for (const vp of VIEWPORTS) {
       await begin(page);
       await pilot(page, `Camp ${vp.width}`);
       await page.getByRole('button', { name: 'New game' }).click();
+      await expect(page.getByRole('dialog', { name: 'Introduction' })).toBeVisible();
+      f.push(...(await audit(page, '15b-intro')));
+      await page.getByRole('button', { name: 'Skip (Esc)' }).click();
       await page.waitForTimeout(1500);
       f.push(...(await audit(page, '16-campaign-harbor', { hud: true })));
       await flying(page);
@@ -151,6 +154,13 @@ for (const vp of VIEWPORTS) {
       f.push(...(await auditFocus(page, '19c-engine-room')));
       await page.keyboard.press('Escape');
       await flying(page);
+      await page.keyboard.press('KeyK');
+      const cx = page.getByRole('dialog', { name: 'Codex' });
+      await cx.getByRole('tab', { name: 'How things work' }).click();
+      await expect(cx).toContainText('The Caravan Clock');
+      f.push(...(await audit(page, '19d-codex')));
+      await page.keyboard.press('Escape');
+      await flying(page);
       await page.keyboard.press('Escape');
       await page.getByRole('tab', { name: 'Save / load' }).click();
       await expect(page.getByRole('dialog')).toContainText('Autosave');
@@ -183,6 +193,7 @@ test.describe('themes at 1280x720', () => {
       await page.keyboard.press('Escape');
       await page.getByRole('button', { name: 'Quit to title' }).click();
       await page.getByRole('button', { name: 'New game' }).click();
+      await page.getByRole('button', { name: 'Skip (Esc)' }).click();
       await page.waitForTimeout(1200);
       await flying(page);
       await page.keyboard.press('KeyP');

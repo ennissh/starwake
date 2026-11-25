@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { audio } from '../audio/audio.js';
 import {
   type CombatEvent,
   type ContentBundle,
@@ -25,7 +26,7 @@ import {
   toWorld,
 } from '@starwake/shared';
 import { CAMERA_LABEL, CameraRig } from '../camera/rig.js';
-import { type Action, ACTIONS, keyLabel } from '../input/keymap.js';
+import { type Action, keyLabel } from '../input/keymap.js';
 import { stickAxes } from '../input/joystick.js';
 import type { Input } from '../input/input.js';
 import { buildStarwake, type StarwakeModel } from '../models/starwake.js';
@@ -260,14 +261,21 @@ export class SpaceScene {
         this.foldHoldStart = performance.now();
         this.hud.toast('Hold for emergency fold…', 1100);
         return true;
-      default: {
-        const def = ACTIONS[a];
-        if ('notYet' in def) {
-          this.hud.toast(def.notYet, 4500);
-          return true;
-        }
+      case 'engineRoom':
+      case 'codex':
+      case 'hail':
+      case 'starMap':
+      case 'systemReport':
+      case 'colony':
+      case 'probe':
+      case 'jump':
+        // Reached only when no campaign took the key: a fight, or the flight test / arena.
+        this.hud.toast(
+          this.o.mode === 'fight' ? 'Not during a fight' : 'Part of a campaign: start a New game',
+        );
+        return true;
+      default:
         return false;
-      }
     }
   }
 
@@ -490,21 +498,29 @@ export class SpaceScene {
     for (const ev of events) {
       switch (ev.t) {
         case 'lance':
+          audio.lance(ev.blocked !== null);
           this.fx.beam(vec3(ev.from), vec3(ev.to), ev.blocked !== null);
           if (ev.blocked === 'emitters')
             this.hud.toast('Lance blocked by shield emitters: take them out (Y)');
           break;
+        case 'shot':
+          audio.shot(ev.side === 'player');
+          break;
         case 'hit':
+          audio.hit();
           this.fx.spark(vec3(ev.pos));
           break;
         case 'playerHit':
+          audio.playerHit();
           this.fx.spark(vec3(ev.pos));
           if (ev.hull > 0) this.chud.flash();
           break;
         case 'destroyed':
+          audio.explosion(ev.radius * 2.5);
           this.fx.explode(vec3(ev.pos), ev.radius * 2.5);
           break;
         case 'detonate':
+          audio.explosion(40);
           this.fx.explode(vec3(ev.pos), 40);
           break;
         case 'subDestroyed':
@@ -514,6 +530,7 @@ export class SpaceScene {
           );
           break;
         case 'launch':
+          audio.launch();
           this.lastLaunched = ev.id;
           this.hud.toast(`${byId(this.content.drones, ev.drone).name} away`);
           break;
@@ -530,6 +547,7 @@ export class SpaceScene {
           this.hud.toast(`${byId(this.content.components, ev.componentId).name} destroyed`);
           break;
         case 'crippled':
+          audio.alarm();
           this.hud.toast('Hull breached: the Starwake is crippled', 3000);
           this.o.onCrippled?.();
           break;

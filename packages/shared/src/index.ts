@@ -21,3 +21,4 @@ export * from './rules/trade.js';
 export * from './rules/diplomacy.js';
 export * from './schemas/translator.js';
 export * from './rules/scripted.js';
+export * from './rules/ending.js';
