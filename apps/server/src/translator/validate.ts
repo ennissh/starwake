@@ -80,12 +80,17 @@ export function applyPlayerMove(
   let s = s0;
   const events: CampaignEvent[] = [];
   const notes: string[] = [];
-  const text =
-    move.type === 'say'
-      ? move.text
-      : move.type === 'offer'
-        ? '(puts an offer on the table)'
-        : `(${move.type})`;
+  const said: Record<Exclude<PlayerMove['type'], 'say'>, string> = {
+    offer: '(puts an offer on the table)',
+    acceptCounter: '(accepts your counter-offer)',
+    askTreaty: 'I propose a treaty between our peoples.',
+    askPassage: 'Will you grant us safe passage through your space?',
+    askKnowledge: 'What do you know about this cluster?',
+    about: 'Tell me about yourselves.',
+    payTribute: '(pays the tribute)',
+    leave: '(leaves)',
+  };
+  const text = move.type === 'say' ? move.text : said[move.type];
   s = {
     ...s,
     conversation: { ...conv, transcript: [...conv.transcript, { who: 'player' as const, text }].slice(-40) },

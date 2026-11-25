@@ -260,7 +260,10 @@ test('campaign fight: attack Cinder Hold, fold out; the server verifies the brow
   };
   await jump('glass-reach');
   await jump('cinder-gate');
-  // An ambush or patrol may already have started a fight; otherwise attack the base.
+  // An ambush or patrol may hail first (parley): fight it; otherwise attack the base.
+  if ((await camp(page))!.panel === 'parley')
+    await page.getByRole('button', { name: 'Fight', exact: true }).click();
+  await page.waitForTimeout(500);
   if (!(await camp(page))!.fighting) {
     await page.keyboard.press('KeyP');
     await page.getByRole('button', { name: 'Attack their base' }).click();
@@ -277,5 +280,58 @@ test('campaign fight: attack Cinder Hold, fold out; the server verifies the brow
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect.poll(async () => (await camp(page))?.fighting).toBe(false);
   expect(['glass-reach', 'cinder-gate']).toContain((await camp(page))!.systemId);
+  expect(errors).toEqual([]);
+});
+
+test('translator (mock): hail the Quillari, learn, trade, insult, leave; memory is kept', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const errors = watchErrors(page);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Click to begin' }).click();
+  await page.getByLabel('New pilot name').fill(`Envoy ${Date.now() % 100000}`);
+  await page.getByRole('button', { name: 'Add pilot' }).click();
+  await page.getByRole('button', { name: 'New game' }).click();
+  await expect.poll(async () => (await camp(page))?.systemId).toBe('harbor');
+  await page.locator('[data-tutor="skip"]').click();
+  // Probe and claim Anvil: it ships Ore Crates to trade with.
+  await page.keyboard.press('KeyP');
+  await page.getByRole('button', { name: 'Place claim beacon' }).click();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  await page.locator('[data-act="select"][data-id="glass-reach"]').dispatchEvent('click');
+  await page.keyboard.press('KeyJ');
+  await expect.poll(async () => (await camp(page))?.systemId).toBe('glass-reach');
+  await expect.poll(async () => (await camp(page))?.folding).toBe(false);
+
+  await page.keyboard.press('KeyV');
+  const tr = page.getByRole('dialog', { name: 'Translator · Quillari' });
+  await expect(tr).toBeVisible();
+  await expect(tr.getByRole('log')).toContainText('Traveller');
+  await tr.getByRole('button', { name: 'Ask about the cluster' }).click();
+  await expect(tr.getByRole('log')).toContainText('Vosk raiders');
+  await tr.getByRole('button', { name: 'Trade', exact: true }).click();
+  await tr.getByRole('button', { name: 'Give more Ore Crate' }).click();
+  await tr.getByRole('button', { name: 'Give more Ore Crate' }).click();
+  await tr.getByRole('button', { name: 'Ask for more Fold mass' }).click();
+  await expect(tr).toContainText('Looks fair to them.');
+  await tr.getByRole('button', { name: 'Offer', exact: true }).click();
+  await expect(tr.getByRole('log')).toContainText('Trade complete.');
+  await tr.getByLabel('What you say').fill('You are pathetic fools.');
+  await page.keyboard.press('Enter');
+  await expect(tr.getByRole('log')).toContainText('You are pathetic fools.');
+  await page.keyboard.press('Escape');
+  await expect(tr).toBeHidden();
+  const s = (await camp(page))!.state as {
+    codex: string[];
+    conversation: unknown;
+    conversationMemory: Record<string, { summary: string }>;
+    relations: Record<string, number>;
+  };
+  expect(s.codex).toContain('knowledge:quillari-vosk-raids');
+  expect(s.conversation).toBeNull();
+  expect(s.conversationMemory.quillari!.summary).toMatch(/Quillari/);
+  expect(s.relations.quillari).toBe(-1); // +2 for the fair trade, −3 for the insult
   expect(errors).toEqual([]);
 });

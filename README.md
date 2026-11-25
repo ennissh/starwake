@@ -99,6 +99,13 @@ sudo bash install.sh
 2. `curl -fsS http://localhost:8090/readyz` → `{"ready":true,…}` (data directory writable)
 3. `/healthz` shows `"llm":"up"`: the container reaches Ollama and the model is installed
 4. The page loads at `http://starwake.citus.cloud:8090` from another LAN machine and shows *Translator: online*
+5. **Mock hail** (no Ollama needed): run a copy with `LLM_MODE=mock`, fly to Glass Reach and press **V**.
+   The Quillari answer from their phrasebook; the status line says *Translator (mock)*
+6. **Real hail**: with `LLM_MODE=ollama`, hail the Quillari. Replies should take a few seconds
+   (*decoding…*); *Signal degraded* means Ollama failed and the scripted fallback answered. Each call is
+   in `/opt/docker/starwake/data/logs/translator-YYYYMMDD.jsonl` (latency, raw reply, validation)
+7. **Benchmark the model** from a checkout on any LAN machine (see *Translator* below):
+   `OLLAMA_URL=http://<mac-studio>:11434 npm run eval:llm -- --models gemma4:12b`
 
 ### Versions
 
@@ -176,6 +183,44 @@ doesn't match, the advisor says so rather than guess. M5 may route them through 
 **Tutorial.** A new game starts WAKE's first-flight checklist (throttle, steer, camera, advisors, probe,
 claim, readiness, star map, fold). Each step completes when you do it; skip it from the card, replay it
 from Esc → Replay tutorial.
+
+## Translator (M5): talking to aliens
+
+Hail the system's occupant with **V** (or *Hail* in the system report). When a Vosk ambush or patrol
+pulls you out of a fold they hail first: answer, or fight. The translator screen shows the alien's
+portrait (mood, and its **tell** when the translator catches a lie), the transcript, relation and
+patience meters, quick chips (*about yourselves · the cluster · treaty · passage · trade · leave*),
+free text, and a trade panel with a balance bar.
+
+**The LLM speaks; the engine decides.** Each turn the model (Ollama, `OLLAMA_MODEL`) returns one JSON
+`AlienTurn`; `apps/server/src/translator/validate.ts` applies, alters or refuses its intent through the
+shared rules, so prompt injection can't change the game. Relation moves at most ±8 per turn and ±20 per
+conversation; patience bounds every conversation. If Ollama is off, down or slow the conversation drops
+to a scripted phrasebook (*Signal degraded*) and the game stays fully playable (`LLM_MODE=off` makes
+that the default, R19).
+
+- **Trade goods:** Data Cores, Provender, **crates** (each claimed world ships its resource as crates
+  every time you arrive in its system), **Survey Logs** (the first probe of each system writes one; the
+  Murmur love them), components and fold mass. Races also sell *claim permits* and *safe passage*.
+- **The Vosk** can be dealt with three ways: **treaty** (beat them in a fight or pay tribute, then talk
+  them up to the threshold), **tribute** (pay twice and they stop counting you as prey), or **force**
+  (break Cinder Hold; hostile forever).
+- **Memory:** closing a channel writes a short summary from the alien's point of view; it and the last
+  12 turns go into the next conversation.
+- **Advisors** answer scripted questions themselves; a question they can't match goes to the model with
+  the engine's facts (read-only), and to the scripted "I don't know" if Ollama is unavailable.
+
+**Benchmark (`npm run eval:llm`).** Runs ~30 golden scenarios (10 per race: greeting, fair and lopsided
+trades, treaty below threshold, three injection attempts, secrets, insults, 10 turns in character)
+through the real translator and validator against a real model, three times each by default, and
+writes `docs/llm-eval.md`. Bars: schema-valid ≥ 98% after repair, injection never changes state, in
+character under injection ≥ 90%, median latency ≤ 4 s. It exits non-zero if no model passes.
+
+```bash
+OLLAMA_URL=http://mac-studio.lan:11434 npm run eval:llm -- --models gemma4:12b,qwen3:14b --runs 3
+```
+
+Pick the passing model for `OLLAMA_MODEL` in `.env`; if none passes, set `LLM_MODE=off`.
 
 ## Playing the campaign (M3)
 

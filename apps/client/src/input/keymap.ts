@@ -75,14 +75,7 @@ export const ACTIONS = {
     notYet: 'The codex is not built yet. Ask your advisors (Enter) instead.',
   },
   probe: { label: 'Probe system', group: 'Ship', defaults: ['KeyP'] },
-  hail: {
-    label: 'Hail ship or base',
-    group: 'Ship',
-    defaults: ['KeyV'],
-    comingIn: 'M5',
-    notYet:
-      'The translator is not online yet: talking to aliens arrives in M5. Relations move with what you do (claims, fights, trade).',
-  },
+  hail: { label: 'Hail (open the translator)', group: 'Ship', defaults: ['KeyV'] },
   jump: { label: 'Fold jump (from star map)', group: 'Ship', defaults: ['KeyJ'] },
   emergencyFold: {
     label: 'Emergency fold (hold 1 s)',

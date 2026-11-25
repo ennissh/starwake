@@ -2,6 +2,19 @@
 
 ## 0.1.0 (in progress)
 
+### M5 · Translator and diplomacy
+- **V** hails a race; ambushes and patrols hail first (answer or fight). Translator screen: portrait with
+  mood and tell, transcript, chips, free text, trade panel with balance bar, relation and patience.
+- Live aliens via Ollama, validated by the engine (`validate.ts`): trades, counter-offers, treaties,
+  tribute, safe passage, knowledge into the codex, hostility. Injection-proof by construction.
+- Scripted fallback when Ollama is off or down (*Signal degraded*); `LLM_MODE=mock` for tests.
+- Claims ship cargo crates; first probes write Survey Logs; races stock components, fold mass, permits
+  and passage. The Vosk can be met by treaty, tribute or force.
+- Conversation memory; JSONL call log in `/data/logs` (14 days); output post-filter by content rating.
+- Advisors ask the model when the script has no answer (read-only).
+- `npm run eval:llm`: the live benchmark with pass bars → `docs/llm-eval.md`.
+- Saves move to version 2 (migrated automatically; a backup of the old file is kept).
+
 ### M4 · Engine room
 - **F** opens the engine room: pick or drag parts between system slots and the hold; a live
   preview shows range, fold mass per parsec, speed, turn, Lance/turret damage per second and shields.

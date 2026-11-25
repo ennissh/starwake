@@ -7,6 +7,7 @@ import {
   type ContentBundle,
   type EncounterResult,
   type InstalledComponent,
+  type PlayerMove,
   type Readiness,
   type Roster,
   ContentBundleSchema,
@@ -84,6 +85,24 @@ export const newSave = (profile: string, slot: SaveMeta['slot'], copyFrom?: stri
 export const getSave = (id: string) => call<SaveView>('GET', `/api/saves/${id}`);
 export const act = (id: string, action: CampaignAction) =>
   call<ActionView>('POST', `/api/campaign/${id}/action`, { action });
+
+/** What the translator shows for one alien turn (the engine's applied version). */
+export interface TranslatorReply {
+  say: string;
+  mood: 'neutral' | 'pleased' | 'amused' | 'annoyed' | 'angry' | 'afraid' | 'scheming';
+  tell: boolean;
+  unverified: boolean;
+}
+export interface TranslatorView extends ActionView {
+  reply: TranslatorReply | null;
+  degraded: boolean;
+  ended: boolean;
+}
+export const openChannel = (id: string, raceId: string) =>
+  call<TranslatorView>('POST', `/api/translator/${id}/open`, { raceId });
+export const sayToChannel = (id: string, move: PlayerMove) =>
+  call<TranslatorView>('POST', `/api/translator/${id}/say`, { move });
+export const closeChannel = (id: string) => call<ActionView>('POST', `/api/translator/${id}/close`, {});
 
 export interface EncounterStart {
   encounterId: string;

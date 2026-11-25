@@ -39,6 +39,7 @@ This document is the build brief for Claude Code. Read all of it before writing 
 | R21 | HTTPS | Plain HTTP for 0.1.0 |
 | R23 | CI and installer (2026-11-24) | A manual-only GitHub Actions workflow publishes images to GHCR; `install.sh` is a single self-contained file (`curl -fsSLO …/install.sh && sudo bash install.sh`), no checkout needed on dwarf |
 | R24 | Playtest batch 1 (2026-11-24) | Tutorial on new game (WAKE first-flight checklist); advisors = WAKE + Navigator, Quartermaster, Tactical (scripted now, translator later); mouse steering off by default with a toggle (L); Lance assist cone (4°, content) + hold-to-face-target (G); VGA = full resolution with the 16-colour palette and dither, no big pixels; fold-jump transition; Hail explains it arrives in M5 |
+| R25 | Translator scope (2026-11-25) | Advisors use the LLM only for questions the script can't answer (read-only, engine facts only). Claimed worlds ship cargo crates of their resource each time you arrive; first probes write Survey Logs; both are trade goods |
 | R22 | Caravan Clock (2026-11-22) | Option B: jumps cost **0.15 yr/pc**, a Waystation refit **0.25 yr**; the clock stays at 10 years. A perfect headless playthrough now uses 3.14 years |
 
 Anything below marked **(proposed)** is a best-practice default. Use it unless Shawn says otherwise. Anything under "Open questions" must be confirmed before the milestone that needs it.
@@ -669,6 +670,7 @@ Build in order. Stop for review after each one.
 - Unit tests cover the stat formulas.
 
 ### M5 · Translator and diplomacy (largest milestone)
+**Status (2026-11-25): built; live eval pending (Shawn).** Persona cards, economies, knowledge and diplomacy rules in `content/races.json`; save v2 with migration; trade/treaty/tribute/passage/knowledge/conversation reducers in shared with tests; the scripted responder is both the mock model and the production fallback; `validate.ts` is the only gate; prompt builder escapes and delimits player text; hashed output post-filter (clean-room + rating lists); JSONL log with rotation; memory summaries; translator UI; ambush/patrol parley. Unit tests cover every intent, injection, timeouts, refused connections, invalid JSON, filter hits, patience; the Vosk arc is completed three ways in tests; Playwright hails the Quillari (mock). **Gate 5 (prototype against the real model) and the `eval:llm` bars must be run by Shawn from the LAN** (cloud sessions can't reach Ollama): `OLLAMA_URL=… npm run eval:llm -- --models gemma4:12b`.
 - Persona cards for Quillari, Vosk and Murmur.
 - Prompt builder, Ollama client, schema validation and repair, validator (§6.4).
 - Trade panel with balance bar; relations, patience, treaties, knowledge sharing into the Codex, tribute and ambush demands.

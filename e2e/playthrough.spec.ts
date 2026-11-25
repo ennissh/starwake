@@ -210,6 +210,11 @@ class Run {
       })
       .toBe(true);
     await this.record(`jump ${from} → ${to}`);
+    // They hail first (M5 parley): this run answers by fighting.
+    if ((await this.snap()).panel === 'parley') {
+      await this.page.getByRole('button', { name: 'Fight', exact: true }).click();
+      await ep(async () => (await this.snap()).fighting).toBe(true);
+    }
     if ((await this.snap()).fighting) await this.fight();
   }
 

@@ -232,8 +232,8 @@ M0 — Skeleton, deploy pipeline, /healthz, install.sh                    [x] bu
 M1 — Flight and cameras, HUD, key help, rebinding, pause               [x] built; 60 fps check pending (Shawn)
 M2 — Combat, drones, subsystems, crippled state, salvage, arena        [x] built; human playtest pending
 M3 — Campaign: Shoal content, star map, jumps, probe, claims, saves    [x] built; clock-length playtest pending
-M4 — Engine room: slots, condition, stat preview, wired effects        [ ]
-M5 — Translator + diplomacy (largest; seven gates)                     [ ]
+M4 — Engine room: slots, condition, stat preview, wired effects        [x] built
+M5 — Translator + diplomacy (largest; seven gates)                     [x] built; eval:llm on the real model pending (Shawn)
 M6 — Win/lose, intro + tutorial, codex, audio                          [ ]
 M7 — Hardening, Playwright smoke, release 0.1.0                        [ ]
 ```
@@ -258,7 +258,8 @@ R19 fallback ships if no model passes · R20 Farglow design system, light/dark +
 R22 Caravan Clock: jumps 0.15 yr/pc, Waystation refit 0.25 yr, 10-year clock (headless playthrough: 3.14 yr for a perfect win) ·
 R23 (2026-11-24) images publish from a manual-only GitHub Actions workflow; `install.sh` is a single self-contained file ·
 R24 (2026-11-24) playtest batch 1: tutorial, advisors (WAKE + council, scripted), mouse steering off by default (L),
-Lance assist + face target (G), full-res VGA palette theme, fold transition.
+Lance assist + face target (G), full-res VGA palette theme, fold transition. ·
+R25 (2026-11-25) advisors ask the LLM only on a scripted miss; claims ship cargo crates, first probes write Survey Logs.
 
 Still open: the final model after `eval:llm` (M5); the exact Ollama URL (asked by `install.sh`).
 
